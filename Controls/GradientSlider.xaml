@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:controls="using:Irozukume.Controls">
+
+	<!-- つまみ。中空のリングにして下のグラデーションを透かし、現在値の色をそのまま見せる。明所・暗所どちらの背景でも縁が見えるよう、白いリングの外側に半透明の暗いリングを重ねる。 -->
+	<Style x:Key="GradientSliderThumbStyle" TargetType="Thumb">
+		<Setter Property="Background" Value="Transparent" />
+		<Setter Property="IsTabStop" Value="False" />
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="Thumb">
+					<Grid>
+						<Ellipse Stroke="#80000000" StrokeThickness="4" />
+						<Ellipse Stroke="White" StrokeThickness="2" />
+					</Grid>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
+
+	<!-- 任意のブラシを背景に敷けるスライダー本体の暗黙スタイル。位置決めは標準 Slider のテンプレート契約に依存するため、名前付きパーツの型(Rectangle)・配置(3行3列、減少レクトと thumb の列/行)を既定テンプレートと同一に保つ。標準 Slider はこれらのパーツを型指定で解決し、HorizontalDecreaseRect.Width を書き込むことで thumb を移動させる。塗りとつまみの見た目だけを差し替える。状態に応じてトラック塗りを純色へ差し替える標準の VisualState は、グラデーションが消えるため取り込まない。 -->
+	<Style TargetType="controls:GradientSlider">
+		<Setter Property="Background" Value="Transparent" />
+		<Setter Property="Foreground" Value="Transparent" />
+		<Setter Property="HorizontalAlignment" Value="Stretch" />
+		<Setter Property="VerticalAlignment" Value="Center" />
+		<Setter Property="Padding" Value="0" />
+		<Setter Property="IsThumbToolTipEnabled" Value="False" />
+		<Setter Property="UseSystemFocusVisuals" Value="True" />
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="controls:GradientSlider">
+					<Grid
+						x:Name="SliderContainer"
+						Margin="{TemplateBinding Padding}"
+						Background="Transparent"
+						Control.IsTemplateFocusTarget="True">
+
+						<!-- 水平向き。減少レクトは行1・列0、thumb は列1で行全体にまたがる。減少レクトの幅を Slider が書き込み、列0が広がることで thumb が右へ動く。最小高はつまみ(28)に合わせ、トラック上下の余白を詰めてスライダー同士を近づける。 -->
+						<Grid x:Name="HorizontalTemplate" MinHeight="28">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="Auto" />
+								<ColumnDefinition Width="Auto" />
+								<ColumnDefinition Width="*" />
+							</Grid.ColumnDefinitions>
+							<Grid.RowDefinitions>
+								<RowDefinition Height="*" />
+								<RowDefinition Height="Auto" />
+								<RowDefinition Height="*" />
+							</Grid.RowDefinitions>
+
+							<!-- 透明度表現用の市松模様。ShowCheckerboard が真のときだけコードから下地と正方形を組んで表示する。角丸はコードで設定する。 -->
+							<Border
+								x:Name="CheckerboardLayer"
+								Grid.Row="1"
+								Grid.ColumnSpan="3"
+								Height="{TemplateBinding TrackThickness}"
+								Visibility="Collapsed" />
+
+							<!-- トラック全体を覆うグラデーション。値の左右で途切れさせず一様に見せる。 -->
+							<Rectangle
+								x:Name="HorizontalTrackRect"
+								Grid.Row="1"
+								Grid.ColumnSpan="3"
+								Height="{TemplateBinding TrackThickness}"
+								RadiusX="{TemplateBinding TrackCornerRadius}"
+								RadiusY="{TemplateBinding TrackCornerRadius}"
+								Fill="{TemplateBinding TrackBrush}"
+								Stroke="{ThemeResource CardStrokeColorDefaultBrush}"
+								StrokeThickness="1" />
+
+							<!-- 色域外の区間を示す斜線ハッチ。OutOfGamutSegments が与えられたときだけコードからハッチを組んで表示する。トラックの角丸へ収めるため CornerRadius と Clip はコードで設定する。 -->
+							<Border
+								x:Name="GamutOverlayLayer"
+								Grid.Row="1"
+								Grid.ColumnSpan="3"
+								Height="{TemplateBinding TrackThickness}"
+								Visibility="Collapsed" />
+
+							<!-- 値より左側の領域。グラデーションを一様に見せるため塗らず、thumb の位置決めのために Slider が幅を書き込む対象としてだけ使う。 -->
+							<Rectangle
+								x:Name="HorizontalDecreaseRect"
+								Grid.Row="1"
+								Fill="Transparent" />
+
+							<Thumb
+								x:Name="HorizontalThumb"
+								Grid.Row="0"
+								Grid.RowSpan="3"
+								Grid.Column="1"
+								Width="20"
+								Height="20"
+								Style="{StaticResource GradientSliderThumbStyle}"
+								FocusVisualMargin="-10,-6,-10,-6"
+								AutomationProperties.AccessibilityView="Raw" />
+
+							<!-- ドラッグ中だけ現れるレンズ(ルーペ)の置き場。トラックの現在位置を拡大して透かし見せ、ドラッグ位置を分かりやすくする。中身と位置はコードから組む。全行・全列にまたがってトラックと同じ幅・高さを持ち、子はその中を Canvas 座標で自由に置く(Canvas は子をクリップしないため、ルーペが帯の上下へはみ出して描ける)。入力は奪わない。 -->
+							<Canvas
+								x:Name="HorizontalLens"
+								Grid.Row="0"
+								Grid.RowSpan="3"
+								Grid.Column="0"
+								Grid.ColumnSpan="3"
+								IsHitTestVisible="False" />
+						</Grid>
+
+						<!-- 垂直向き。減少レクトは列1・行2(下)、thumb は行1で列全体にまたがる。減少レクトの高さを Slider が書き込み、行2が伸びることで thumb が上へ動く。 -->
+						<Grid x:Name="VerticalTemplate" MinWidth="32" Visibility="Collapsed">
+							<Grid.RowDefinitions>
+								<RowDefinition Height="*" />
+								<RowDefinition Height="Auto" />
+								<RowDefinition Height="Auto" />
+							</Grid.RowDefinitions>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="*" />
+								<ColumnDefinition Width="Auto" />
+								<ColumnDefinition Width="*" />
+							</Grid.ColumnDefinitions>
+
+							<Rectangle
+								x:Name="VerticalTrackRect"
+								Grid.Column="1"
+								Grid.RowSpan="3"
+								Width="{TemplateBinding TrackThickness}"
+								RadiusX="{TemplateBinding TrackCornerRadius}"
+								RadiusY="{TemplateBinding TrackCornerRadius}"
+								Fill="{TemplateBinding TrackBrush}"
+								Stroke="{ThemeResource CardStrokeColorDefaultBrush}"
+								StrokeThickness="1" />
+
+							<Rectangle
+								x:Name="VerticalDecreaseRect"
+								Grid.Column="1"
+								Grid.Row="2"
+								Fill="Transparent" />
+
+							<Thumb
+								x:Name="VerticalThumb"
+								Grid.Row="1"
+								Grid.Column="0"
+								Grid.ColumnSpan="3"
+								Width="28"
+								Height="28"
+								Style="{StaticResource GradientSliderThumbStyle}"
+								FocusVisualMargin="-6,-14,-6,-14"
+								AutomationProperties.AccessibilityView="Raw" />
+
+							<!-- ドラッグ中だけ現れるレンズ(ルーペ)の置き場。水平向きの HorizontalLens と対の、垂直向き用。全行・全列にまたがってトラックと同じ高さ・幅を持ち、子はその中を Canvas 座標で自由に置く。 -->
+							<Canvas
+								x:Name="VerticalLens"
+								Grid.Row="0"
+								Grid.RowSpan="3"
+								Grid.Column="0"
+								Grid.ColumnSpan="3"
+								IsHitTestVisible="False" />
+						</Grid>
+					</Grid>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
+</ResourceDictionary>

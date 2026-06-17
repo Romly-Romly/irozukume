@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+		<!-- 画面キャプチャ系 API（WDA_EXCLUDEFROMCAPTURE 等）が Windows 10 2004 (build 19041) 以降を要するため、最低対応バージョンを 19041 とする。 -->
+		<TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+		<RootNamespace>Irozukume</RootNamespace>
+		<!-- アプリのバージョン。publish スクリプトはこの値を読み取って zip 名に反映する。FileVersion はここから 0.1.0.0 が導出され、プレリリース表記(-alpha)は AssemblyInformationalVersion に入る。 -->
+		<Version>0.1.0-alpha</Version>
+		<!-- 既定(フォールバック)の表示言語。非パッケージアプリには Package.appxmanifest が無いため、このプロパティで宣言する。OS の表示言語に対応する resw が無いときと、選択言語に欠けた文字列があるときの最終フォールバックに使う。Strings\en\Resources.resw を必ず完備しておく。 -->
+		<DefaultLanguage>en</DefaultLanguage>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<Platforms>x86;x64;arm64</Platforms>
+		<RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+		<UseWinUI>true</UseWinUI>
+		<!-- exe 本体に埋め込むアイコン。エクスプローラ・タスクバー・Alt+Tab の既定アイコン源になる。実体は _assets\icons の build_ico.py が各サイズのPNGから束ねて生成する。 -->
+		<ApplicationIcon>Assets\Irozukume.ico</ApplicationIcon>
+		<WindowsPackageType>None</WindowsPackageType>
+		<EnableMsixTooling>true</EnableMsixTooling>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<!-- 単一起動を Program.Main で実装するため、XAML が自動生成する既定の Main を無効化する。 -->
+		<DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+		<!-- プロジェクトファイルをリポジトリのルート直下に置いているため、SDK 既定のソース収集は _spikes 配下の別プロジェクトまで巻き込んでしまう。これを除外し、Irozukume 自身のソースだけをコンパイル対象にする。 -->
+		<DefaultItemExcludes>$(DefaultItemExcludes);_spikes\**</DefaultItemExcludes>
+	</PropertyGroup>
+
+	<!-- 同梱アイコンフォント。_assets のツールで生成し、ms-appx:///Assets/Fonts/romoji.ttf#Romoji で参照する。 -->
+	<ItemGroup>
+		<Content Include="Assets\Fonts\romoji.ttf" CopyToOutputDirectory="PreserveNewest" />
+		<!-- 起動中ウィンドウへ AppWindow.SetIcon で当てるため、ico の実体を出力に置く。非パッケージ配布では資産URIが解決できないため、実行フォルダからの相対パスで参照する。 -->
+		<Content Include="Assets\Irozukume.ico" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260508005" />
+		<PackageReference Include="H.NotifyIcon.WinUI" Version="2.4.2-dev.17" />
+		<PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
+		<PackageReference Include="CommunityToolkit.WinUI.Controls.Sizers" Version="8.2.251219" />
+		<PackageReference Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
+	</ItemGroup>
+
+</Project>

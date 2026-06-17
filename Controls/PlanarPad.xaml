@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:controls="using:Irozukume.Controls">
+
+	<!-- 2次元パッドの暗黙スタイル。見せるグラデーションは Content として置き、つまみはコードで値の位置へ移動する。回転トランスフォームが Content とつまみをまとめて回し、入力はコード側で逆回転して値へ写す。操作はコントロール全体で受けるため、Content とつまみは当たり判定を持たせない。 -->
+	<Style TargetType="controls:PlanarPad">
+		<Setter Property="HorizontalAlignment" Value="Center" />
+		<Setter Property="VerticalAlignment" Value="Center" />
+		<Setter Property="IsTabStop" Value="True" />
+		<Setter Property="UseSystemFocusVisuals" Value="True" />
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="controls:PlanarPad">
+					<!-- ルートごと中心まわりに回す。当たり判定面(透明な背景)・Content・つまみが一体で回るため、回転後の見た目とクリック領域が一致する。回転角はコードで PART_Rotation に書き込む。 -->
+					<Grid
+						x:Name="PART_Root"
+						Background="Transparent"
+						Control.IsTemplateFocusTarget="True"
+						RenderTransformOrigin="0.5,0.5">
+						<Grid.RenderTransform>
+							<RotateTransform x:Name="PART_Rotation" />
+						</Grid.RenderTransform>
+
+						<!-- 彩度・明度のグラデーション等を利用側が Content で与える。視覚のみで当たり判定は持たせない。色面の角は、これを包む Border の角丸でまとめて切り抜く(角丸量はコードで PART_FieldClip へ設定する)。 -->
+						<Border x:Name="PART_FieldClip">
+							<ContentPresenter
+								HorizontalAlignment="Stretch"
+								VerticalAlignment="Stretch"
+								Content="{TemplateBinding Content}"
+								ContentTemplate="{TemplateBinding ContentTemplate}"
+								IsHitTestVisible="False" />
+						</Border>
+
+						<!-- つまみ。中央に置き、コードで値の位置へ平行移動する。明暗どちらの背景でも縁が見えるよう白の内側に半透明の暗い縁を重ねる。 -->
+						<Grid
+							x:Name="PART_Thumb"
+							Width="{TemplateBinding ThumbDiameter}"
+							Height="{TemplateBinding ThumbDiameter}"
+							HorizontalAlignment="Center"
+							VerticalAlignment="Center"
+							IsHitTestVisible="False">
+							<Ellipse Stroke="#80000000" StrokeThickness="4" />
+							<Ellipse Stroke="White" StrokeThickness="2" />
+						</Grid>
+
+						<!-- ドラッグ中だけ現れるレンズ(ルーペ)の置き場。背後の色面を拡大・屈折・色収差して見せる。ルーペとパッドは同じ回転枠(PART_Root)に入るため、色面の向きと一致する。中身と位置はコードから組む。Canvas は子をクリップしないため、つまみより大きなレンズがはみ出して描ける。 -->
+						<Canvas x:Name="PART_Lens" IsHitTestVisible="False" />
+					</Grid>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
+</ResourceDictionary>

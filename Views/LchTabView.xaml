@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+	x:Class="Irozukume.Views.LchTabView"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:controls="using:Irozukume.Controls"
+	xmlns:helpers="using:Irozukume.Helpers"
+	mc:Ignorable="d">
+
+	<!-- 上段に色相環エリアと、その右の縦並びコントロール(OKLCH/CIE LCH 切替・色域制限トグル)を置き、下段に明度・彩度・色相のスライダーを置く。色相環は色相を、中央の L-C パッドは明度(縦)と彩度(横)を編集する。L-C 平面は sRGB 色域に収まる部分だけを実色で塗り、色域外はハッチで透かして可視化する。スライダーは表色系で上限が変わらないよう 0–1 の正規化値で束縛し、数値入力欄は各表色系の素の尺度で見せる。色相環は領域の幅と、スライダー群を除いた残りの高さの小さい方へ正方形でコード側から合わせ、ウィンドウに追従して拡縮する。 -->
+	<Grid x:Name="LayoutRoot" RowSpacing="16">
+		<Grid.Resources>
+			<!-- スライダー行の数値入力欄の幅を揃える。ラベル列の幅は全スライダータブ共通の SliderLabelWidth を使う。単位記号(°)は入力欄の右に小さく添える。入力欄は ExpandingNumberBox で、普段は LchRestWidth まで縮め、フォーカス時(スピンボタンのポップアップ時)に LchValueWidth まで広げ、縮んだぶんは隣のスライダー列が伸びる。単位記号は固定幅(16)のスロットへ置き、記号の有無(H のみ °)にかかわらず各行の入力欄の左端がそろうようにする。 -->
+			<x:Double x:Key="LchValueWidth">120</x:Double>
+			<x:Double x:Key="LchRestWidth">80</x:Double>
+		</Grid.Resources>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
+		</Grid.RowDefinitions>
+
+		<!-- 上段: 色相環エリアと右の縦並びコントロール。 -->
+		<Grid Grid.Row="0" ColumnSpacing="16">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="Auto" />
+			</Grid.ColumnDefinitions>
+
+			<!-- 色相環エリア。利用可能な領域いっぱいに、正方形を保って拡縮する。色相環の実寸はコード側で領域の短辺へ合わせ、色相環の画像と L-C 平面はその実寸と表示倍率に合わせて作り直す。 -->
+			<Grid
+				x:Name="RingArea"
+				Grid.Column="0"
+				SizeChanged="OnRingAreaSizeChanged">
+				<controls:RingSlider
+					x:Name="HueRing"
+					HorizontalAlignment="Center"
+					VerticalAlignment="Top"
+					x:Uid="NameHue"
+					Value="{x:Bind ViewModel.LchH, Mode=TwoWay}">
+
+					<!-- 中央に明度・彩度の L-C パッドを置く。横が彩度(左0→右が表示上限)、縦が明度(上が最大→下0)。下地は色域内を実色、色域外をハッチで透かした画像をコード側で作って差し込む。操作は2軸をまとめて二次元で扱う(色域内への最近傍寄せ)ため、つまみ位置は一方向束縛で受け、操作の反映は ValuesChanged から SetLchPad へ渡す。 -->
+					<controls:PlanarPad
+						x:Name="LcPad"
+						x:Uid="LchLcPad"
+						XValue="{x:Bind ViewModel.LchCNorm, Mode=OneWay}"
+						YValue="{x:Bind ViewModel.LchLNorm, Mode=OneWay}">
+						<Image x:Name="LcImage" Stretch="Fill" />
+					</controls:PlanarPad>
+				</controls:RingSlider>
+			</Grid>
+
+			<!-- 色相環の右に縦並びで、副モード切替と色域制限トグルを置く。色相環の上端に揃える。 -->
+			<StackPanel
+				Grid.Column="1"
+				VerticalAlignment="Top"
+				Spacing="16">
+
+				<!-- OKLCH と CIE LCH の切り替え。縦並びにする。色相環・L-C パッドは共通で、明度・彩度・色相の読み方(尺度と知覚均等性)だけが変わる。表記は言語非依存のためそのまま書く。 -->
+				<RadioButtons
+					x:Name="SpaceSelector"
+					MaxColumns="1"
+					SelectedIndex="0"
+					SelectionChanged="OnSpaceChanged">
+					<x:String>OKLCH</x:String>
+					<x:String>LCH</x:String>
+				</RadioButtons>
+
+				<!-- 彩度を sRGB 色域へ制限するトグル。オフ(既定)では色域外の彩度も保ち、表示できない範囲をハッチで示す。ラベルは短く、説明はツールチップに置く。 -->
+				<CheckBox
+					x:Uid="LchGamutLimit"
+					IsChecked="{x:Bind ViewModel.GamutLimit, Mode=TwoWay}" />
+			</StackPanel>
+		</Grid>
+
+		<!-- 下段: 明度・彩度・色相のスライダー群。各行はラベル・スライダー・数値入力欄の3列。スライダーは正規化値(0–1)、数値入力欄は素の尺度に束縛する。スライダーには色域外区間を渡してハッチで可視化する。この高さを差し引いて色相環の一辺を決めるため、名前で参照する。 -->
+		<StackPanel Grid.Row="1" x:Name="SliderHost" Spacing="{StaticResource SliderSpacing}">
+			<!-- 明度 L。共通尺度 0–100 で見せる(OKLCH の 0–1 を 100 倍、CIE LCH の 0–100 はそのまま)。 -->
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="Auto" />
+				</Grid.ColumnDefinitions>
+				<TextBlock Grid.Column="0" Width="{StaticResource SliderLabelWidth}" VerticalAlignment="Center" Text="L" />
+				<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+					Grid.Column="1"
+					x:Uid="NameLightness"
+					Minimum="0"
+					Maximum="1"
+					StepFrequency="0.01"
+					LargeChange="0.1"
+					Value="{x:Bind ViewModel.LchLNorm, Mode=TwoWay}"
+					TrackBrush="{x:Bind ViewModel.LchLightnessTrackBrush, Mode=OneWay}"
+					OutOfGamutSegments="{x:Bind ViewModel.LchLightnessGamut, Mode=OneWay}"
+					OutOfGamutStyle="{x:Bind ViewModel.OutOfRangeStyle, Mode=OneWay}" />
+				<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+					<controls:ExpandingNumberBox
+						FocusWidth="{StaticResource LchValueWidth}"
+						RestWidth="{StaticResource LchRestWidth}"
+						SpinButtonPlacementMode="Compact"
+						Minimum="0"
+						Maximum="100"
+						SmallChange="1"
+						NumberFormatter="{x:Bind helpers:NumberFormatters.Integer}"
+						x:Uid="NameLightness"
+						AutomationProperties.AutomationId="LchLightnessValueBox"
+						Value="{x:Bind ViewModel.LchL, Mode=TwoWay}" />
+					<TextBlock VerticalAlignment="Center" Width="16" />
+				</StackPanel>
+			</Grid>
+
+			<!-- 彩度 C。素の尺度で見せる(OKLCH は 0–0.4 程度、CIE LCH は 0–150 程度)。数値入力欄の上限は両表色系を覆う 150 とし、表色系ごとの上限超過は設定時に丸める。書式とスピン刻みは表色系で切り替える。 -->
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="Auto" />
+				</Grid.ColumnDefinitions>
+				<TextBlock Grid.Column="0" Width="{StaticResource SliderLabelWidth}" VerticalAlignment="Center" Text="C" />
+				<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+					Grid.Column="1"
+					x:Uid="NameChroma"
+					Minimum="0"
+					Maximum="1"
+					StepFrequency="{x:Bind ViewModel.LchChromaNormStep, Mode=OneWay}"
+					LargeChange="{x:Bind ViewModel.LchChromaNormLargeStep, Mode=OneWay}"
+					Value="{x:Bind ViewModel.LchCNorm, Mode=TwoWay}"
+					TrackBrush="{x:Bind ViewModel.LchChromaTrackBrush, Mode=OneWay}"
+					OutOfGamutSegments="{x:Bind ViewModel.LchChromaGamut, Mode=OneWay}"
+					OutOfGamutStyle="{x:Bind ViewModel.OutOfRangeStyle, Mode=OneWay}" />
+				<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+					<controls:ExpandingNumberBox
+						FocusWidth="{StaticResource LchValueWidth}"
+						RestWidth="{StaticResource LchRestWidth}"
+						SpinButtonPlacementMode="Compact"
+						Minimum="0"
+						Maximum="150"
+						SmallChange="{x:Bind ViewModel.LchChromaStep, Mode=OneWay}"
+						NumberFormatter="{x:Bind ViewModel.LchChromaFormatter, Mode=OneWay}"
+						x:Uid="NameChroma"
+						AutomationProperties.AutomationId="LchChromaValueBox"
+						Value="{x:Bind ViewModel.LchC, Mode=TwoWay}" />
+					<TextBlock VerticalAlignment="Center" Width="16" />
+				</StackPanel>
+			</Grid>
+
+			<!-- 色相 H(度, 0–360)。 -->
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="Auto" />
+				</Grid.ColumnDefinitions>
+				<TextBlock Grid.Column="0" Width="{StaticResource SliderLabelWidth}" VerticalAlignment="Center" Text="H" />
+				<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+					Grid.Column="1"
+					x:Uid="NameHue"
+					Minimum="0"
+					Maximum="1"
+					StepFrequency="0.0028"
+					LargeChange="0.0278"
+					Value="{x:Bind ViewModel.LchHNorm, Mode=TwoWay}"
+					TrackBrush="{x:Bind ViewModel.LchHueTrackBrush, Mode=OneWay}"
+					OutOfGamutSegments="{x:Bind ViewModel.LchHueGamut, Mode=OneWay}"
+					OutOfGamutStyle="{x:Bind ViewModel.OutOfRangeStyle, Mode=OneWay}" />
+				<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+					<controls:ExpandingNumberBox
+						FocusWidth="{StaticResource LchValueWidth}"
+						RestWidth="{StaticResource LchRestWidth}"
+						SpinButtonPlacementMode="Compact"
+						Minimum="0"
+						Maximum="360"
+						SmallChange="1"
+						NumberFormatter="{x:Bind helpers:NumberFormatters.Integer}"
+						x:Uid="NameHue"
+						AutomationProperties.AutomationId="LchHueValueBox"
+						Value="{x:Bind ViewModel.LchH, Mode=TwoWay}" />
+					<TextBlock VerticalAlignment="Center" Width="16" Text="°" />
+				</StackPanel>
+			</Grid>
+		</StackPanel>
+	</Grid>
+</UserControl>

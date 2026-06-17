@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+	x:Class="Irozukume.Views.HsvHslTabView"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:controls="using:Irozukume.Controls"
+	xmlns:helpers="using:Irozukume.Helpers"
+	mc:Ignorable="d">
+
+	<!-- 上段に色相環エリアと、その右の縦並びコントロール(HSV/HSL 切替・回転トグル)を置き、下段にスライダー群を置く。両行とも内容の高さに収め、内容は上端へ詰めて余白を下に集める。色相環はエリアの幅と、スライダー群を除いた残りの高さの小さい方へ正方形でコード側から合わせ、ウィンドウに追従して拡縮する。 -->
+	<Grid x:Name="LayoutRoot" RowSpacing="16">
+		<Grid.Resources>
+			<!-- スライダー行の数値入力欄の幅を揃える。ラベル列の幅は全スライダータブ共通の SliderLabelWidth を使う。単位記号(° や %)は入力欄の右に小さく添える。入力欄は ExpandingNumberBox で、普段は HsvRestWidth まで縮め、フォーカス時(スピンボタンのポップアップ時)に HsvValueWidth まで広げ、縮んだぶんは隣のスライダー列が伸びる。単位記号は固定幅(16)のスロットへ置き、° と % で幅が違っても各行の入力欄の左端がそろうようにする。 -->
+			<x:Double x:Key="HsvValueWidth">120</x:Double>
+			<x:Double x:Key="HsvRestWidth">72</x:Double>
+		</Grid.Resources>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
+		</Grid.RowDefinitions>
+
+		<!-- 上段: 色相環エリアと右の縦並びコントロール。 -->
+		<Grid Grid.Row="0" ColumnSpacing="16">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="Auto" />
+			</Grid.ColumnDefinitions>
+
+			<!-- 色相環エリア。利用可能な領域いっぱいに、正方形を保って拡縮する。色相環の実寸はコード側で領域の短辺へ合わせ、色相環・三角形の画像はその実寸と表示倍率に合わせて作り直す。 -->
+			<Grid
+				x:Name="RingArea"
+				Grid.Column="0"
+				SizeChanged="OnRingAreaSizeChanged">
+				<controls:RingSlider
+					x:Name="HueRing"
+					HorizontalAlignment="Center"
+					VerticalAlignment="Top"
+					x:Uid="NameHue"
+					Value="{x:Bind ViewModel.H, Mode=TwoWay}">
+
+					<!-- 中央には HSV の彩度・明度パッドと HSL の彩度・輝度三角形を重ねて置き、モードで表示を切り替える。 -->
+					<Grid>
+						<controls:PlanarPad
+							x:Name="SvPad"
+							x:Uid="HsvSvPad"
+							XValue="{x:Bind ViewModel.Saturation01, Mode=TwoWay}"
+							YValue="{x:Bind ViewModel.Value01, Mode=TwoWay}"
+							PadRotation="{x:Bind ViewModel.SvPadRotation, Mode=OneWay}">
+
+							<!-- 彩度(横: 左0→右1)と明度(縦: 下0→上1)の下地。滑らかな下地は XAML のグラデーションの重ね合わせ、Web セーフ限定のときは段階的に丸めたビットマップで描き、どちらを見せるかはコード側で切り替える。 -->
+							<Grid>
+								<!-- 滑らかな下地。下地は現在の色相、横に白→透明を重ねて左を白(彩度0)にし、縦に透明→黒を重ねて下を黒(明度0)にする。 -->
+								<Grid x:Name="SvGradientLayer">
+									<Rectangle Fill="{x:Bind ViewModel.SvBaseColorBrush, Mode=OneWay}" />
+									<Rectangle>
+										<Rectangle.Fill>
+											<LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+												<GradientStop Offset="0" Color="#FFFFFFFF" />
+												<GradientStop Offset="1" Color="#00FFFFFF" />
+											</LinearGradientBrush>
+										</Rectangle.Fill>
+									</Rectangle>
+									<Rectangle>
+										<Rectangle.Fill>
+											<LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+												<GradientStop Offset="0" Color="#00000000" />
+												<GradientStop Offset="1" Color="#FF000000" />
+											</LinearGradientBrush>
+										</Rectangle.Fill>
+									</Rectangle>
+								</Grid>
+
+								<!-- Web セーフ限定のときに見せる、段階的に丸めた下地。色相に依って塗りが変わるためコード側で画像を作って差し込む。 -->
+								<Image x:Name="SvImage" Stretch="Fill" Visibility="Collapsed" />
+							</Grid>
+						</controls:PlanarPad>
+
+						<controls:TrianglePad
+							x:Name="SlPad"
+							Visibility="Collapsed"
+							x:Uid="HsvSlPad"
+							XValue="{x:Bind ViewModel.HslSaturation01, Mode=TwoWay}"
+							YValue="{x:Bind ViewModel.Lightness01, Mode=TwoWay}"
+							PadRotation="{x:Bind ViewModel.SlPadRotation, Mode=OneWay}">
+
+							<!-- 純色・白・黒を頂点とする彩度・輝度の三角形。色相に依って塗りが変わるためコード側で画像を作って差し込む。 -->
+							<Image x:Name="TriangleImage" Stretch="Fill" />
+						</controls:TrianglePad>
+
+						<controls:PlanarPad
+							x:Name="HwbPad"
+							Visibility="Collapsed"
+							x:Uid="HsvHwbPad"
+							XValue="{x:Bind ViewModel.Whiteness01, Mode=TwoWay}"
+							YValue="{x:Bind ViewModel.HwbPadY, Mode=TwoWay}"
+							PadRotation="{x:Bind ViewModel.HwbPadRotation, Mode=OneWay}">
+
+							<!-- 白み(横: 左0→右1)と黒み(縦: 上0→下1)の正方形。純色を左上・白を右上・黒を左下・灰を右下に取り、白み+黒みが1を超える右下は灰へ退化する。色相に依って塗りが変わり、純色・白・黒の加法混合は重ねたグラデーションでは描けないため、コード側で画像を作って差し込む。 -->
+							<Image x:Name="HwbImage" Stretch="Fill" />
+						</controls:PlanarPad>
+					</Grid>
+				</controls:RingSlider>
+			</Grid>
+
+			<!-- 色相環の右に縦並びで、HSV/HSL 切替と回転トグルを置く。色相環の上端に揃える。既定の RadioButton・CheckBox は MinWidth(120) を持ち、短いラベルでも列の右に空きが出て色相環の幅を奪うため、この列では最小幅を外して内容の幅に詰める。 -->
+			<StackPanel
+				Grid.Column="1"
+				VerticalAlignment="Top"
+				Spacing="16">
+				<StackPanel.Resources>
+					<Style TargetType="RadioButton" BasedOn="{StaticResource DefaultRadioButtonStyle}">
+						<Setter Property="MinWidth" Value="0" />
+					</Style>
+					<Style TargetType="CheckBox" BasedOn="{StaticResource DefaultCheckBoxStyle}">
+						<Setter Property="MinWidth" Value="0" />
+					</Style>
+				</StackPanel.Resources>
+
+				<!-- HSV と HSL の切り替え。縦並びにする。色相環は共通で、中央のパッドとスライダー群だけ差し替える。 -->
+				<RadioButtons
+					x:Name="ModeSelector"
+					MaxColumns="1"
+					SelectedIndex="0"
+					SelectionChanged="OnModeChanged">
+					<!-- 各項目を RadioButton で直接置く(文字列項目だと外側の暗黙スタイルが RadioButtons の内部生成項目へ届かない)。RadioButton はテンプレート内部にラジオの丸を載せる固定高(32)の枠を持ち、MinHeight ではそれ未満へ縮められないため、上下に負のマージンを与えて行を寄せ、HSV/HSL/HWB の縦の間隔を狭める。 -->
+					<RadioButton Content="HSV" Margin="0,-3,0,-3" />
+					<RadioButton Content="HSL" Margin="0,-3,0,-3" />
+					<RadioButton Content="HWB" Margin="0,-3,0,-3" />
+				</RadioButtons>
+
+				<!-- 中央のパッドを色相環の位置に連動させて回すトグル。ラベルは短く、説明はツールチップに置く。 -->
+				<CheckBox
+					x:Uid="HsvFollow"
+					IsChecked="{x:Bind ViewModel.FollowHue, Mode=TwoWay}" />
+
+				<!-- HWB の白み+黒みを正規化(合計を100%以内へ畳む)するトグル。HWB モードのときだけ表示する。ラベルは短く、説明はツールチップに置く。 -->
+				<CheckBox
+					x:Name="NormalizeCheck"
+					Visibility="Collapsed"
+					x:Uid="HwbNormalize"
+					IsChecked="{x:Bind ViewModel.NormalizeHwb, Mode=TwoWay}" />
+			</StackPanel>
+		</Grid>
+
+		<!-- 下段: スライダー群。HSV と HSL を重ねて置き、モードで表示を切り替える。各行はラベル・スライダー・数値入力欄の3列で、入力欄の右に単位記号(° や %)を添える。この高さを差し引いて色相環の一辺を決めるため、名前で参照する。 -->
+		<Grid Grid.Row="1" x:Name="SliderHost">
+			<!-- HSV のスライダー群。色相環・パッドと同じ値に束縛し、どちらからでも操作できる。 -->
+			<StackPanel x:Name="HsvSliders" Spacing="{StaticResource SliderSpacing}">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+					<TextBlock Grid.Column="0" Width="{StaticResource SliderLabelWidth}" VerticalAlignment="Center" Text="H" />
+					<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+						Grid.Column="1"
+						x:Uid="NameHue"
+						Minimum="0"
+						Maximum="360"
+						StepFrequency="1"
+						Value="{x:Bind ViewModel.H, Mode=TwoWay}"
+						TrackBrush="{x:Bind ViewModel.HueTrackBrush, Mode=OneWay}" />
+					<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+						<controls:ExpandingNumberBox
+							FocusWidth="{StaticResource HsvValueWidth}"
+							RestWidth="{StaticResource HsvRestWidth}"
+							SpinButtonPlacementMode="Compact"
+							Minimum="0"
+							Maximum="360"
+							NumberFormatter="{x:Bind helpers:NumberFormatters.Integer}"
+							x:Uid="NameHue"
+							AutomationProperties.AutomationId="HsvHueValueBox"
+							Value="{x:Bind ViewModel.H, Mode=TwoWay}" />
+						<TextBlock VerticalAlignment="Center" Width="16" Text="°" />
+					</StackPanel>
+				</Grid>
+
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+					<TextBlock Grid.Column="0" Width="{StaticResource SliderLabelWidth}" VerticalAlignment="Center" Text="S" />
+					<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+						Grid.Column="1"
+						x:Uid="NameSaturation"
+						Minimum="0"
+						Maximum="1"
+						StepFrequency="0.01"
+						LargeChange="0.1"
+						Value="{x:Bind ViewModel.Saturation01, Mode=TwoWay}"
+						TrackBrush="{x:Bind ViewModel.SaturationTrackBrush, Mode=OneWay}" />
+					<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+						<controls:ExpandingNumberBox
+							FocusWidth="{StaticResource HsvValueWidth}"
+							RestWidth="{StaticResource HsvRestWidth}"
+							SpinButtonPlacementMode="Compact"
+							Minimum="0"
+							Maximum="100"
+							NumberFormatter="{x:Bind helpers:NumberFormatters.Integer}"
+							x:Uid="NameSaturation"
+							AutomationProperties.AutomationId="SaturationValueBox"
+							Value="{x:Bind ViewModel.S, Mode=TwoWay}" />
+						<TextBlock VerticalAlignment="Center" Width="16" Text="%" />
+					</StackPanel>
+				</Grid>
+
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+					<TextBlock Grid.Column="0" Width="{StaticResource SliderLabelWidth}" VerticalAlignment="Center" Text="V" />
+					<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+						Grid.Column="1"
+						x:Uid="NameValue"
+						Minimum="0"
+						Maximum="1"
+						StepFrequency="0.01"
+						LargeChange="0.1"
+						Value="{x:Bind ViewModel.Value01, Mode=TwoWay}"
+						TrackBrush="{x:Bind ViewModel.ValueTrackBrush, Mode=OneWay}" />
+					<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+						<controls:ExpandingNumberBox
+							FocusWidth="{StaticResource HsvValueWidth}"
+							RestWidth="{StaticResource HsvRestWidth}"
+							SpinButtonPlacementMode="Compact"
+							Minimum="0"
+							Maximum="100"
+							NumberFormatter="{x:Bind helpers:NumberFormatters.Integer}"
+							x:Uid="NameValue"
+							AutomationProperties.AutomationId="ValueValueBox"
+							Value="{x:Bind ViewModel.V, Mode=TwoWay}" />
+						<TextBlock VerticalAlignment="Center" Width="16" Text="%" />
+					</StackPanel>
+				</Grid>
+			</StackPanel>
+
+			<!-- HSL のスライダー群。色相環・三角形パッドと同じ値に束縛し、どちらからでも操作できる。 -->
+			<StackPanel x:Name="HslSliders" Visibility="Collapsed" Spacing="{StaticResource SliderSpacing}">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+					<TextBlock Grid.Column="0" Width="{StaticResource SliderLabelWidth}" VerticalAlignment="Center" Text="H" />
+					<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+						Grid.Column="1"
+						x:Uid="NameHue"
+						Minimum="0"
+						Maximum="360"
+						StepFrequency="1"
+						Value="{x:Bind ViewModel.H, Mode=TwoWay}"
+						TrackBrush="{x:Bind ViewModel.HueTrackBrush, Mode=OneWay}" />
+					<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+						<controls:ExpandingNumberBox
+							FocusWidth="{StaticResource HsvValueWidth}"
+							RestWidth="{StaticResource HsvRestWidth}"
+							SpinButtonPlacementMode="Compact"
+							Minimum="0"
+							Maximum="360"
+							NumberFormatter="{x:Bind helpers:NumberFormatters.Integer}"
+							x:Uid="NameHue"
+							AutomationProperties.AutomationId="HslHueValueBox"
+							Value="{x:Bind ViewModel.H, Mode=TwoWay}" />
+						<TextBlock VerticalAlignment="Center" Width="16" Text="°" />
+					</StackPanel>
+				</Grid>
+
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+					<TextBlock Grid.Column="0" Width="{StaticResource SliderLabelWidth}" VerticalAlignment="Center" Text="S" />
+					<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+						Grid.Column="1"
+						x:Uid="NameSaturation"
+						Minimum="0"
+						Maximum="1"
+						StepFrequency="0.01"
+						LargeChange="0.1"
+						Value="{x:Bind ViewModel.HslSaturation01, Mode=TwoWay}"
+						TrackBrush="{x:Bind ViewModel.HslSaturationTrackBrush, Mode=OneWay}" />
+					<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+						<controls:ExpandingNumberBox
+							FocusWidth="{StaticResource HsvValueWidth}"
+							RestWidth="{StaticResource HsvRestWidth}"
+							SpinButtonPlacementMode="Compact"
+							Minimum="0"
+							Maximum="100"
+							NumberFormatter="{x:Bind helpers:NumberFormatters.Integer}"
+							x:Uid="NameSaturation"
+							AutomationProperties.AutomationId="HslSaturationValueBox"
+							Value="{x:Bind ViewModel.HslS, Mode=TwoWay}" />
+						<TextBlock VerticalAlignment="Center" Width="16" Text="%" />
+					</StackPanel>
+				</Grid>
+
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+					<TextBlock Grid.Column="0" Width="{StaticResource SliderLabelWidth}" VerticalAlignment="Center" Text="L" />
+					<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+						Grid.Column="1"
+						x:Uid="NameLightness"
+						Minimum="0"
+						Maximum="1"
+						StepFrequency="0.01"
+						LargeChange="0.1"
+						Value="{x:Bind ViewModel.Lightness01, Mode=TwoWay}"
+						TrackBrush="{x:Bind ViewModel.LightnessTrackBrush, Mode=OneWay}" />
+					<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+						<controls:ExpandingNumberBox
+							FocusWidth="{StaticResource HsvValueWidth}"
+							RestWidth="{StaticResource HsvRestWidth}"
+							SpinButtonPlacementMode="Compact"
+							Minimum="0"
+							Maximum="100"
+							NumberFormatter="{x:Bind helpers:NumberFormatters.Integer}"
+							x:Uid="NameLightness"
+							AutomationProperties.AutomationId="LightnessValueBox"
+							Value="{x:Bind ViewModel.HslL, Mode=TwoWay}" />
+						<TextBlock VerticalAlignment="Center" Width="16" Text="%" />
+					</StackPanel>
+				</Grid>
+			</StackPanel>
+
+			<!-- HWB のスライダー群。色相環・正方形パッドと同じ値に束縛し、どちらからでも操作できる。B のラベルは Blackness の B で、HSV/HSL の各成分とは別物。 -->
+			<StackPanel x:Name="HwbSliders" Visibility="Collapsed" Spacing="{StaticResource SliderSpacing}">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+					<TextBlock Grid.Column="0" Width="{StaticResource SliderLabelWidth}" VerticalAlignment="Center" Text="H" />
+					<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+						Grid.Column="1"
+						x:Uid="NameHue"
+						Minimum="0"
+						Maximum="360"
+						StepFrequency="1"
+						Value="{x:Bind ViewModel.H, Mode=TwoWay}"
+						TrackBrush="{x:Bind ViewModel.HueTrackBrush, Mode=OneWay}" />
+					<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+						<controls:ExpandingNumberBox
+							FocusWidth="{StaticResource HsvValueWidth}"
+							RestWidth="{StaticResource HsvRestWidth}"
+							SpinButtonPlacementMode="Compact"
+							Minimum="0"
+							Maximum="360"
+							NumberFormatter="{x:Bind helpers:NumberFormatters.Integer}"
+							x:Uid="NameHue"
+							AutomationProperties.AutomationId="HwbHueValueBox"
+							Value="{x:Bind ViewModel.H, Mode=TwoWay}" />
+						<TextBlock VerticalAlignment="Center" Width="16" Text="°" />
+					</StackPanel>
+				</Grid>
+
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+					<TextBlock Grid.Column="0" Width="{StaticResource SliderLabelWidth}" VerticalAlignment="Center" Text="W" />
+					<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+						Grid.Column="1"
+						x:Uid="NameWhiteness"
+						Minimum="0"
+						Maximum="1"
+						StepFrequency="0.01"
+						LargeChange="0.1"
+						Value="{x:Bind ViewModel.Whiteness01, Mode=TwoWay}"
+						TrackBrush="{x:Bind ViewModel.WhitenessTrackBrush, Mode=OneWay}" />
+					<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+						<controls:ExpandingNumberBox
+							FocusWidth="{StaticResource HsvValueWidth}"
+							RestWidth="{StaticResource HsvRestWidth}"
+							SpinButtonPlacementMode="Compact"
+							Minimum="0"
+							Maximum="100"
+							NumberFormatter="{x:Bind helpers:NumberFormatters.Integer}"
+							x:Uid="NameWhiteness"
+							AutomationProperties.AutomationId="WhitenessValueBox"
+							Value="{x:Bind ViewModel.HwbW, Mode=TwoWay}" />
+						<TextBlock VerticalAlignment="Center" Width="16" Text="%" />
+					</StackPanel>
+				</Grid>
+
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+					<TextBlock Grid.Column="0" Width="{StaticResource SliderLabelWidth}" VerticalAlignment="Center" Text="B" />
+					<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+						Grid.Column="1"
+						x:Uid="NameBlackness"
+						Minimum="0"
+						Maximum="1"
+						StepFrequency="0.01"
+						LargeChange="0.1"
+						Value="{x:Bind ViewModel.Blackness01, Mode=TwoWay}"
+						TrackBrush="{x:Bind ViewModel.BlacknessTrackBrush, Mode=OneWay}" />
+					<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+						<controls:ExpandingNumberBox
+							FocusWidth="{StaticResource HsvValueWidth}"
+							RestWidth="{StaticResource HsvRestWidth}"
+							SpinButtonPlacementMode="Compact"
+							Minimum="0"
+							Maximum="100"
+							NumberFormatter="{x:Bind helpers:NumberFormatters.Integer}"
+							x:Uid="NameBlackness"
+							AutomationProperties.AutomationId="BlacknessValueBox"
+							Value="{x:Bind ViewModel.HwbB, Mode=TwoWay}" />
+						<TextBlock VerticalAlignment="Center" Width="16" Text="%" />
+					</StackPanel>
+				</Grid>
+			</StackPanel>
+		</Grid>
+	</Grid>
+</UserControl>

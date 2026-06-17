@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+	x:Class="Irozukume.Views.ContrastMatrixWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	mc:Ignorable="d">
+
+	<Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="12" RowSpacing="12">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="*" />
+		</Grid.RowDefinitions>
+
+		<!-- ツールバー: サンプル文字の入力欄・定型文メニュー・色覚シミュレーションのメニュー・斜線トグルを横一列に置く。入力欄はテキストモードのコントラスト確認欄と同じ文字列を双方向で編集し、各セルのサンプル字へ反映される。定型文メニューはよく使う見本文を入力欄へ流し込む。色覚と斜線は場所を取らないようアイコンだけにし、意味はツールチップで伝える。入力欄・メニュー・トグルの値は共有モデルに持ち、設定に永続化される。 -->
+		<Border
+			Grid.Row="0"
+			Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+			BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+			BorderThickness="1"
+			CornerRadius="8"
+			Padding="4">
+			<Grid ColumnSpacing="8">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="Auto" />
+				</Grid.ColumnDefinitions>
+				<TextBox
+					x:Uid="MatrixSampleText"
+					Grid.Column="0"
+					VerticalAlignment="Center"
+					Text="{x:Bind ViewModel.ContrastSampleText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+				<!-- 定型文メニュー。見本文そのものは言語に依らず固定(Lorem ipsum はラテン語のダミー文、fox は全アルファベットを含むパングラム、イーハトーヴォは日本語の見本の定番)のため、項目の見出しも多言語化せず冒頭をそのまま見せる。 -->
+				<DropDownButton
+					x:Uid="MatrixSamplePresets"
+					Grid.Column="1"
+					Background="Transparent"
+					BorderThickness="0"
+					Padding="10,6"
+					VerticalAlignment="Center">
+					<FontIcon Glyph="&#xE8D2;" FontSize="14" />
+					<DropDownButton.Flyout>
+						<MenuFlyout Placement="Bottom">
+							<MenuFlyoutItem Tag="lorem" Text="Lorem ipsum…" Click="OnSamplePresetClick" />
+							<MenuFlyoutItem Tag="fox" Text="The quick brown fox…" Click="OnSamplePresetClick" />
+							<MenuFlyoutItem Tag="ihatovo" Text="あのイーハトーヴォ…" Click="OnSamplePresetClick" />
+						</MenuFlyout>
+					</DropDownButton.Flyout>
+				</DropDownButton>
+				<!-- 色覚シミュレーションの切り替え。選んだ色覚でセルの文字と背景の見え方が行列全体で切り替わる。ヘッダーの色チップとコントラスト比・AA/AAA の判定はフルカラーの値のまま。ボタン部はオン/オフのトグル(オンは直前に選んだ種別へ復帰、点灯でシミュレーション中を示す)、矢印部のメニューで種別を正確に選ぶ。排他のチェックは RadioMenuFlyoutItem の GroupName が担い、識別はタブと同じく Tag の安定キーで行う。起動時はコード側が保存値に合わせて点灯と項目のチェックを入れる。 -->
+				<ToggleSplitButton
+					x:Name="VisionToggle"
+					x:Uid="MatrixVisionSelector"
+					Grid.Column="2"
+					Background="Transparent"
+					VerticalAlignment="Center"
+					IsCheckedChanged="OnVisionToggleChanged">
+					<FontIcon FontFamily="ms-appx:///Assets/Fonts/romoji.ttf#Romoji" Glyph="&#xE001;" FontSize="14" />
+					<ToggleSplitButton.Flyout>
+						<MenuFlyout Placement="Bottom">
+							<RadioMenuFlyoutItem x:Name="VisionProtanItem" x:Uid="VisionProtan" GroupName="MatrixVision" Tag="protan" Click="OnVisionMenuClick">
+								<RadioMenuFlyoutItem.Icon>
+									<FontIcon FontFamily="ms-appx:///Assets/Fonts/romoji.ttf#Romoji" Glyph="&#xE00F;" />
+								</RadioMenuFlyoutItem.Icon>
+							</RadioMenuFlyoutItem>
+							<RadioMenuFlyoutItem x:Name="VisionDeutanItem" x:Uid="VisionDeutan" GroupName="MatrixVision" Tag="deutan" Click="OnVisionMenuClick">
+								<RadioMenuFlyoutItem.Icon>
+									<FontIcon FontFamily="ms-appx:///Assets/Fonts/romoji.ttf#Romoji" Glyph="&#xE00E;" />
+								</RadioMenuFlyoutItem.Icon>
+							</RadioMenuFlyoutItem>
+							<RadioMenuFlyoutItem x:Name="VisionTritanItem" x:Uid="VisionTritan" GroupName="MatrixVision" Tag="tritan" Click="OnVisionMenuClick">
+								<RadioMenuFlyoutItem.Icon>
+									<FontIcon FontFamily="ms-appx:///Assets/Fonts/romoji.ttf#Romoji" Glyph="&#xE010;" />
+								</RadioMenuFlyoutItem.Icon>
+							</RadioMenuFlyoutItem>
+							<RadioMenuFlyoutItem x:Name="VisionMonochromacyItem" x:Uid="VisionMonochromacy" GroupName="MatrixVision" Tag="monochromacy" Click="OnVisionMenuClick" />
+						</MenuFlyout>
+					</ToggleSplitButton.Flyout>
+				</ToggleSplitButton>
+				<!-- 色覚シミュレーションの強さ(severity)。色相系(P型・D型・T型)を選んでいる間だけ出す。サイドバーの強さスライダーと値を共有し、行列のセルの見え方へ共通で効く。1色覚・フルカラーのときは隠す。 -->
+				<Slider
+					x:Uid="VisionSeveritySlider"
+					Grid.Column="3"
+					Width="120"
+					VerticalAlignment="Center"
+					Minimum="0"
+					Maximum="1"
+					StepFrequency="0.01"
+					SmallChange="0.01"
+					LargeChange="0.1"
+					IsThumbToolTipEnabled="False"
+					Visibility="{x:Bind ViewModel.MatrixVisionSeverityVisibility, Mode=OneWay}"
+					Value="{x:Bind ViewModel.VisionSeverity, Mode=TwoWay}" />
+				<ToggleButton
+					x:Uid="MatrixHatchToggle"
+					Grid.Column="4"
+					Background="Transparent"
+					BorderThickness="0"
+					Padding="10,6"
+					IsChecked="{x:Bind ViewModel.MatrixHatchFails, Mode=TwoWay}">
+					<FontIcon FontFamily="ms-appx:///Assets/Fonts/romoji.ttf#Romoji" Glyph="&#xE00D;" FontSize="14" />
+				</ToggleButton>
+			</Grid>
+		</Border>
+
+		<!-- 全色×全色のコントラスト比を一覧する行列。行が文字色、列が背景色。中身は件数に合わせてコード側(RebuildMatrix)が組み立てる。 -->
+		<Grid x:Name="MatrixGrid" Grid.Row="1" RowSpacing="6" ColumnSpacing="6" />
+
+		<!-- ドラッグ中の拡大つまみ(ルーペ)を最前面で描くための透明オーバーレイ。メインウィンドウとは別の XamlRoot のため、このウィンドウ用に1枚持つ。RootGrid 直下の最後の子に置いて全行を覆い、入力は奪わない。読み込み後にコード側で LensOverlayService へ登録する。 -->
+		<Canvas
+			x:Name="LensOverlay"
+			Grid.Row="0"
+			Grid.RowSpan="2"
+			IsHitTestVisible="False" />
+	</Grid>
+</Window>

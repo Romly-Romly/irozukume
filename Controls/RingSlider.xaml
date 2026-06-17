@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:controls="using:Irozukume.Controls">
+
+	<!-- 環状スライダーの暗黙スタイル。リングの塗りは TrackBrush で受け、中央は ContentPresenter として空け、つまみはコードで環の上へ移動する。帯の上での押下だけを操作対象にするため、塗りとつまみは当たり判定を持たず、操作はコントロール全体で受ける。中央の Content は独立して入力を受けられる。 -->
+	<Style TargetType="controls:RingSlider">
+		<Setter Property="HorizontalAlignment" Value="Stretch" />
+		<Setter Property="VerticalAlignment" Value="Stretch" />
+		<Setter Property="HorizontalContentAlignment" Value="Center" />
+		<Setter Property="VerticalContentAlignment" Value="Center" />
+		<Setter Property="IsTabStop" Value="True" />
+		<Setter Property="UseSystemFocusVisuals" Value="True" />
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="controls:RingSlider">
+					<Grid
+						x:Name="PART_Root"
+						Background="Transparent"
+						Control.IsTemplateFocusTarget="True">
+
+						<!-- リングの塗り。色相環画像などを利用側が TrackBrush で与える。視覚のみで当たり判定は持たせない。 -->
+						<Rectangle
+							Fill="{TemplateBinding TrackBrush}"
+							IsHitTestVisible="False" />
+
+						<!-- 中央の空き。2次元スライダー等を Content に置ける。 -->
+						<ContentPresenter
+							HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+							VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+							Content="{TemplateBinding Content}"
+							ContentTemplate="{TemplateBinding ContentTemplate}" />
+
+						<!-- つまみ。中央に置き、コードで環の上へ平行移動する。中空リングで下の色を透かし、明暗どちらの背景でも縁が見えるよう白の内側に半透明の暗い縁を重ねる。視覚のみで、操作はコントロール全体で受ける。 -->
+						<Grid
+							x:Name="PART_Thumb"
+							Width="{TemplateBinding ThumbDiameter}"
+							Height="{TemplateBinding ThumbDiameter}"
+							HorizontalAlignment="Center"
+							VerticalAlignment="Center"
+							IsHitTestVisible="False">
+							<Ellipse Stroke="#80000000" StrokeThickness="4" />
+							<Ellipse Stroke="White" StrokeThickness="2" />
+						</Grid>
+
+						<!-- ドラッグ中だけ現れるレンズ(ルーペ)の置き場。背後の色相環を拡大・屈折・色収差して見せる。中身と位置はコードから組む。Canvas は子をクリップしないため、つまみより大きなレンズが帯の外へはみ出して描ける。 -->
+						<Canvas x:Name="PART_Lens" IsHitTestVisible="False" />
+					</Grid>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
+</ResourceDictionary>

@@ -1,0 +1,1176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+		<xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+		<xsd:element name="root" msdata:IsDataSet="true">
+			<xsd:complexType>
+				<xsd:choice maxOccurs="unbounded">
+					<xsd:element name="metadata">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" />
+							</xsd:sequence>
+							<xsd:attribute name="name" use="required" type="xsd:string" />
+							<xsd:attribute name="type" type="xsd:string" />
+							<xsd:attribute name="mimetype" type="xsd:string" />
+							<xsd:attribute ref="xml:space" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="assembly">
+						<xsd:complexType>
+							<xsd:attribute name="alias" type="xsd:string" />
+							<xsd:attribute name="name" type="xsd:string" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="data">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+								<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+							<xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+							<xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+							<xsd:attribute ref="xml:space" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="resheader">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" use="required" />
+						</xsd:complexType>
+					</xsd:element>
+				</xsd:choice>
+			</xsd:complexType>
+		</xsd:element>
+	</xsd:schema>
+	<resheader name="resmimetype">
+		<value>text/microsoft-resx</value>
+	</resheader>
+	<resheader name="version">
+		<value>2.0</value>
+	</resheader>
+	<resheader name="reader">
+		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<resheader name="writer">
+		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+
+	<!-- MainWindow: メニューバー -->
+	<data name="MenuFile.Title" xml:space="preserve">
+		<value>ファイル</value>
+	</data>
+	<data name="MenuClose.Text" xml:space="preserve">
+		<value>閉じる</value>
+	</data>
+	<data name="SidebarSplitter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>サイドバーの幅を調整</value>
+	</data>
+	<data name="TitleBarIcon.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>システムメニュー</value>
+	</data>
+	<data name="MenuExit.Text" xml:space="preserve">
+		<value>終了</value>
+	</data>
+	<data name="MenuEdit.Title" xml:space="preserve">
+		<value>編集</value>
+	</data>
+	<data name="MenuUndo.Text" xml:space="preserve">
+		<value>元に戻す</value>
+	</data>
+	<data name="MenuRedo.Text" xml:space="preserve">
+		<value>やり直し</value>
+	</data>
+	<data name="MenuCopyFormat.Text" xml:space="preserve">
+		<value>形式を選択してコピー</value>
+	</data>
+	<data name="MenuCopyFormatWeb.Text" xml:space="preserve">
+		<value>形式を選択してコピー(Web)</value>
+	</data>
+	<data name="MenuCopyTermReset.Text" xml:space="preserve">
+		<value>末尾にリセットを付ける</value>
+	</data>
+	<data name="MenuPaste.Text" xml:space="preserve">
+		<value>貼り付け</value>
+	</data>
+	<data name="MenuPasteSwitchTab.Text" xml:space="preserve">
+		<value>貼り付け時にタブを切り替える</value>
+	</data>
+	<data name="MenuColor.Title" xml:space="preserve">
+		<value>色</value>
+	</data>
+	<data name="MenuBlackWhite.Text" xml:space="preserve">
+		<value>黒白</value>
+	</data>
+	<data name="MenuMakeOpaque.Text" xml:space="preserve">
+		<value>すべての色を不透明にする</value>
+	</data>
+	<data name="MenuAddFavorite.Text" xml:space="preserve">
+		<value>お気に入りに追加</value>
+	</data>
+	<data name="MenuRandom.Text" xml:space="preserve">
+		<value>完全ランダム</value>
+	</data>
+	<data name="MenuRandomLightness.Text" xml:space="preserve">
+		<value>明度を揃えてランダム</value>
+	</data>
+	<data name="MenuRandomChroma.Text" xml:space="preserve">
+		<value>彩度を揃えてランダム</value>
+	</data>
+	<data name="MenuRandomHue.Text" xml:space="preserve">
+		<value>色相を揃えてランダム</value>
+	</data>
+	<data name="MenuRandomContrast.Text" xml:space="preserve">
+		<value>コントラストを確保してランダム</value>
+	</data>
+	<data name="MenuView.Title" xml:space="preserve">
+		<value>表示</value>
+	</data>
+	<data name="MenuNextTab.Text" xml:space="preserve">
+		<value>次のタブ</value>
+	</data>
+	<data name="MenuPrevTab.Text" xml:space="preserve">
+		<value>前のタブ</value>
+	</data>
+	<data name="MenuShowActualColor.Text" xml:space="preserve">
+		<value>スライダーを実際の色で表示</value>
+	</data>
+	<data name="MenuShowActualColor.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>各スライダーのトラックを、編集中の色を反映した実際の色のグラデーションで描きます。オフのときは成分ごとの変化だけを示す既定のグラデーションになります。</value>
+	</data>
+	<data name="MenuShowContrastText.Text" xml:space="preserve">
+		<value>コントラスト確認モード</value>
+	</data>
+	<data name="MenuShowAlpha.Text" xml:space="preserve">
+		<value>アルファ値スライダーを表示</value>
+	</data>
+	<data name="MenuShowToolbarCaption.Text" xml:space="preserve">
+		<value>ツールバーのキャプションを表示</value>
+	</data>
+	<data name="MenuContrastMatrix.Text" xml:space="preserve">
+		<value>コントラストマトリックス</value>
+	</data>
+	<data name="AppName" xml:space="preserve">
+		<value>イロヅクメ</value>
+	</data>
+	<data name="MatrixWindowTitle" xml:space="preserve">
+		<value>コントラストマトリックス - イロヅクメ</value>
+	</data>
+	<data name="MatrixCornerLabel" xml:space="preserve">
+		<value>文字色＼背景色</value>
+	</data>
+	<data name="MatrixSampleText.PlaceholderText" xml:space="preserve">
+		<value>サンプル文字を入力</value>
+	</data>
+	<data name="MatrixSampleText.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>サンプル文字 (各セルとコントラスト確認欄に反映)</value>
+	</data>
+	<data name="MatrixSamplePresets.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>サンプル文字の定型文</value>
+	</data>
+	<data name="MatrixSamplePresets.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>サンプル文字の定型文</value>
+	</data>
+	<data name="MatrixHatchToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>AA を満たさない組み合わせに斜線を重ねる</value>
+	</data>
+	<data name="MatrixHatchToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>不適合 (AA未満) を斜線で表示</value>
+	</data>
+	<data name="MatrixVisionSelector.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>色覚シミュレーションのオン/オフ (▼で種別を選択)</value>
+	</data>
+	<data name="MatrixVisionSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色覚シミュレーション</value>
+	</data>
+	<data name="MenuContrastIncludeAlpha.Text" xml:space="preserve">
+		<value>コントラストに不透明度を反映</value>
+	</data>
+	<data name="MenuVisionSubmenu.Text" xml:space="preserve">
+		<value>色覚シミュレーション</value>
+	</data>
+	<data name="VisionProtan.Text" xml:space="preserve">
+		<value>1型色覚</value>
+	</data>
+	<data name="VisionDeutan.Text" xml:space="preserve">
+		<value>2型色覚</value>
+	</data>
+	<data name="VisionTritan.Text" xml:space="preserve">
+		<value>3型色覚</value>
+	</data>
+	<data name="VisionMonochromacy.Text" xml:space="preserve">
+		<value>1色覚</value>
+	</data>
+	<data name="VisionSeverityIcon.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>色覚シミュレーションの強さ (0=正常、100%=完全な2色覚)。P型・D型・T型に共通。</value>
+	</data>
+	<data name="VisionSeverityIcon.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色覚シミュレーションの強さ</value>
+	</data>
+	<data name="VisionSeveritySlider.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>色覚の弱まりの強さ (0=正常、100%=完全な2色覚)</value>
+	</data>
+	<data name="VisionSeveritySlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色覚シミュレーションの強さ</value>
+	</data>
+	<data name="VisionClearAll.Text" xml:space="preserve">
+		<value>全て解除</value>
+	</data>
+	<data name="MenuLimitNone.Text" xml:space="preserve">
+		<value>色を制限しない</value>
+	</data>
+	<data name="MenuLimitSubmenu.Text" xml:space="preserve">
+		<value>色を制限する</value>
+	</data>
+	<data name="MenuLimitWebSafe.Text" xml:space="preserve">
+		<value>Webセーフカラー (216色)</value>
+	</data>
+	<data name="MenuLimitRgb565.Text" xml:space="preserve">
+		<value>RGB565 (65536色)</value>
+	</data>
+	<data name="MenuLimitRgb555.Text" xml:space="preserve">
+		<value>RGB555 (32768色)</value>
+	</data>
+	<data name="MenuLimitRgb444.Text" xml:space="preserve">
+		<value>RGB444 (4096色)</value>
+	</data>
+	<data name="MenuLimitRgb332.Text" xml:space="preserve">
+		<value>RGB332 (256色)</value>
+	</data>
+	<data name="MenuLimitTerm256.Text" xml:space="preserve">
+		<value>ターミナル 256色</value>
+	</data>
+	<data name="MenuLimitTerm16.Text" xml:space="preserve">
+		<value>ターミナル 16色</value>
+	</data>
+	<data name="MenuLimitTerm8.Text" xml:space="preserve">
+		<value>ターミナル 8色</value>
+	</data>
+	<data name="MenuOpenSettings.Text" xml:space="preserve">
+		<value>設定</value>
+	</data>
+	<data name="SettingsPageHeader.Text" xml:space="preserve">
+		<value>設定</value>
+	</data>
+
+	<!-- サイドバーの色パネル: ツールチップとアクセシビリティ名 -->
+	<data name="SwatchColorN" xml:space="preserve">
+		<value>色 {0}</value>
+	</data>
+	<data name="SwatchAlphaPreview.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>クリックでアルファを編集</value>
+	</data>
+	<data name="SwatchAlphaPreview.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>不透明度プレビュー クリックでこの色をアクティブにしてアルファタブへ移動</value>
+	</data>
+	<data name="SwatchToolDelete.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>この色を削除</value>
+	</data>
+	<data name="SwatchToolDelete.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>この色を削除</value>
+	</data>
+	<data name="SwatchToolAdd.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>下に色を追加</value>
+	</data>
+	<data name="SwatchToolAdd.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>下に色を追加</value>
+	</data>
+	<data name="SwatchToolFavorite.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>この色をお気に入りに追加</value>
+	</data>
+	<data name="SwatchToolFavorite.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>この色をお気に入りに追加</value>
+	</data>
+	<data name="SwatchHexEdit.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>クリックして16進数を編集</value>
+	</data>
+	<data name="SwatchHexEdit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>16進数。クリックで編集。</value>
+	</data>
+	<data name="SwatchHexEditHeader.Text" xml:space="preserve">
+		<value>16進数を編集</value>
+	</data>
+	<data name="SwatchHexEditBox.PlaceholderText" xml:space="preserve">
+		<value>#RRGGBB</value>
+	</data>
+	<data name="SwatchHexEditBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>16進数</value>
+	</data>
+	<data name="SwatchHexEditError.Text" xml:space="preserve">
+		<value>色として解釈できません</value>
+	</data>
+	<data name="SwatchHexEditApply.Content" xml:space="preserve">
+		<value>適用</value>
+	</data>
+	<!-- サイドバーの色パネルの右クリックメニュー (コードから組み立てるためフラットキー) -->
+	<data name="Ctx_CopyFormatWeb" xml:space="preserve">
+		<value>形式を選択してコピー(Web)</value>
+	</data>
+	<data name="Ctx_CopyFormat" xml:space="preserve">
+		<value>形式を選択してコピー</value>
+	</data>
+	<data name="Ctx_TermReset" xml:space="preserve">
+		<value>末尾にリセットを付ける</value>
+	</data>
+	<data name="Ctx_Paste" xml:space="preserve">
+		<value>貼り付け</value>
+	</data>
+	<data name="Ctx_Random" xml:space="preserve">
+		<value>ランダム</value>
+	</data>
+	<data name="Ctx_AddFavorite" xml:space="preserve">
+		<value>お気に入りに追加</value>
+	</data>
+	<data name="SwatchColor2.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>背景色</value>
+	</data>
+	<data name="SwatchColor2.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>背景色</value>
+	</data>
+	<data name="ContrastTextRoleLabel.Text" xml:space="preserve">
+		<value>文字色</value>
+	</data>
+	<data name="SwatchRoleSwap.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>文字色と背景色を入れ替え (X)</value>
+	</data>
+	<data name="SwatchRoleSwap.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>文字色と背景色を入れ替え</value>
+	</data>
+	<data name="ContrastBgRoleLabel.Text" xml:space="preserve">
+		<value>背景色</value>
+	</data>
+	<data name="ContrastSampleDefault" xml:space="preserve">
+		<value>コントラスト確認 Ag 永 0123</value>
+	</data>
+	<data name="ContrastSampleText.PlaceholderText" xml:space="preserve">
+		<value>文字を入力</value>
+	</data>
+	<data name="ContrastSampleText.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>コントラスト確認用テキスト (文字色・背景色は上の役選択で選ぶ)</value>
+	</data>
+	<data name="ContrastSlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>コントラスト</value>
+	</data>
+	<data name="ContrastDarkLabel.Text" xml:space="preserve">
+		<value>暗</value>
+	</data>
+	<data name="ContrastLightLabel.Text" xml:space="preserve">
+		<value>明</value>
+	</data>
+
+	<!-- MainWindow: ツールバー -->
+	<data name="ToolbarRefresh.Text" xml:space="preserve">
+		<value>再取得</value>
+	</data>
+	<data name="ToolbarShowText.Text" xml:space="preserve">
+		<value>コントラスト</value>
+	</data>
+	<data name="ToolbarShowAlpha.Text" xml:space="preserve">
+		<value>アルファ</value>
+	</data>
+	<data name="ToolbarShowAlphaButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>アルファ値スライダーの表示</value>
+	</data>
+	<data name="ToolbarMatrix.Text" xml:space="preserve">
+		<value>マトリックス</value>
+	</data>
+	<data name="ToolbarMatrixButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>コントラストマトリックスウィンドウの表示 (Ctrl+M)</value>
+	</data>
+	<data name="ToolbarVision.Text" xml:space="preserve">
+		<value>色覚</value>
+	</data>
+	<data name="ToolbarLimit.Text" xml:space="preserve">
+		<value>色制限</value>
+	</data>
+	<data name="ToolbarLimitButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色制限</value>
+	</data>
+	<data name="ToolbarLimitButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>色制限</value>
+	</data>
+	<data name="ToolbarVisionButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>色覚シミュレーションの表示</value>
+	</data>
+	<data name="ToolbarVisionButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色覚シミュレーション</value>
+	</data>
+	<data name="ToolbarShowTextButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>コントラスト確認モード</value>
+	</data>
+	<data name="ToolbarAddFavorite.Text" xml:space="preserve">
+		<value>追加</value>
+	</data>
+	<data name="ToolbarAddFavoriteButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>現在の色を1つのお気に入りパレットとして保存 (Ctrl+D)</value>
+	</data>
+	<data name="ToolbarOverflowButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>その他</value>
+	</data>
+	<data name="ToolbarOverflowButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>その他</value>
+	</data>
+
+	<!-- MainWindow: タブ見出し(言語非依存のものを除く) -->
+	<data name="TabPalette.Text" xml:space="preserve">
+		<value>パレット</value>
+	</data>
+	<data name="TabPalette.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>パレット (Ctrl+6)</value>
+	</data>
+	<data name="TabMix.Text" xml:space="preserve">
+		<value>ミックス</value>
+	</data>
+	<data name="TabMix.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>ミックス (Ctrl+7)</value>
+	</data>
+	<data name="TabHarmony.Text" xml:space="preserve">
+		<value>配色</value>
+	</data>
+	<data name="TabHarmony.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>配色 (Ctrl+8)</value>
+	</data>
+	<data name="HarmonySchemeLabel.Text" xml:space="preserve">
+		<value>配色の種類</value>
+	</data>
+	<data name="HarmonyComplementary.Content" xml:space="preserve">
+		<value>補色（コンプリメンタリー）</value>
+	</data>
+	<data name="HarmonyComplementary.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>色相環で正反対(180度)の2色。最も対比の強い組み合わせ。</value>
+	</data>
+	<data name="HarmonyAnalogous.Content" xml:space="preserve">
+		<value>類似色（アナロジー）</value>
+	</data>
+	<data name="HarmonyAnalogous.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>基準色から同じ向きへ30度ずつ離れた隣り合う色(最大5色)。まとまりのある穏やかな配色。</value>
+	</data>
+	<data name="HarmonyTriadic.Content" xml:space="preserve">
+		<value>トライアード</value>
+	</data>
+	<data name="HarmonyTriadic.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>色相環を三等分した3色(120度間隔)。鮮やかで均衡のとれた配色。</value>
+	</data>
+	<data name="HarmonySplitComplementary.Content" xml:space="preserve">
+		<value>分裂補色（スプリット・コンプリメンタリー）</value>
+	</data>
+	<data name="HarmonySplitComplementary.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>補色の手前で左右に割った3色(150度・210度)。補色の対比を和らげた配色。</value>
+	</data>
+	<data name="HarmonyTetradic.Content" xml:space="preserve">
+		<value>テトラード</value>
+	</data>
+	<data name="HarmonyTetradic.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>近接色の対を反対側にも置いた矩形の4色。2組の補色からなる豊かな配色。</value>
+	</data>
+	<data name="HarmonySquare.Content" xml:space="preserve">
+		<value>正方形</value>
+	</data>
+	<data name="HarmonySquare.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>色相環を四等分した4色(90度間隔)。均等で力強い配色。</value>
+	</data>
+	<data name="HarmonyApply.Content" xml:space="preserve">
+		<value>整える</value>
+	</data>
+	<data name="HarmonyChromaN" xml:space="preserve">
+		<value>色 {0} の彩度</value>
+	</data>
+	<data name="HarmonyValueN" xml:space="preserve">
+		<value>色 {0} の明度</value>
+	</data>
+	<data name="HarmonySharedChroma" xml:space="preserve">
+		<value>全色共通の彩度</value>
+	</data>
+	<data name="HarmonySharedValue" xml:space="preserve">
+		<value>全色共通の明度</value>
+	</data>
+	<data name="HarmonyDiscTypeLabel.Text" xml:space="preserve">
+		<value>ディスクの種類</value>
+	</data>
+	<data name="HarmonyDiscFullRange.Content" xml:space="preserve">
+		<value>フルレンジ（白芯）</value>
+	</data>
+	<data name="HarmonyDiscFullRange.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>中心が白で縁が黒。明度全域をカバー。中心からの距離が同じであれば明度も等しい。最も鮮やかな色は中心寄りの輪に並ぶ（青だけは縁寄り）。</value>
+	</data>
+	<data name="HarmonyDiscFullRangeReversed.Content" xml:space="preserve">
+		<value>フルレンジ（黒芯）</value>
+	</data>
+	<data name="HarmonyDiscFullRangeReversed.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>中心が黒で縁が白。明度全域をカバー。中心からの距離が同じであれば明度も等しい。最も鮮やかな色は縁寄りの輪に並ぶ（青だけは中心寄り）。</value>
+	</data>
+	<data name="HarmonyDiscWhiteToCusp.Content" xml:space="preserve">
+		<value>明清色</value>
+	</data>
+	<data name="HarmonyDiscWhiteToCusp.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>中心が白で、縁を各色相の最も鮮やかな点(cusp)に取る。純色に白を混ぜた明清色（ティント）。縁の明度は色相によって異なる。</value>
+	</data>
+	<data name="HarmonyDiscBlackToCusp.Content" xml:space="preserve">
+		<value>暗清色</value>
+	</data>
+	<data name="HarmonyDiscBlackToCusp.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>中心が黒で、縁を各色相の最も鮮やかな点(cusp)に取る。純色に黒を混ぜた暗清色（シェード）。縁の明度は色相によって異なる。</value>
+	</data>
+	<data name="HarmonyDiscHsv.Content" xml:space="preserve">
+		<value>HSV</value>
+	</data>
+	<data name="HarmonyDiscHsv.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>中心からの角度が色相、距離が彩度(S)。中心が白、縁がその色相の純色で、明度(V)は下のスライダーで色ごとに変える。色相は HSV 色相を使うため、伝統的な RGB の色相環に沿った配色になる。</value>
+	</data>
+	<data name="HarmonyDiscHint.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>Shift を押しながらドラッグすると、中心からの距離を保ったまま回転します</value>
+	</data>
+	<data name="HarmonyDiad.Content" xml:space="preserve">
+		<value>ダイアード</value>
+	</data>
+	<data name="HarmonyDiad.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>基準色と、そこから少し離れた1色(約60度)の2色。補色より穏やかな対比。</value>
+	</data>
+	<data name="HarmonyPentad.Content" xml:space="preserve">
+		<value>ペンタード</value>
+	</data>
+	<data name="HarmonyPentad.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>色相環を五等分した5色(72度間隔)。</value>
+	</data>
+	<data name="HarmonyMonochromatic.Content" xml:space="preserve">
+		<value>モノクロマティック</value>
+	</data>
+	<data name="HarmonyMonochromatic.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>色相を1つに固定し、明度・彩度だけを色ごとに変える。統一感のある落ち着いた配色。</value>
+	</data>
+	<data name="HarmonyDominantTone.Content" xml:space="preserve">
+		<value>ドミナントトーン</value>
+	</data>
+	<data name="HarmonyDominantTone.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>トーン(明度+彩度)を全色で揃え、色相だけを変える。明るさと鮮やかさが揃った、まとまりのある配色。</value>
+	</data>
+	<data name="HarmonyTonal.Content" xml:space="preserve">
+		<value>トーナル</value>
+	</data>
+	<data name="HarmonyTonal.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>ドミナントトーンの一種で、共通トーンをくすんだ中間色域に収める。明度・彩度が中間に制限される。</value>
+	</data>
+	<data name="HarmonyReverse.Content" xml:space="preserve">
+		<value>反転</value>
+	</data>
+	<data name="HarmonyReverse.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>非対称な配色(類似色・テトラード・ダイアード)の向きを左右反転します。対称な配色では効きません。</value>
+	</data>
+	<data name="HarmonyMonotone.Content" xml:space="preserve">
+		<value>モノトーン</value>
+	</data>
+	<data name="HarmonyMonotone.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>無彩色だけで明度の階調を作る配色。色みを持たず、明暗の差だけで構成する。</value>
+	</data>
+	<data name="HarmonyCurveLabel.Text" xml:space="preserve">
+		<value>トーンカーブ</value>
+	</data>
+	<data name="HarmonyCurveLinear.Content" xml:space="preserve">
+		<value>リニア</value>
+	</data>
+	<data name="HarmonyCurveLinear.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>明度を等間隔の直線に並べる。知覚的に均等な階調になる。</value>
+	</data>
+	<data name="HarmonyCurveCubic.Content" xml:space="preserve">
+		<value>S字</value>
+	</data>
+	<data name="HarmonyCurveCubic.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>中間をなだらかに、両端を離すS字に並べる。コントラスト高めの階調になる。</value>
+	</data>
+	<data name="HarmonyCurveInverseS.Content" xml:space="preserve">
+		<value>逆S字</value>
+	</data>
+	<data name="HarmonyCurveInverseS.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>中間を広げ、両端を詰める逆S字に並べる。コントラスト低めの階調になる。</value>
+	</data>
+	<data name="HarmonyCurveGamma.Content" xml:space="preserve">
+		<value>ガンマ</value>
+	</data>
+	<data name="HarmonyCurveGamma.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>明暗どちらか一方の側へ段を寄せる。反転と組み合わせると寄せる側を入れ替えられる。</value>
+	</data>
+	<data name="HarmonyCurveReverse.Content" xml:space="preserve">
+		<value>反転</value>
+	</data>
+	<data name="HarmonyCurveReverse.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>明度の並び順を逆にして、ランプの向き(明→暗 ⇄ 暗→明)を入れ替える。</value>
+	</data>
+	<data name="MixSpaceLabel.Text" xml:space="preserve">
+		<value>混色する色空間</value>
+	</data>
+	<data name="MixMethodLabel.Text" xml:space="preserve">
+		<value>塗り広げ方</value>
+	</data>
+	<data name="MixMethodIdw.Content" xml:space="preserve">
+		<value>逆距離加重</value>
+	</data>
+	<data name="MixMethodGaussian.Content" xml:space="preserve">
+		<value>ガウス</value>
+	</data>
+	<data name="MixMethodNearest.Content" xml:space="preserve">
+		<value>最近傍</value>
+	</data>
+	<data name="MixArrangeButton.Content" xml:space="preserve">
+		<value>自動アレンジ</value>
+	</data>
+	<data name="MixArrangeCorners.Text" xml:space="preserve">
+		<value>四隅</value>
+	</data>
+	<data name="MixArrangePolygon.Text" xml:space="preserve">
+		<value>正多角形</value>
+	</data>
+	<data name="MixArrangeColumn.Text" xml:space="preserve">
+		<value>縦一列</value>
+	</data>
+	<data name="MixArrangeRow.Text" xml:space="preserve">
+		<value>横一列</value>
+	</data>
+	<data name="MixHueDirLabel.Text" xml:space="preserve">
+		<value>色相の回り方</value>
+	</data>
+	<data name="MixHueShorter.Content" xml:space="preserve">
+		<value>近い側</value>
+	</data>
+	<data name="MixHueLonger.Content" xml:space="preserve">
+		<value>遠回り</value>
+	</data>
+	<data name="MixSharpnessLabel.Text" xml:space="preserve">
+		<value>シャープネス</value>
+	</data>
+
+	<!-- 各タブ共通のアクセシビリティ名。同じ値を持つ複数の要素で同一の x:Uid を共有する。 -->
+	<data name="NameHue.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相</value>
+	</data>
+	<data name="NameSaturation.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>彩度</value>
+	</data>
+	<data name="NameValue.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>明度</value>
+	</data>
+	<data name="NameLightness.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>輝度</value>
+	</data>
+	<data name="NameWhiteness.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>白み</value>
+	</data>
+	<data name="NameBlackness.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>黒み</value>
+	</data>
+	<data name="NameChroma.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>彩度(クロマ)</value>
+	</data>
+	<data name="NameLumaY.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>輝度 Y</value>
+	</data>
+	<data name="NameOpacity.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>不透明度</value>
+	</data>
+	<data name="NameGray.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>グレー</value>
+	</data>
+	<data name="NameGray.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>グレー</value>
+	</data>
+
+	<!-- RGB/CMYK タブの各スライダーのヒント(ツールチップ)。1文字ラベルの正体を補う。 -->
+	<data name="HintRed.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>赤</value>
+	</data>
+	<data name="HintGreen.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>緑</value>
+	</data>
+	<data name="HintBlue.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>青</value>
+	</data>
+	<data name="HintCyan.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>シアン</value>
+	</data>
+	<data name="HintMagenta.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>マゼンタ</value>
+	</data>
+	<data name="HintYellow.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>イエロー</value>
+	</data>
+	<data name="HintKey.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>キー（黒）</value>
+	</data>
+
+	<!-- HSV/HSL タブ -->
+	<data name="HsvSvPad.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>彩度と明度</value>
+	</data>
+	<data name="HsvSlPad.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>彩度と輝度</value>
+	</data>
+	<data name="HsvHwbPad.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>白みと黒み</value>
+	</data>
+	<data name="LchLcPad.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>明度と彩度</value>
+	</data>
+	<data name="HsvFollow.Content" xml:space="preserve">
+		<value>連動</value>
+	</data>
+	<data name="HsvFollow.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>2次元スライダーを色相環に連動させる</value>
+	</data>
+	<data name="HwbNormalize.Content" xml:space="preserve">
+		<value>正規化</value>
+	</data>
+	<data name="HwbNormalize.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>白み+黒みの合計を100%以内へ畳む(退化した灰を正準形に丸める)</value>
+	</data>
+	<data name="LchGamutLimit.Content" xml:space="preserve">
+		<value>色域制限</value>
+	</data>
+	<data name="LchGamutLimit.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>彩度を sRGB 色域の境界でクランプする(オフでは色域外の彩度も保ち、表示できない範囲をハッチで示す)</value>
+	</data>
+
+	<!-- Lab タブ -->
+	<data name="NameLabLightness.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>明度 L</value>
+	</data>
+	<data name="NameLabA.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>a 軸</value>
+	</data>
+	<data name="NameLabB.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>b 軸</value>
+	</data>
+	<data name="LabAbPad.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>a と b</value>
+	</data>
+	<data name="LabGamutLimit.Content" xml:space="preserve">
+		<value>色域制限</value>
+	</data>
+	<data name="LabGamutLimit.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>a・b を sRGB 色域の境界でクランプする(オフでは色域外の値も保ち、表示できない範囲をハッチで示す)</value>
+	</data>
+
+	<!-- YUV/YCbCr タブ -->
+	<data name="YuvCbCrPad.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Cb と Cr</value>
+	</data>
+	<data name="YuvStandard.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>係数規格</value>
+	</data>
+	<data name="YuvStudioRange.Content" xml:space="preserve">
+		<value>スタジオレンジ</value>
+	</data>
+	<data name="YuvGamutLimit.Content" xml:space="preserve">
+		<value>色域制限</value>
+	</data>
+	<data name="YuvGamutLimit.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>色差(Cb・Cr)を sRGB 色域の境界でクランプする(オフでは色域外の色差も保ち、表示できない範囲をハッチで示す)</value>
+	</data>
+
+	<!-- RGB/CMYK タブ -->
+	<data name="RgbTabUnit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>RGB の表示単位</value>
+	</data>
+
+	<!-- アルファ タブ -->
+	<data name="AlphaTabUnit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>不透明度の表示単位</value>
+	</data>
+
+	<!-- Palette タブ -->
+	<data name="PaletteType.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>パレットの種類</value>
+	</data>
+	<data name="PaletteSearch.PlaceholderText" xml:space="preserve">
+		<value>色名・カラーコードで検索</value>
+	</data>
+	<data name="PaletteSearch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色の検索</value>
+	</data>
+	<data name="PaletteSortLabel.Text" xml:space="preserve">
+		<value>並び順</value>
+	</data>
+	<data name="PaletteSortHue.Content" xml:space="preserve">
+		<value>色相順</value>
+	</data>
+	<data name="PaletteSortName.Content" xml:space="preserve">
+		<value>名前順</value>
+	</data>
+	<data name="PaletteSortHistory.Content" xml:space="preserve">
+		<value>履歴順</value>
+	</data>
+
+	<!-- Palette タブ: コピー／貼り付け履歴 -->
+	<data name="HistoryFilter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>履歴の絞り込み</value>
+	</data>
+	<data name="HistoryEmpty.Text" xml:space="preserve">
+		<value>コピー・貼り付けした色の履歴がここに並びます</value>
+	</data>
+
+	<!-- Palette タブ: お気に入りパレット -->
+	<data name="Palette_Favorites" xml:space="preserve">
+		<value>お気に入り</value>
+	</data>
+	<data name="FavoritesEmpty.Text" xml:space="preserve">
+		<value>「お気に入りに追加」で作ったパレットがここに並びます</value>
+	</data>
+	<data name="Favorite_MenuRestore" xml:space="preserve">
+		<value>パレットを復元</value>
+	</data>
+	<data name="Favorite_RestoreShortcut" xml:space="preserve">
+		<value>Enter, ダブルクリック</value>
+	</data>
+	<data name="Favorite_MenuRename" xml:space="preserve">
+		<value>名前を変更</value>
+	</data>
+	<data name="Favorite_MenuDelete" xml:space="preserve">
+		<value>削除</value>
+	</data>
+	<data name="Favorite_DefaultNameFormat" xml:space="preserve">
+		<value>お気に入り {0}</value>
+	</data>
+	<data name="Favorite_SaveDialogTitle" xml:space="preserve">
+		<value>お気に入りに保存</value>
+	</data>
+	<data name="Favorite_RenameDialogTitle" xml:space="preserve">
+		<value>お気に入りの名前を変更</value>
+	</data>
+	<data name="Favorite_DeleteDialogTitle" xml:space="preserve">
+		<value>お気に入りを削除</value>
+	</data>
+	<data name="Favorite_DeleteConfirmFormat" xml:space="preserve">
+		<value>「{0}」を削除しますか？元に戻せません。</value>
+	</data>
+	<data name="Favorite_DialogSave" xml:space="preserve">
+		<value>保存</value>
+	</data>
+	<data name="Favorite_DialogCancel" xml:space="preserve">
+		<value>キャンセル</value>
+	</data>
+	<data name="Favorite_DeleteConfirm" xml:space="preserve">
+		<value>削除</value>
+	</data>
+
+	<!-- 設定ページ: 全般 -->
+	<data name="SettingsGeneralHeader.Text" xml:space="preserve">
+		<value>全般</value>
+	</data>
+	<data name="SettingsThemeCard.Header" xml:space="preserve">
+		<value>アプリ テーマ</value>
+	</data>
+	<data name="SettingsThemeCard.Description" xml:space="preserve">
+		<value>アプリの配色を選びます。</value>
+	</data>
+	<data name="SettingsThemeLight.Content" xml:space="preserve">
+		<value>ライト</value>
+	</data>
+	<data name="SettingsThemeDark.Content" xml:space="preserve">
+		<value>ダーク</value>
+	</data>
+	<data name="SettingsThemeSystem.Content" xml:space="preserve">
+		<value>システム設定の使用</value>
+	</data>
+
+	<data name="SettingsLanguageCard.Header" xml:space="preserve">
+		<value>表示言語</value>
+	</data>
+	<data name="SettingsLanguageCard.Description" xml:space="preserve">
+		<value>アプリの表示言語を選びます。</value>
+	</data>
+	<data name="SettingsLanguageSystem.Content" xml:space="preserve">
+		<value>システムに合わせる</value>
+	</data>
+
+	<!-- 設定ページ: 表示 -->
+	<data name="SettingsDisplayHeader.Text" xml:space="preserve">
+		<value>表示</value>
+	</data>
+	<data name="SettingsOogStyleCard.Header" xml:space="preserve">
+		<value>色域外の表示</value>
+	</data>
+	<data name="SettingsOogStyleCard.Description" xml:space="preserve">
+		<value>2次元スライダー(LCH の L-C 平面、Lab の a-b 平面)で sRGB 色域から外れた範囲の見せ方を選びます。色域内は常に実際の色で表示します。</value>
+	</data>
+	<data name="SettingsOogFillBoundary.Content" xml:space="preserve">
+		<value>色で塗る + 境界線</value>
+	</data>
+	<data name="SettingsOogFillBoundaryHatch.Content" xml:space="preserve">
+		<value>色で塗る + 境界線 + 斜線</value>
+	</data>
+	<data name="SettingsOogWhiteHatch.Content" xml:space="preserve">
+		<value>斜線のみ (白地)</value>
+	</data>
+
+	<!-- 設定ページ: コピー -->
+	<data name="SettingsCopyHeader.Text" xml:space="preserve">
+		<value>コピー</value>
+	</data>
+	<data name="SettingsCopyFormatCard.Header" xml:space="preserve">
+		<value>コピー形式</value>
+	</data>
+	<data name="SettingsCopyFormatCard.Description" xml:space="preserve">
+		<value>「コピー」(Ctrl+C) で書き出す色の形式です。展開すると、この形式のアルファ値の表記を選べます。</value>
+	</data>
+	<data name="SettingsCopyFormat2Card.Header" xml:space="preserve">
+		<value>2つ目のコピー形式</value>
+	</data>
+	<data name="SettingsCopyFormat2Card.Description" xml:space="preserve">
+		<value>Ctrl+Shift+C で書き出す色の形式です。展開すると、この形式のアルファ値の表記を1つ目と独立して選べます。</value>
+	</data>
+	<data name="SettingsWebAlphaUnitCard.Header" xml:space="preserve">
+		<value>アルファ値の表記</value>
+	</data>
+	<data name="SettingsWebAlphaUnitCard.Description" xml:space="preserve">
+		<value>rgba()・hsla()・hwb() などのコピーで不透明度を 0–1 の数値とパーセントのどちらで書き出すかを選びます。色や丸めには影響しません。</value>
+	</data>
+	<data name="SettingsWebAlphaNumber.Content" xml:space="preserve">
+		<value>数値 (0.0–1.0)</value>
+	</data>
+	<data name="SettingsWebAlphaPercent.Content" xml:space="preserve">
+		<value>パーセント (0–100%)</value>
+	</data>
+	<data name="SettingsFormatHex.Content" xml:space="preserve">
+		<value>16進 (#RRGGBB)</value>
+	</data>
+	<data name="SettingsFormatHexA.Content" xml:space="preserve">
+		<value>16進 + 不透明度 (#RRGGBBAA)</value>
+	</data>
+	<data name="SettingsFormatPacked.Content" xml:space="preserve">
+		<value>パック (0xRRGGBB)</value>
+	</data>
+	<data name="SettingsFormatPackedA.Content" xml:space="preserve">
+		<value>パック + 不透明度 (0xAARRGGBB)</value>
+	</data>
+	<data name="SettingsFormatTermTcFg.Content" xml:space="preserve">
+		<value>ターミナル 前景 (フルカラー)</value>
+	</data>
+	<data name="SettingsFormatTerm256Fg.Content" xml:space="preserve">
+		<value>ターミナル 前景 (256色)</value>
+	</data>
+	<data name="SettingsFormatTerm16Fg.Content" xml:space="preserve">
+		<value>ターミナル 前景 (16色)</value>
+	</data>
+	<data name="SettingsFormatTerm8Fg.Content" xml:space="preserve">
+		<value>ターミナル 前景 (8色)</value>
+	</data>
+	<data name="SettingsFormatTermTcBg.Content" xml:space="preserve">
+		<value>ターミナル 背景 (フルカラー)</value>
+	</data>
+	<data name="SettingsFormatTerm256Bg.Content" xml:space="preserve">
+		<value>ターミナル 背景 (256色)</value>
+	</data>
+	<data name="SettingsFormatTerm16Bg.Content" xml:space="preserve">
+		<value>ターミナル 背景 (16色)</value>
+	</data>
+	<data name="SettingsFormatTerm8Bg.Content" xml:space="preserve">
+		<value>ターミナル 背景 (8色)</value>
+	</data>
+
+	<!-- 設定ページ: 表示 (スナップの距離計算) -->
+	<data name="SettingsSnapMetricCard.Header" xml:space="preserve">
+		<value>最も近い色へのスナップ</value>
+	</data>
+	<data name="SettingsSnapMetricCard.Description" xml:space="preserve">
+		<value>色を制限へ丸めるときの距離の測り方を選びます。Webセーフ・RGB565 等の格子モードと、ターミナルの 256/16/8 の最近傍探索のどちらにも効きます。</value>
+	</data>
+	<data name="SettingsSnapMetricLab.Content" xml:space="preserve">
+		<value>知覚的 (Lab)</value>
+	</data>
+	<data name="SettingsSnapMetricRedmean.Content" xml:space="preserve">
+		<value>重み付きRGB (redmean)</value>
+	</data>
+	<data name="SettingsSnapMetricRgb.Content" xml:space="preserve">
+		<value>単純RGB</value>
+	</data>
+
+	<!-- 設定ページ: ターミナル -->
+	<data name="SettingsTerminalHeader.Text" xml:space="preserve">
+		<value>ターミナル</value>
+	</data>
+	<data name="SettingsTerminalThemeCard.Header" xml:space="preserve">
+		<value>参照する配色テーマ</value>
+	</data>
+	<data name="SettingsTerminalThemeCard.Description" xml:space="preserve">
+		<value>基本16色 (0-15) の実RGBを決める端末の配色を選びます。貼り付けの逆引きと、16色・8色および 256色の 0-15 に使います。</value>
+	</data>
+	<data name="SettingsTerminalEscCard.Header" xml:space="preserve">
+		<value>ESC の表記</value>
+	</data>
+	<data name="SettingsTerminalEscCard.Description" xml:space="preserve">
+		<value>ターミナル形式のコピーで先頭の ESC をどう書き出すかを選びます。貼り付け先に合わせて選んでください。</value>
+	</data>
+	<data name="SettingsEscLiteral.Content" xml:space="preserve">
+		<value>実体ESC (0x1B)</value>
+	</data>
+
+	<!-- 設定ページ: このアプリについて -->
+	<data name="SettingsAboutHeader.Text" xml:space="preserve">
+		<value>このアプリについて</value>
+	</data>
+
+	<!-- コードから参照する文字列 -->
+	<data name="Copy_Term_Foreground" xml:space="preserve">
+		<value>前景</value>
+	</data>
+	<data name="Copy_Term_Background" xml:space="preserve">
+		<value>背景</value>
+	</data>
+	<data name="Copy_Term_TrueColor" xml:space="preserve">
+		<value>フルカラー</value>
+	</data>
+	<data name="Copy_Term_256" xml:space="preserve">
+		<value>256色</value>
+	</data>
+	<data name="Copy_Term_16" xml:space="preserve">
+		<value>16色</value>
+	</data>
+	<data name="Copy_Term_8" xml:space="preserve">
+		<value>8色</value>
+	</data>
+	<data name="Copy_Term_Label" xml:space="preserve">
+		<value>ターミナル{0}({1})</value>
+	</data>
+	<data name="Tray_Open" xml:space="preserve">
+		<value>開く</value>
+	</data>
+	<data name="Tray_LeftClick" xml:space="preserve">
+		<value>左クリック</value>
+	</data>
+	<data name="Tray_Exit" xml:space="preserve">
+		<value>終了</value>
+	</data>
+	<data name="History_Filter_All" xml:space="preserve">
+		<value>すべての履歴</value>
+	</data>
+	<data name="History_Filter_Paste" xml:space="preserve">
+		<value>貼り付け履歴</value>
+	</data>
+	<data name="History_Filter_Copy" xml:space="preserve">
+		<value>コピー履歴</value>
+	</data>
+	<data name="Edit_Copy_Prefix" xml:space="preserve">
+		<value>コピー - </value>
+	</data>
+	<data name="Palette_Warning_TooltipFormat" xml:space="preserve">
+		<value>現在の色制限では表せない色です (最も近い色: {0})</value>
+	</data>
+	<data name="Palette_Warning_AccessibleSuffix" xml:space="preserve">
+		<value>現在の色制限では表せません</value>
+	</data>
+	<data name="Palette_WebNamedColors" xml:space="preserve">
+		<value>Web 名前付きカラー (CSS)</value>
+	</data>
+	<data name="Palette_Terminal16" xml:space="preserve">
+		<value>ターミナル ({0})</value>
+	</data>
+	<data name="Palette_Terminal256" xml:space="preserve">
+		<value>ターミナル 256色</value>
+	</data>
+	<data name="Palette_History" xml:space="preserve">
+		<value>コピー／貼り付け履歴</value>
+	</data>
+	<data name="Tab_FallbackFormat" xml:space="preserve">
+		<value>「{0}」タブの中身</value>
+	</data>
+	<data name="Restart_Title" xml:space="preserve">
+		<value>言語の変更</value>
+	</data>
+	<data name="Restart_Message" xml:space="preserve">
+		<value>言語を変更しました。アプリを再起動すると新しい言語で表示されます。今すぐ再起動しますか？</value>
+	</data>
+	<data name="Restart_Now" xml:space="preserve">
+		<value>再起動</value>
+	</data>
+	<data name="Restart_Later" xml:space="preserve">
+		<value>後で</value>
+	</data>
+	<data name="SettingsAdvancedToggle.Header" xml:space="preserve">
+		<value>上級者向け設定</value>
+	</data>
+	<data name="SettingsLensHeader.Text" xml:space="preserve">
+		<value>スライダーつまみレンズ</value>
+	</data>
+	<data name="SettingsLensEffectCard.Header" xml:space="preserve">
+		<value>レンズ効果</value>
+	</data>
+	<data name="SettingsLensEffectCard.Description" xml:space="preserve">
+		<value>つまみのルーペに屈折・色収差のガラス効果を掛けます。オフにするとただの拡大になります。</value>
+	</data>
+	<data name="SettingsLensMagnifyCard.Header" xml:space="preserve">
+		<value>拡大率</value>
+	</data>
+	<data name="SettingsLensMagnifyCard.Description" xml:space="preserve">
+		<value>0で拡大なし、1.0で標準、上げるほど拡大します。</value>
+	</data>
+	<data name="SettingsLensRefractionCard.Header" xml:space="preserve">
+		<value>屈折</value>
+	</data>
+	<data name="SettingsLensStrengthCard.Header" xml:space="preserve">
+		<value>強さ</value>
+	</data>
+	<data name="SettingsLensBevelCard.Header" xml:space="preserve">
+		<value>ベベル</value>
+	</data>
+	<data name="SettingsLensBevelCard.Description" xml:space="preserve">
+		<value>屈折が縁から内側へ及ぶ幅の倍率。大きいほど中心寄りまで歪みます。</value>
+	</data>
+	<data name="SettingsLensChromaCard.Header" xml:space="preserve">
+		<value>色収差</value>
+	</data>
+	<data name="SettingsLensChromaCard.Description" xml:space="preserve">
+		<value>0で色収差なし。屈折がオンの時のみ効きます。</value>
+	</data>
+	<data name="SettingsLensResetButton.Content" xml:space="preserve">
+		<value>デフォルトに戻す</value>
+	</data>
+	<data name="Tray_PickColor" xml:space="preserve">
+		<value>画面から色を拾う</value>
+	</data>
+	<data name="Tray_RestartAsAdmin" xml:space="preserve">
+		<value>管理者として再起動</value>
+	</data>
+	<data name="Tray_RunningAsAdmin" xml:space="preserve">
+		<value>管理者として実行中</value>
+	</data>
+	<data name="Picker_HistorySource" xml:space="preserve">
+		<value>画面から取得</value>
+	</data>
+	<data name="ToolbarPickColor.Text" xml:space="preserve">
+		<value>色を拾う</value>
+	</data>
+	<data name="ToolbarPickColorButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>画面から色を拾う（クリックで確定、Esc または右クリックで中止）</value>
+	</data>
+	<data name="SettingsScreenPickerHeader.Text" xml:space="preserve">
+		<value>画面カラーピッカー</value>
+	</data>
+	<data name="SettingsScreenPickerMagnifyCard.Header" xml:space="preserve">
+		<value>拡大率</value>
+	</data>
+	<data name="SettingsScreenPickerMagnifyCard.Description" xml:space="preserve">
+		<value>上げるほど1画素が大きく映り、採色しやすくなります。</value>
+	</data>
+	<data name="SettingsScreenPickerDiameterCard.Header" xml:space="preserve">
+		<value>レンズの大きさ</value>
+	</data>
+	<data name="SettingsScreenPickerDiameterCard.Description" xml:space="preserve">
+		<value>円形のガラスレンズの直径です。</value>
+	</data>
+	<data name="SettingsScreenPickerGlassCard.Header" xml:space="preserve">
+		<value>ガラス効果</value>
+	</data>
+	<data name="SettingsScreenPickerGlassCard.Description" xml:space="preserve">
+		<value>屈折・ぼかし・ハイライトのガラス効果を掛けます。オフにすると縁と拡大だけの素のルーペになります。</value>
+	</data>
+	<data name="SettingsScreenPickerRefractionCard.Header" xml:space="preserve">
+		<value>屈折の強さ</value>
+	</data>
+	<data name="SettingsScreenPickerRefractionCard.Description" xml:space="preserve">
+		<value>0で屈折なし、1.0で標準、上げるほど縁が強く歪みます。</value>
+	</data>
+	<data name="SettingsScreenPickerResetButton.Content" xml:space="preserve">
+		<value>デフォルトに戻す</value>
+	</data>
+</root>

@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+	x:Class="Irozukume.Views.SettingsView"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:tkcontrols="using:CommunityToolkit.WinUI.Controls"
+	mc:Ignorable="d"
+	SizeChanged="OnSizeChanged">
+
+	<!-- 設定ページ。設定セクション群(左)とアプリ情報(右)を横並びにし、ウィンドウが狭くなったらアプリ情報を設定の下へ回すレスポンシブ配置にする。配置の切り替えはコードビハインドの SizeChanged で行う。設定項目が増えてもセクションを足して育てられる構造にする。 -->
+	<ScrollViewer
+		VerticalScrollBarVisibility="Auto"
+		HorizontalScrollMode="Disabled">
+		<Grid
+			x:Name="LayoutGrid"
+			Padding="24"
+			ColumnSpacing="32"
+			RowSpacing="24">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition x:Name="AboutColumn" Width="320" />
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+			</Grid.RowDefinitions>
+
+			<!-- 設定セクション群。列の幅いっぱいに広げ、カードをウィンドウ幅へ追従させる。 -->
+			<StackPanel
+				Grid.Row="0"
+				Grid.Column="0"
+				Spacing="24">
+
+				<!-- 全般に関する設定。テーマと言語を束ねる。 -->
+				<StackPanel Spacing="4">
+					<TextBlock
+						x:Uid="SettingsGeneralHeader"
+						Style="{StaticResource BodyStrongTextBlockStyle}" />
+
+					<!-- アプリのテーマ(配色)。ライト/ダーク/システム設定の使用 から選び、選んだ瞬間にアプリ全体へ反映する。 -->
+					<tkcontrols:SettingsCard
+						x:Uid="SettingsThemeCard">
+						<tkcontrols:SettingsCard.HeaderIcon>
+							<FontIcon
+								FontFamily="{ThemeResource SymbolThemeFontFamily}"
+								Glyph="&#xE771;" />
+						</tkcontrols:SettingsCard.HeaderIcon>
+						<ComboBox SelectedIndex="{x:Bind Appearance.ThemeIndex, Mode=TwoWay}">
+							<ComboBoxItem x:Uid="SettingsThemeLight" />
+							<ComboBoxItem x:Uid="SettingsThemeDark" />
+							<ComboBoxItem x:Uid="SettingsThemeSystem" />
+						</ComboBox>
+					</tkcontrols:SettingsCard>
+
+					<!-- アプリの表示言語。日本語/English/システムに合わせる から選ぶ。読み込み済みの UI には動的に反映できないため、変更時はコードビハインドが再起動を促す。 -->
+					<tkcontrols:SettingsCard x:Uid="SettingsLanguageCard">
+						<tkcontrols:SettingsCard.HeaderIcon>
+							<FontIcon
+								FontFamily="{ThemeResource SymbolThemeFontFamily}"
+								Glyph="&#xE774;" />
+						</tkcontrols:SettingsCard.HeaderIcon>
+						<ComboBox SelectedIndex="{x:Bind Appearance.LanguageIndex, Mode=TwoWay}">
+							<ComboBoxItem Content="日本語" />
+							<ComboBoxItem Content="English" />
+							<ComboBoxItem x:Uid="SettingsLanguageSystem" />
+						</ComboBox>
+					</tkcontrols:SettingsCard>
+				</StackPanel>
+
+				<!-- 表示に関する設定。 -->
+				<StackPanel Spacing="4">
+					<TextBlock
+						x:Uid="SettingsDisplayHeader"
+						Style="{StaticResource BodyStrongTextBlockStyle}" />
+
+					<!-- 2次元スライダー(LCH の L-C 平面、Lab の a-b 平面)で sRGB 色域を外れた範囲をどう見せるか。色域内は常に実際の色で塗り、ここでは色域外の描き方だけを切り替える。各色の RGB やスライダーの値には影響しない。 -->
+					<tkcontrols:SettingsCard x:Uid="SettingsOogStyleCard">
+						<tkcontrols:SettingsCard.HeaderIcon>
+							<FontIcon
+								FontFamily="ms-appx:///Assets/Fonts/romoji.ttf#Romoji"
+								Glyph="&#xE00A;" />
+						</tkcontrols:SettingsCard.HeaderIcon>
+						<ComboBox SelectedIndex="{x:Bind ViewModel.OutOfRangeStyleIndex, Mode=TwoWay}">
+							<ComboBoxItem x:Uid="SettingsOogFillBoundary" />
+							<ComboBoxItem x:Uid="SettingsOogFillBoundaryHatch" />
+							<ComboBoxItem x:Uid="SettingsOogWhiteHatch" />
+						</ComboBox>
+					</tkcontrols:SettingsCard>
+
+					<!-- 最も近い色へスナップするときの距離計算。WebSafe・RGB565 等の格子モードと、ターミナルの 256/16/8 のどちらの最近傍探索にも効く。各色の RGB は変えず、見える色と書き出すインデックスの選び方だけを変える。 -->
+					<tkcontrols:SettingsCard x:Uid="SettingsSnapMetricCard">
+						<tkcontrols:SettingsCard.HeaderIcon>
+							<!-- このカードはアイコンを持たない。SettingsCard は HeaderIcon が null だとアイコン列を畳んでヘッダーが左へ寄るため、透明の FontIcon でアイコン列の幅だけを確保し、他のカードとヘッダーの左位置を揃える。グリフは不可視で、幅を持たせるためだけに指定している。 -->
+							<FontIcon
+								FontFamily="{ThemeResource SymbolThemeFontFamily}"
+								Glyph="&#xE790;"
+								Opacity="0" />
+						</tkcontrols:SettingsCard.HeaderIcon>
+						<ComboBox SelectedIndex="{x:Bind ViewModel.SnapMetricIndex, Mode=TwoWay}">
+							<ComboBoxItem x:Uid="SettingsSnapMetricLab" />
+							<ComboBoxItem x:Uid="SettingsSnapMetricRedmean" />
+							<ComboBoxItem x:Uid="SettingsSnapMetricRgb" />
+						</ComboBox>
+					</tkcontrols:SettingsCard>
+				</StackPanel>
+
+				<!-- コピーに関する設定。1つ目(Ctrl+C)・2つ目(Ctrl+Shift+C)のコピー形式をそれぞれエクスパンダーにし、各展開部にその形式の CSS 関数アルファの表記を畳む。アルファ表記を形式ごとに独立して持てる。「形式を選択してコピー」サブメニューは1つ目の表記に従う。 -->
+				<StackPanel Spacing="4">
+					<TextBlock
+						x:Uid="SettingsCopyHeader"
+						Style="{StaticResource BodyStrongTextBlockStyle}" />
+
+					<!-- 編集メニューの「コピー」(Ctrl+C)で色1を書き出す既定の形式。展開すると、この形式の CSS 関数アルファを 0–1 の数値とパーセントのどちらで書くかを選べる。「形式を選択してコピー」サブメニューもこの表記に従う。 -->
+					<tkcontrols:SettingsExpander
+						x:Uid="SettingsCopyFormatCard">
+						<tkcontrols:SettingsExpander.HeaderIcon>
+							<FontIcon
+								FontFamily="{ThemeResource SymbolThemeFontFamily}"
+								Glyph="&#xE8C8;" />
+						</tkcontrols:SettingsExpander.HeaderIcon>
+						<ComboBox SelectedValue="{x:Bind ViewModel.CopyFormatKey, Mode=TwoWay}" SelectedValuePath="Tag">
+							<ComboBoxItem Tag="hex" x:Uid="SettingsFormatHex" />
+							<ComboBoxItem Tag="hexa" x:Uid="SettingsFormatHexA" />
+							<ComboBoxItem Tag="rgb" Content="rgb()" />
+							<ComboBoxItem Tag="rgba" Content="rgba()" />
+							<ComboBoxItem Tag="rgb_modern" Content="rgb(R G B)" />
+							<ComboBoxItem Tag="rgba_modern" Content="rgb(R G B / A)" />
+							<ComboBoxItem Tag="hsl" Content="hsl()" />
+							<ComboBoxItem Tag="hsla" Content="hsla()" />
+							<ComboBoxItem Tag="hsl_modern" Content="hsl(H S L)" />
+							<ComboBoxItem Tag="hsla_modern" Content="hsl(H S L / A)" />
+							<ComboBoxItem Tag="hwb" Content="hwb()" />
+							<ComboBoxItem Tag="hwba" Content="hwb(H W B / A)" />
+							<ComboBoxItem Tag="packed" x:Uid="SettingsFormatPacked" />
+							<ComboBoxItem Tag="packeda" x:Uid="SettingsFormatPackedA" />
+							<ComboBoxItem IsEnabled="False" HorizontalContentAlignment="Stretch">
+								<Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+							</ComboBoxItem>
+							<ComboBoxItem Tag="term_tc_fg" x:Uid="SettingsFormatTermTcFg" />
+							<ComboBoxItem Tag="term_256_fg" x:Uid="SettingsFormatTerm256Fg" />
+							<ComboBoxItem Tag="term_16_fg" x:Uid="SettingsFormatTerm16Fg" />
+							<ComboBoxItem Tag="term_8_fg" x:Uid="SettingsFormatTerm8Fg" />
+							<ComboBoxItem Tag="term_tc_bg" x:Uid="SettingsFormatTermTcBg" />
+							<ComboBoxItem Tag="term_256_bg" x:Uid="SettingsFormatTerm256Bg" />
+							<ComboBoxItem Tag="term_16_bg" x:Uid="SettingsFormatTerm16Bg" />
+							<ComboBoxItem Tag="term_8_bg" x:Uid="SettingsFormatTerm8Bg" />
+						</ComboBox>
+						<tkcontrols:SettingsExpander.Items>
+							<!-- 1つ目の形式の CSS 関数アルファを 0–1 の数値とパーセントのどちらで書き出すか。「形式を選択してコピー」サブメニューもこの表記を使う。色や丸めには影響しない。 -->
+							<tkcontrols:SettingsCard x:Uid="SettingsWebAlphaUnitCard">
+								<ComboBox SelectedIndex="{x:Bind ViewModel.WebAlphaUnitIndex, Mode=TwoWay}">
+									<ComboBoxItem x:Uid="SettingsWebAlphaNumber" />
+									<ComboBoxItem x:Uid="SettingsWebAlphaPercent" />
+								</ComboBox>
+							</tkcontrols:SettingsCard>
+						</tkcontrols:SettingsExpander.Items>
+					</tkcontrols:SettingsExpander>
+
+					<!-- Ctrl+Shift+C で色1を書き出す2つ目の形式。展開すると、この形式の CSS 関数アルファの表記を1つ目と独立して選べる。 -->
+					<tkcontrols:SettingsExpander
+						x:Uid="SettingsCopyFormat2Card">
+						<tkcontrols:SettingsExpander.HeaderIcon>
+							<FontIcon
+								FontFamily="{ThemeResource SymbolThemeFontFamily}"
+								Glyph="&#xE8C8;" />
+						</tkcontrols:SettingsExpander.HeaderIcon>
+						<ComboBox SelectedValue="{x:Bind ViewModel.CopyFormatKey2, Mode=TwoWay}" SelectedValuePath="Tag">
+							<ComboBoxItem Tag="hex" x:Uid="SettingsFormatHex" />
+							<ComboBoxItem Tag="hexa" x:Uid="SettingsFormatHexA" />
+							<ComboBoxItem Tag="rgb" Content="rgb()" />
+							<ComboBoxItem Tag="rgba" Content="rgba()" />
+							<ComboBoxItem Tag="rgb_modern" Content="rgb(R G B)" />
+							<ComboBoxItem Tag="rgba_modern" Content="rgb(R G B / A)" />
+							<ComboBoxItem Tag="hsl" Content="hsl()" />
+							<ComboBoxItem Tag="hsla" Content="hsla()" />
+							<ComboBoxItem Tag="hsl_modern" Content="hsl(H S L)" />
+							<ComboBoxItem Tag="hsla_modern" Content="hsl(H S L / A)" />
+							<ComboBoxItem Tag="hwb" Content="hwb()" />
+							<ComboBoxItem Tag="hwba" Content="hwb(H W B / A)" />
+							<ComboBoxItem Tag="packed" x:Uid="SettingsFormatPacked" />
+							<ComboBoxItem Tag="packeda" x:Uid="SettingsFormatPackedA" />
+							<ComboBoxItem IsEnabled="False" HorizontalContentAlignment="Stretch">
+								<Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+							</ComboBoxItem>
+							<ComboBoxItem Tag="term_tc_fg" x:Uid="SettingsFormatTermTcFg" />
+							<ComboBoxItem Tag="term_256_fg" x:Uid="SettingsFormatTerm256Fg" />
+							<ComboBoxItem Tag="term_16_fg" x:Uid="SettingsFormatTerm16Fg" />
+							<ComboBoxItem Tag="term_8_fg" x:Uid="SettingsFormatTerm8Fg" />
+							<ComboBoxItem Tag="term_tc_bg" x:Uid="SettingsFormatTermTcBg" />
+							<ComboBoxItem Tag="term_256_bg" x:Uid="SettingsFormatTerm256Bg" />
+							<ComboBoxItem Tag="term_16_bg" x:Uid="SettingsFormatTerm16Bg" />
+							<ComboBoxItem Tag="term_8_bg" x:Uid="SettingsFormatTerm8Bg" />
+						</ComboBox>
+						<tkcontrols:SettingsExpander.Items>
+							<!-- 2つ目の形式の CSS 関数アルファを 0–1 の数値とパーセントのどちらで書き出すか。1つ目と独立。色や丸めには影響しない。 -->
+							<tkcontrols:SettingsCard x:Uid="SettingsWebAlphaUnitCard">
+								<ComboBox SelectedIndex="{x:Bind ViewModel.WebAlphaUnit2Index, Mode=TwoWay}">
+									<ComboBoxItem x:Uid="SettingsWebAlphaNumber" />
+									<ComboBoxItem x:Uid="SettingsWebAlphaPercent" />
+								</ComboBox>
+							</tkcontrols:SettingsCard>
+						</tkcontrols:SettingsExpander.Items>
+					</tkcontrols:SettingsExpander>
+				</StackPanel>
+
+				<!-- ターミナルの色に関する設定。 -->
+				<StackPanel Spacing="4">
+					<TextBlock
+						x:Uid="SettingsTerminalHeader"
+						Style="{StaticResource BodyStrongTextBlockStyle}" />
+
+					<!-- 基本16色(0-15)を解決する参照テーマ。これらの実RGBは端末の配色テーマで変わるため、貼り付けの逆引きと 16/8 色・256 色の 0-15 のコピー・表示に使う配色を選ぶ。キューブ(16-231)とグレー(232-255)は固定のため影響しない。 -->
+					<tkcontrols:SettingsCard x:Uid="SettingsTerminalThemeCard">
+						<tkcontrols:SettingsCard.HeaderIcon>
+							<FontIcon
+								FontFamily="{ThemeResource SymbolThemeFontFamily}"
+								Glyph="&#xE756;" />
+						</tkcontrols:SettingsCard.HeaderIcon>
+						<ComboBox SelectedIndex="{x:Bind ViewModel.TerminalThemeIndex, Mode=TwoWay}">
+							<ComboBoxItem Content="Campbell" />
+							<ComboBoxItem Content="VGA" />
+							<ComboBoxItem Content="xterm" />
+						</ComboBox>
+					</tkcontrols:SettingsCard>
+
+					<!-- ターミナル形式のコピーで先頭の ESC をどの表記で書き出すか。貼り付け先(端末への直貼り、シェルの printf、ソースの文字列リテラル等)に合わせて選ぶ。色や丸めには影響しない。 -->
+					<tkcontrols:SettingsCard x:Uid="SettingsTerminalEscCard">
+						<tkcontrols:SettingsCard.HeaderIcon>
+							<FontIcon
+								FontFamily="{ThemeResource SymbolThemeFontFamily}"
+								Glyph="&#xE756;" />
+						</tkcontrols:SettingsCard.HeaderIcon>
+						<ComboBox SelectedIndex="{x:Bind ViewModel.TerminalEscIndex, Mode=TwoWay}">
+							<ComboBoxItem x:Uid="SettingsEscLiteral" />
+							<ComboBoxItem Content="\e" />
+							<ComboBoxItem Content="\x1b" />
+							<ComboBoxItem Content="\033" />
+							<ComboBoxItem Content="&#92;u001b" />
+							<ComboBoxItem Content="^[" />
+						</ComboBox>
+					</tkcontrols:SettingsCard>
+				</StackPanel>
+
+				<!-- 上級者向け: スライダーつまみのガラスレンズ(ルーペ)の効きの調整。アプリ情報の「上級者向け設定」トグルがオンのときだけ現れる。値は全スライダー・色相環・パッドのルーペに共通で効き、色や丸めには影響しない。 -->
+				<StackPanel
+					Spacing="4"
+					Visibility="{x:Bind ViewModel.AdvancedSettingsVisibility, Mode=OneWay}">
+					<TextBlock
+						x:Uid="SettingsLensHeader"
+						Style="{StaticResource BodyStrongTextBlockStyle}" />
+
+					<!-- レンズ効果の総スイッチ。オフにすると屈折・色収差を切り、ただの拡大になる。 -->
+					<tkcontrols:SettingsCard x:Uid="SettingsLensEffectCard">
+						<tkcontrols:SettingsCard.HeaderIcon>
+							<FontIcon
+								FontFamily="{ThemeResource SymbolThemeFontFamily}"
+								Glyph="&#xE7B3;" />
+						</tkcontrols:SettingsCard.HeaderIcon>
+						<ToggleSwitch IsOn="{x:Bind ViewModel.LensEffectEnabled, Mode=TwoWay}" />
+					</tkcontrols:SettingsCard>
+
+					<!-- 拡大率。基準の等倍からの増分への係数で、0 で等倍(拡大なし)、1.0 で基準どおり、上げるほど拡大が強まる。レンズ効果オフ時も効く(ただの拡大の倍率)。 -->
+					<tkcontrols:SettingsCard x:Uid="SettingsLensMagnifyCard">
+						<tkcontrols:SettingsCard.HeaderIcon>
+							<FontIcon
+								FontFamily="{ThemeResource SymbolThemeFontFamily}"
+								Glyph="&#xE8A3;" />
+						</tkcontrols:SettingsCard.HeaderIcon>
+						<Slider
+							Width="220"
+							Minimum="0"
+							Maximum="3"
+							StepFrequency="0.05"
+							Value="{x:Bind ViewModel.LensMagnify, Mode=TwoWay}" />
+					</tkcontrols:SettingsCard>
+
+					<!-- 縁の屈折。オン/オフのトグルを見出し行に置き、展開して強さ(基準値への倍率, 1.0 で基準どおり)とベベルのスライダーを出す。 -->
+					<tkcontrols:SettingsExpander x:Uid="SettingsLensRefractionCard">
+						<tkcontrols:SettingsExpander.HeaderIcon>
+							<FontIcon
+								FontFamily="{ThemeResource SymbolThemeFontFamily}"
+								Glyph="&#xE790;" />
+						</tkcontrols:SettingsExpander.HeaderIcon>
+						<ToggleSwitch IsOn="{x:Bind ViewModel.LensRefractionEnabled, Mode=TwoWay}" />
+						<tkcontrols:SettingsExpander.Items>
+							<!-- 強さは基準の縁の屈折量への倍率。中央0で屈折なし、正で内向き(基準の向き)、負で外向きに反転する。 -->
+							<tkcontrols:SettingsCard x:Uid="SettingsLensStrengthCard">
+								<Slider
+									Width="220"
+									Minimum="-3"
+									Maximum="3"
+									StepFrequency="0.05"
+									Value="{x:Bind ViewModel.LensRefractionStrength, Mode=TwoWay}" />
+							</tkcontrols:SettingsCard>
+
+							<!-- ベベルは屈折が縁から内側へ効く幅の倍率(基準値に掛ける)。色収差も同じ屈折を使うため影響を受ける。 -->
+							<tkcontrols:SettingsCard x:Uid="SettingsLensBevelCard">
+								<Slider
+									Width="220"
+									Minimum="0"
+									Maximum="2"
+									StepFrequency="0.05"
+									Value="{x:Bind ViewModel.LensBevel, Mode=TwoWay}" />
+							</tkcontrols:SettingsCard>
+
+							<!-- 色収差(縁のカラーフリンジ)。屈折を R/G/B へ別量に分ける量の倍率で、0 で色収差なし。屈折と同じ縁の歪み・ベベルを使うため、専用のオン/オフは持たず屈折の下へ並べる。 -->
+							<tkcontrols:SettingsCard x:Uid="SettingsLensChromaCard">
+								<Slider
+									Width="220"
+									Minimum="0"
+									Maximum="2"
+									StepFrequency="0.05"
+									Value="{x:Bind ViewModel.LensChromaSpread, Mode=TwoWay}" />
+							</tkcontrols:SettingsCard>
+						</tkcontrols:SettingsExpander.Items>
+					</tkcontrols:SettingsExpander>
+
+					<!-- レンズ調整を既定値へ戻す。 -->
+					<Button
+						x:Uid="SettingsLensResetButton"
+						Margin="0,4,0,0"
+						Click="OnResetLensClick" />
+				</StackPanel>
+
+				<!-- 上級者向け: 画面カラーピッカーのガラスレンズの効きの調整。「上級者向け設定」トグルがオンのときだけ現れる。値はピッカーを開いたときの見た目に効き、採色する色には影響しない。 -->
+				<StackPanel
+					Spacing="4"
+					Margin="0,12,0,0"
+					Visibility="{x:Bind ViewModel.AdvancedSettingsVisibility, Mode=OneWay}">
+					<TextBlock
+						x:Uid="SettingsScreenPickerHeader"
+						Style="{StaticResource BodyStrongTextBlockStyle}" />
+
+					<!-- 拡大率。上げるほど1画素が大きく映り採色しやすくなる。 -->
+					<tkcontrols:SettingsCard x:Uid="SettingsScreenPickerMagnifyCard">
+						<tkcontrols:SettingsCard.HeaderIcon>
+							<FontIcon
+								FontFamily="{ThemeResource SymbolThemeFontFamily}"
+								Glyph="&#xE8A3;" />
+						</tkcontrols:SettingsCard.HeaderIcon>
+						<Slider
+							Width="220"
+							Minimum="2"
+							Maximum="20"
+							StepFrequency="1"
+							Value="{x:Bind ViewModel.ScreenPickerMagnify, Mode=TwoWay}" />
+					</tkcontrols:SettingsCard>
+
+					<!-- レンズの直径(DIP)。円形のガラス本体の大きさ。 -->
+					<tkcontrols:SettingsCard x:Uid="SettingsScreenPickerDiameterCard">
+						<tkcontrols:SettingsCard.HeaderIcon>
+							<FontIcon
+								FontFamily="{ThemeResource SymbolThemeFontFamily}"
+								Glyph="&#xE740;" />
+						</tkcontrols:SettingsCard.HeaderIcon>
+						<Slider
+							Width="220"
+							Minimum="220"
+							Maximum="440"
+							StepFrequency="10"
+							Value="{x:Bind ViewModel.ScreenPickerDiameter, Mode=TwoWay}" />
+					</tkcontrols:SettingsCard>
+
+					<!-- ガラス効果。オン/オフのトグルを見出し行に置き、展開して屈折の強さスライダーを出す。オフにすると縁と拡大だけの素のルーペになる。 -->
+					<tkcontrols:SettingsExpander x:Uid="SettingsScreenPickerGlassCard">
+						<tkcontrols:SettingsExpander.HeaderIcon>
+							<FontIcon
+								FontFamily="{ThemeResource SymbolThemeFontFamily}"
+								Glyph="&#xE7B3;" />
+						</tkcontrols:SettingsExpander.HeaderIcon>
+						<ToggleSwitch IsOn="{x:Bind ViewModel.ScreenPickerGlassEffect, Mode=TwoWay}" />
+						<tkcontrols:SettingsExpander.Items>
+							<!-- 屈折の強さの倍率(既定値に掛ける)。0 で屈折なし、1.0 で既定どおり、上げるほど縁が強く歪む。 -->
+							<tkcontrols:SettingsCard x:Uid="SettingsScreenPickerRefractionCard">
+								<Slider
+									Width="220"
+									Minimum="0"
+									Maximum="2"
+									StepFrequency="0.05"
+									Value="{x:Bind ViewModel.ScreenPickerRefractionStrength, Mode=TwoWay}" />
+							</tkcontrols:SettingsCard>
+						</tkcontrols:SettingsExpander.Items>
+					</tkcontrols:SettingsExpander>
+
+					<!-- 画面ピッカーの調整を既定値へ戻す。 -->
+					<Button
+						x:Uid="SettingsScreenPickerResetButton"
+						Margin="0,4,0,0"
+						Click="OnResetScreenPickerClick" />
+				</StackPanel>
+			</StackPanel>
+
+			<!-- このアプリについて。広いときは右の側帯(既定の配置)、狭いときはコードビハインドで設定の下へ回す。 -->
+			<StackPanel
+				x:Name="AboutPanel"
+				Grid.Row="0"
+				Grid.Column="1"
+				Spacing="4"
+				VerticalAlignment="Top">
+				<TextBlock
+					x:Uid="SettingsAboutHeader"
+					Style="{StaticResource BodyStrongTextBlockStyle}" />
+				<TextBlock
+					Margin="0,4,0,0"
+					Text="{x:Bind AppNameVersionText}"
+					TextWrapping="Wrap" />
+				<TextBlock
+					Text="© 2026 Romly All rights reserved."
+					Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+					TextWrapping="Wrap" />
+
+				<!-- 上級者向け設定の表示トグル。オンにすると左の設定群にスライダーつまみレンズの調整セクションが現れる。普段は隠しておく実験的な設定の入口。 -->
+				<ToggleSwitch
+					x:Uid="SettingsAdvancedToggle"
+					Margin="0,16,0,0"
+					IsOn="{x:Bind ViewModel.AdvancedSettings, Mode=TwoWay}" />
+			</StackPanel>
+		</Grid>
+	</ScrollViewer>
+</UserControl>

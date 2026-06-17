@@ -1,0 +1,13 @@
+# ビルド成果物（exe・ログ・selftestが出力するルーペPNGはこの配下に生成される）
+[Bb]in/
+[Oo]bj/
+
+# publish スクリプトが出力する配布用フォルダと zip
+dist/
+
+# Visual Studio / Rider
+.vs/
+*.user
+
+# Claude Code のローカル設定
+.claude/settings.local.json

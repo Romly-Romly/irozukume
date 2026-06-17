@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+	x:Class="Irozukume.Views.HarmonyTabView"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:controls="using:Irozukume.Controls"
+	mc:Ignorable="d">
+
+	<!-- 配色(色相の関係づけ)の2次元コントロールと、その右に並べた配色の種類の設定。左の縦並びで、上に OKLCH の色相×明度の円盤(配色の各色を番号つきマーカーで示し、配色に組み込まれた色を線で結ぶ)を置き、その下に色数ぶんの彩度スライダーを積む。円盤は中心からの角度が色相・距離が明度(中心が白・縁が黒)で配色の各色の色相・明度を、彩度スライダーは各色の彩度を受け持ち、彩度は配色には含めず色ごとに独立に変えられる。右の縦並びで配色の種類を選び、整えるで現在の種類へ各色を寄せる。円盤は領域の幅と、下の彩度スライダーを除いた残りの可視高さの小さい方へ正方形でコード側から合わせ、ウィンドウに追従して拡縮する。編集対象の状態は色リストを束ねる共有モデルを外部から受け取る。 -->
+	<Grid x:Name="LayoutRoot">
+		<Grid ColumnSpacing="16">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="Auto" />
+			</Grid.ColumnDefinitions>
+
+			<!-- 左: 円盤と彩度スライダーの縦並び。円盤は上端へ詰め、彩度スライダーはその下に積む。 -->
+			<Grid Grid.Column="0" RowSpacing="12">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="*" />
+					<RowDefinition Height="Auto" />
+				</Grid.RowDefinitions>
+
+				<!-- 円盤エリア。利用可能な領域いっぱいに、正方形を保って拡縮する。円盤の実寸はコード側で領域の短辺へ合わせ、盤面画像はその実寸と表示倍率に合わせて作り直す。 -->
+				<Grid
+					x:Name="PadArea"
+					Grid.Row="0"
+					SizeChanged="OnPadAreaSizeChanged">
+					<controls:HarmonyDisc
+						x:Name="Disc"
+						x:Uid="HarmonyDiscHint"
+						HorizontalAlignment="Center"
+						VerticalAlignment="Top" />
+					<controls:MonotoneRamp
+						x:Name="Ramp"
+						HorizontalAlignment="Stretch"
+						VerticalAlignment="Top"
+						Visibility="Collapsed" />
+				</Grid>
+
+				<!-- 彩度スライダー群。色数ぶんの行をコード側(EnsureChromaSliders)が組み立てる。各行は番号と、その色の彩度ランプを下地にした水平スライダー。 -->
+				<StackPanel
+					x:Name="SliderHost"
+					Grid.Row="1"
+					Spacing="8"
+					SizeChanged="OnSliderHostSizeChanged" />
+			</Grid>
+
+			<!-- 右: 配色の種類の選択と、整えるボタン。円盤の上端に揃える。ComboBox は内容なりの幅になり親へは伸びないため、最長項目の幅が言語で変わっても揃うよう確定幅を与える。 -->
+			<StackPanel
+				Grid.Column="1"
+				VerticalAlignment="Top"
+				Spacing="16">
+				<StackPanel.Resources>
+					<Style TargetType="ComboBox" BasedOn="{StaticResource DefaultComboBoxStyle}">
+						<Setter Property="Width" Value="180" />
+					</Style>
+				</StackPanel.Resources>
+
+				<!-- 配色の種類。基準色からの色相の角度関係でまとまりを作る角度系の配色を並べる。 -->
+				<StackPanel Spacing="4">
+					<TextBlock x:Uid="HarmonySchemeLabel" Style="{StaticResource CaptionTextBlockStyle}" />
+					<ComboBox SelectedValue="{x:Bind ViewModel.HarmonySchemeKey, Mode=TwoWay}" SelectedValuePath="Tag">
+						<ComboBoxItem Tag="complementary" x:Uid="HarmonyComplementary" />
+						<ComboBoxItem Tag="analogous" x:Uid="HarmonyAnalogous" />
+						<ComboBoxItem Tag="split_complementary" x:Uid="HarmonySplitComplementary" />
+						<ComboBoxItem Tag="diad" x:Uid="HarmonyDiad" />
+						<ComboBoxItem Tag="triadic" x:Uid="HarmonyTriadic" />
+						<ComboBoxItem Tag="tetradic" x:Uid="HarmonyTetradic" />
+						<ComboBoxItem Tag="square" x:Uid="HarmonySquare" />
+						<ComboBoxItem Tag="pentad" x:Uid="HarmonyPentad" />
+						<!-- 角度系と拘束系の区切り。選択不可の項目に区切り線だけを入れる。 -->
+						<ComboBoxItem IsEnabled="False" HorizontalContentAlignment="Stretch">
+							<Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+						</ComboBoxItem>
+						<ComboBoxItem Tag="monochromatic" x:Uid="HarmonyMonochromatic" />
+						<ComboBoxItem Tag="dominant_tone" x:Uid="HarmonyDominantTone" />
+						<ComboBoxItem Tag="tonal" x:Uid="HarmonyTonal" />
+						<!-- 拘束系(色相・トーン)と無彩色系の区切り。 -->
+						<ComboBoxItem IsEnabled="False" HorizontalContentAlignment="Stretch">
+							<Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+						</ComboBoxItem>
+						<ComboBoxItem Tag="monotone" x:Uid="HarmonyMonotone" />
+					</ComboBox>
+				</StackPanel>
+
+				<!-- 角度系・拘束系(モノトーン以外)の操作。整える・色相の反転・明度ディスクの型をまとめ、モノトーンのときは隠す。 -->
+				<StackPanel x:Name="OffsetControls" Spacing="16">
+					<!-- 現在の種類へ各色を寄せる。各色の色相を配色の角度へ、中心からの距離(半径軸)を全色の平均へ揃え、スライダー軸(明度ディスクでは彩度、HSV では明度)は各色のまま保つ。色相の向きの基準には1番の色を使う。 -->
+					<Button x:Uid="HarmonyApply" HorizontalAlignment="Stretch" Click="OnApplyClick" />
+
+					<!-- 配色を逆周り(鏡像)にする。非対称な配色(類似色・テトラード・ダイアード)にだけ効き、対称な配色では無効化(グレーアウト)する。 -->
+					<CheckBox
+						x:Uid="HarmonyReverse"
+						IsChecked="{x:Bind ViewModel.HarmonyReverse, Mode=TwoWay}"
+						IsEnabled="{x:Bind ViewModel.HarmonyReverseApplicable, Mode=OneWay}" />
+
+					<!-- 明度ディスクの型。中心からの距離を明度へどう写すかを選ぶ。フルレンジ(中心白・縁黒)、白→cusp(中心白・縁を最も鮮やかな明度)、黒→cusp(中心黒・縁を最も鮮やかな明度)。表示の見せ方の選択で、配色の色相関係には影響しない。 -->
+					<StackPanel Spacing="4">
+						<TextBlock x:Uid="HarmonyDiscTypeLabel" Style="{StaticResource CaptionTextBlockStyle}" />
+						<ComboBox SelectedValue="{x:Bind ViewModel.LightnessDiscPatternKey, Mode=TwoWay}" SelectedValuePath="Tag">
+							<ComboBoxItem Tag="full_range" x:Uid="HarmonyDiscFullRange" />
+							<ComboBoxItem Tag="full_range_reversed" x:Uid="HarmonyDiscFullRangeReversed" />
+							<!-- フルレンジと cusp 系の区切り。 -->
+							<ComboBoxItem IsEnabled="False" HorizontalContentAlignment="Stretch">
+								<Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+							</ComboBoxItem>
+							<ComboBoxItem Tag="white_to_cusp" x:Uid="HarmonyDiscWhiteToCusp" />
+							<ComboBoxItem Tag="black_to_cusp" x:Uid="HarmonyDiscBlackToCusp" />
+							<!-- OKLCH 明度系と HSV の区切り。 -->
+							<ComboBoxItem IsEnabled="False" HorizontalContentAlignment="Stretch">
+								<Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+							</ComboBoxItem>
+							<ComboBoxItem Tag="hsv" x:Uid="HarmonyDiscHsv" />
+						</ComboBox>
+					</StackPanel>
+				</StackPanel>
+
+				<!-- モノトーンの操作。トーンカーブのプリセット(リニア・S字・逆S字・ガンマ)で明度の並びを整え、反転で並び順を逆にする。モノトーンのときだけ出す。 -->
+				<StackPanel x:Name="MonotoneControls" Spacing="8" Visibility="Collapsed">
+					<TextBlock x:Uid="HarmonyCurveLabel" Style="{StaticResource CaptionTextBlockStyle}" />
+					<Grid ColumnSpacing="8" RowSpacing="8">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="*" />
+							<ColumnDefinition Width="*" />
+						</Grid.ColumnDefinitions>
+						<Grid.RowDefinitions>
+							<RowDefinition Height="Auto" />
+							<RowDefinition Height="Auto" />
+						</Grid.RowDefinitions>
+						<Button Grid.Row="0" Grid.Column="0" x:Uid="HarmonyCurveLinear" HorizontalAlignment="Stretch" Click="OnCurveLinearClick" />
+						<Button Grid.Row="0" Grid.Column="1" x:Uid="HarmonyCurveCubic" HorizontalAlignment="Stretch" Click="OnCurveCubicClick" />
+						<Button Grid.Row="1" Grid.Column="0" x:Uid="HarmonyCurveInverseS" HorizontalAlignment="Stretch" Click="OnCurveInverseSClick" />
+						<Button Grid.Row="1" Grid.Column="1" x:Uid="HarmonyCurveGamma" HorizontalAlignment="Stretch" Click="OnCurveGammaClick" />
+					</Grid>
+					<Button x:Uid="HarmonyCurveReverse" HorizontalAlignment="Stretch" Click="OnCurveReverseClick" />
+				</StackPanel>
+			</StackPanel>
+		</Grid>
+	</Grid>
+</UserControl>

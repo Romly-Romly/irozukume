@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+	x:Class="Irozukume.Controls.ColorSwatchPanel"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:controls="using:Irozukume.Controls"
+	mc:Ignorable="d">
+
+	<UserControl.Resources>
+		<!-- アクティブ枠のアクセント色。RoleChipBar・MixPad と同じく SystemAccentColor を使い、編集中の色を同じ手掛かりで示す。Color を ThemeResource で引いておき、ハイコントラスト等での色変更にも追従させる。 -->
+		<SolidColorBrush x:Key="ActiveSwatchAccentBrush" Color="{ThemeResource SystemAccentColor}" />
+
+		<!-- 透過プレビュー用ボタン。標準ボタンの枠や背景を出さず、敷いた市松と色を隠さないまま、ポインタやキーボードで押せる手応えだけを重ねる。 -->
+		<Style x:Key="AlphaPreviewButtonStyle" TargetType="Button">
+			<Setter Property="HorizontalAlignment" Value="Stretch" />
+			<Setter Property="VerticalAlignment" Value="Stretch" />
+			<Setter Property="HorizontalContentAlignment" Value="Stretch" />
+			<Setter Property="VerticalContentAlignment" Value="Stretch" />
+			<Setter Property="Background" Value="Transparent" />
+			<Setter Property="Padding" Value="0" />
+			<Setter Property="UseSystemFocusVisuals" Value="True" />
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate TargetType="Button">
+						<Grid Background="{TemplateBinding Background}">
+							<ContentPresenter
+								HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+								VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+								Content="{TemplateBinding Content}"
+								ContentTemplate="{TemplateBinding ContentTemplate}" />
+							<Border
+								x:Name="StateOverlay"
+								Background="Transparent" />
+							<VisualStateManager.VisualStateGroups>
+								<VisualStateGroup x:Name="CommonStates">
+									<VisualState x:Name="Normal" />
+									<VisualState x:Name="PointerOver">
+										<VisualState.Setters>
+											<Setter Target="StateOverlay.Background" Value="#26FFFFFF" />
+										</VisualState.Setters>
+									</VisualState>
+									<VisualState x:Name="Pressed">
+										<VisualState.Setters>
+											<Setter Target="StateOverlay.Background" Value="#33000000" />
+										</VisualState.Setters>
+									</VisualState>
+									<VisualState x:Name="Disabled" />
+								</VisualStateGroup>
+							</VisualStateManager.VisualStateGroups>
+						</Grid>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
+
+		<!-- ホバーで現れるツールボタン。どの色の上でも読めるよう、テーマのカード色を敷いた小さな正方形にする。 -->
+		<Style x:Key="SwatchToolButtonStyle" TargetType="Button">
+			<Setter Property="Width" Value="32" />
+			<Setter Property="Height" Value="32" />
+			<Setter Property="Padding" Value="0" />
+			<Setter Property="CornerRadius" Value="4" />
+			<Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+			<Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+			<Setter Property="BorderThickness" Value="1" />
+		</Style>
+
+		<!-- 16進表記の編集を開くボタン。見た目は元のラベルのまま、押せる手応えだけを薄く重ねる。塗りの上で読めるよう前景色は中身の TextBlock 側で束縛する。 -->
+		<Style x:Key="HexLabelButtonStyle" TargetType="Button">
+			<Setter Property="Background" Value="Transparent" />
+			<Setter Property="BorderThickness" Value="0" />
+			<Setter Property="Padding" Value="6,2" />
+			<Setter Property="CornerRadius" Value="4" />
+			<Setter Property="UseSystemFocusVisuals" Value="True" />
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate TargetType="Button">
+						<Grid Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
+							<Border
+								x:Name="StateOverlay"
+								Background="Transparent"
+								CornerRadius="{TemplateBinding CornerRadius}" />
+							<ContentPresenter
+								Padding="{TemplateBinding Padding}"
+								HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+								VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+								Content="{TemplateBinding Content}"
+								ContentTemplate="{TemplateBinding ContentTemplate}" />
+							<VisualStateManager.VisualStateGroups>
+								<VisualStateGroup x:Name="CommonStates">
+									<VisualState x:Name="Normal" />
+									<VisualState x:Name="PointerOver">
+										<VisualState.Setters>
+											<Setter Target="StateOverlay.Background" Value="#26FFFFFF" />
+										</VisualState.Setters>
+									</VisualState>
+									<VisualState x:Name="Pressed">
+										<VisualState.Setters>
+											<Setter Target="StateOverlay.Background" Value="#33000000" />
+										</VisualState.Setters>
+									</VisualState>
+									<VisualState x:Name="Disabled" />
+								</VisualStateGroup>
+							</VisualStateManager.VisualStateGroups>
+						</Grid>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
+	</UserControl.Resources>
+
+	<Grid>
+	<!-- パネル本体。背景に丸め反映済みの色を敷く。色覚シミュレーションを縦軸ではなく横軸に取り、右側の列(P型・D型・T型・1色覚)へ表示トグルがオンの間だけ並べる。透過プレビューは下部のアルファ帯に集約し、帯の左を主色の透過プレビュー、右の各色覚列の真下を「その色覚で見たときの透過の様子」にする。これにより色覚と透過が右下で交差し、双方を同時に見せる。16進表記は左上の不透明域の左下に置く。本体のポインタ操作は、押下後の移動量でクリック(アクティブ化)とドラッグ(並べ替え)を見分ける。 -->
+	<Border
+		x:Name="Root"
+		Background="{x:Bind Item.FillBrush, Mode=OneWay}"
+		BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+		BorderThickness="1"
+		CornerRadius="8"
+		PointerPressed="OnRootPointerPressed"
+		PointerMoved="OnRootPointerMoved"
+		PointerReleased="OnRootPointerReleased"
+		PointerExited="OnRootPointerExited"
+		PointerCaptureLost="OnRootPointerCaptureLost"
+		PointerCanceled="OnRootPointerCanceled"
+		ContextRequested="OnRootContextRequested">
+		<Grid x:Name="ContentRoot" SizeChanged="OnContentRootSizeChanged">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition x:Name="MainColumn" Width="3*" />
+				<ColumnDefinition x:Name="ProtanColumn" Width="*" />
+				<ColumnDefinition x:Name="DeutanColumn" Width="*" />
+				<ColumnDefinition x:Name="TritanColumn" Width="*" />
+				<ColumnDefinition x:Name="MonochromacyColumn" Width="*" />
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="*" />
+				<RowDefinition Height="40" />
+			</Grid.RowDefinitions>
+
+			<!-- 右側: 色覚シミュレーションの不透明塗り(P型・D型・T型・1色覚)。各列の上段にその色覚での見え方を敷く。表示トグルがオフの間は隠し、列幅もコード側で0にして畳む。キャプションはパネル全高に渡る縦ラベルとして後段でこの上に重ねる。 -->
+			<Rectangle Grid.Row="0" Grid.Column="1" Fill="{x:Bind Item.Protan.FillBrush, Mode=OneWay}" Visibility="{x:Bind Item.Protan.RowVisibility, Mode=OneWay}" />
+			<Rectangle Grid.Row="0" Grid.Column="2" Fill="{x:Bind Item.Deutan.FillBrush, Mode=OneWay}" Visibility="{x:Bind Item.Deutan.RowVisibility, Mode=OneWay}" />
+			<Rectangle Grid.Row="0" Grid.Column="3" Fill="{x:Bind Item.Tritan.FillBrush, Mode=OneWay}" Visibility="{x:Bind Item.Tritan.RowVisibility, Mode=OneWay}" />
+			<Rectangle Grid.Row="0" Grid.Column="4" Fill="{x:Bind Item.Monochromacy.FillBrush, Mode=OneWay}" Visibility="{x:Bind Item.Monochromacy.RowVisibility, Mode=OneWay}" />
+
+			<!-- 左下: 主色の透過プレビューと16進表記。透過プレビュー(市松+現在のアルファの色)を敷き、その左下へ16進表記を重ねる。透過プレビューはクリックでこの色をアクティブにしてアルファタブへ移り、16進表記は押すと編集フライアウトが開く。16進の文字色は、市松と現在のアルファの色を合成した見え方に映える黒か白(ForegroundBrush)。 -->
+			<Grid Grid.Row="1" Grid.Column="0">
+				<!-- 透過プレビュー。Button にして、ポインタ・キーボード・支援技術から操作できるようにする。 -->
+				<Button
+					Style="{StaticResource AlphaPreviewButtonStyle}"
+					Click="OnAlphaPreviewClick"
+					x:Uid="SwatchAlphaPreview">
+					<Grid>
+						<controls:CheckerboardPanel x:Name="MainAlphaChecker" />
+						<Rectangle Fill="{x:Bind Item.AlphaFillBrush, Mode=OneWay}" />
+					</Grid>
+				</Button>
+
+				<!-- 16進表記。透過プレビューの上へ重ねる別ボタンで、透過プレビューの操作とは別に当たり判定を持ち、ここを押したときだけ編集フライアウトを開く。 -->
+				<Button
+					Margin="6"
+					HorizontalAlignment="Left"
+					VerticalAlignment="Bottom"
+					Style="{StaticResource HexLabelButtonStyle}"
+					x:Uid="SwatchHexEdit">
+					<TextBlock
+						FontFamily="Consolas"
+						FontSize="16"
+						Foreground="{x:Bind Item.ForegroundBrush, Mode=OneWay}"
+						Text="{x:Bind Item.HexText, Mode=OneWay}" />
+					<Button.Flyout>
+						<Flyout x:Name="HexEditFlyout" Opened="OnHexEditFlyoutOpened">
+							<StackPanel Width="200" Spacing="8">
+								<TextBlock x:Uid="SwatchHexEditHeader" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+								<TextBox
+									x:Name="HexEditBox"
+									x:Uid="SwatchHexEditBox"
+									FontFamily="Consolas"
+									KeyDown="OnHexEditBoxKeyDown"
+									TextChanged="OnHexEditBoxTextChanged" />
+								<TextBlock
+									x:Name="HexEditError"
+									x:Uid="SwatchHexEditError"
+									Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+									TextWrapping="Wrap"
+									Visibility="Collapsed" />
+								<Button
+									x:Uid="SwatchHexEditApply"
+									HorizontalAlignment="Right"
+									Style="{ThemeResource AccentButtonStyle}"
+									Click="OnHexEditApplyClick" />
+							</StackPanel>
+						</Flyout>
+					</Button.Flyout>
+				</Button>
+			</Grid>
+
+			<!-- 右下: 各色覚で見たときの透過プレビュー(色覚と透過の交差)。市松の明色・暗色へ現在のアルファで色を合成してからその色覚での見え方へ変換した2色で、不透明な市松として描く。升の並びは PhaseX(コード側で更新)により左の主色の透過プレビューの市松と切れ目なく繋がる。 -->
+			<controls:CheckerboardPanel
+				x:Name="ProtanAlphaChecker"
+				Grid.Row="1"
+				Grid.Column="1"
+				Visibility="{x:Bind Item.Protan.RowVisibility, Mode=OneWay}"
+				LightFill="{x:Bind Item.Protan.AlphaLightBrush, Mode=OneWay}"
+				DarkFill="{x:Bind Item.Protan.AlphaDarkBrush, Mode=OneWay}" />
+
+			<controls:CheckerboardPanel
+				x:Name="DeutanAlphaChecker"
+				Grid.Row="1"
+				Grid.Column="2"
+				Visibility="{x:Bind Item.Deutan.RowVisibility, Mode=OneWay}"
+				LightFill="{x:Bind Item.Deutan.AlphaLightBrush, Mode=OneWay}"
+				DarkFill="{x:Bind Item.Deutan.AlphaDarkBrush, Mode=OneWay}" />
+
+			<controls:CheckerboardPanel
+				x:Name="TritanAlphaChecker"
+				Grid.Row="1"
+				Grid.Column="3"
+				Visibility="{x:Bind Item.Tritan.RowVisibility, Mode=OneWay}"
+				LightFill="{x:Bind Item.Tritan.AlphaLightBrush, Mode=OneWay}"
+				DarkFill="{x:Bind Item.Tritan.AlphaDarkBrush, Mode=OneWay}" />
+
+			<controls:CheckerboardPanel
+				x:Name="MonochromacyAlphaChecker"
+				Grid.Row="1"
+				Grid.Column="4"
+				Visibility="{x:Bind Item.Monochromacy.RowVisibility, Mode=OneWay}"
+				LightFill="{x:Bind Item.Monochromacy.AlphaLightBrush, Mode=OneWay}"
+				DarkFill="{x:Bind Item.Monochromacy.AlphaDarkBrush, Mode=OneWay}" />
+
+			<!-- 色覚列のキャプション。各列のパネル全高(不透明域+アルファ帯)に渡る Canvas へ載せ、配置はコード側(PositionVerticalLabel)で行う。Canvas は子を無限幅で測るため、回転前の横書きが狭い列幅で切り詰められない。日本語は1文字ずつ縦書きで横中央・上揃え、英語等は左上角を軸に時計回り90度回転して上から読み下し、パネル高を超えた分は下端で切れる。 -->
+			<Canvas
+				Grid.Row="0"
+				Grid.RowSpan="2"
+				Grid.Column="1"
+				Visibility="{x:Bind Item.Protan.RowVisibility, Mode=OneWay}"
+				SizeChanged="OnLabelCanvasSizeChanged">
+				<TextBlock
+					x:Name="ProtanLabel"
+					x:Uid="VisionProtan"
+					TextAlignment="Center"
+					FontSize="12"
+					LineHeight="14"
+					LineStackingStrategy="BlockLineHeight"
+					Foreground="{x:Bind Item.Protan.ForegroundBrush, Mode=OneWay}" />
+			</Canvas>
+
+			<Canvas
+				Grid.Row="0"
+				Grid.RowSpan="2"
+				Grid.Column="2"
+				Visibility="{x:Bind Item.Deutan.RowVisibility, Mode=OneWay}"
+				SizeChanged="OnLabelCanvasSizeChanged">
+				<TextBlock
+					x:Name="DeutanLabel"
+					x:Uid="VisionDeutan"
+					TextAlignment="Center"
+					FontSize="12"
+					LineHeight="14"
+					LineStackingStrategy="BlockLineHeight"
+					Foreground="{x:Bind Item.Deutan.ForegroundBrush, Mode=OneWay}" />
+			</Canvas>
+
+			<Canvas
+				Grid.Row="0"
+				Grid.RowSpan="2"
+				Grid.Column="3"
+				Visibility="{x:Bind Item.Tritan.RowVisibility, Mode=OneWay}"
+				SizeChanged="OnLabelCanvasSizeChanged">
+				<TextBlock
+					x:Name="TritanLabel"
+					x:Uid="VisionTritan"
+					TextAlignment="Center"
+					FontSize="12"
+					LineHeight="14"
+					LineStackingStrategy="BlockLineHeight"
+					Foreground="{x:Bind Item.Tritan.ForegroundBrush, Mode=OneWay}" />
+			</Canvas>
+
+			<Canvas
+				Grid.Row="0"
+				Grid.RowSpan="2"
+				Grid.Column="4"
+				Visibility="{x:Bind Item.Monochromacy.RowVisibility, Mode=OneWay}"
+				SizeChanged="OnLabelCanvasSizeChanged">
+				<TextBlock
+					x:Name="MonochromacyLabel"
+					x:Uid="VisionMonochromacy"
+					TextAlignment="Center"
+					FontSize="12"
+					LineHeight="14"
+					LineStackingStrategy="BlockLineHeight"
+					Foreground="{x:Bind Item.Monochromacy.ForegroundBrush, Mode=OneWay}" />
+			</Canvas>
+
+			<!-- 上端に横並びのツールボタン(削除・下に追加)。パネル上部へポインタを寄せた間だけ見せ、左へ詰める。これにより右側の色覚シミュレーションの列と重ならない。削除は色が1つしか無い間、追加は色数が上限の間押せない。 -->
+			<StackPanel
+				x:Name="ToolButtons"
+				Grid.Row="0"
+				Grid.RowSpan="2"
+				Grid.Column="0"
+				Grid.ColumnSpan="5"
+				Orientation="Horizontal"
+				HorizontalAlignment="Left"
+				VerticalAlignment="Top"
+				Margin="8,8,0,0"
+				Spacing="4"
+				Visibility="Collapsed">
+				<Button
+					x:Uid="SwatchToolDelete"
+					Style="{StaticResource SwatchToolButtonStyle}"
+					IsEnabled="{x:Bind Item.CanDelete, Mode=OneWay}"
+					Click="OnDeleteClick">
+					<FontIcon Glyph="&#xE74D;" FontSize="14" />
+				</Button>
+				<Button
+					x:Uid="SwatchToolAdd"
+					Style="{StaticResource SwatchToolButtonStyle}"
+					IsEnabled="{x:Bind Item.CanAdd, Mode=OneWay}"
+					Click="OnAddClick">
+					<FontIcon Glyph="&#xE710;" FontSize="14" />
+				</Button>
+				<Button
+					x:Uid="SwatchToolFavorite"
+					Style="{StaticResource SwatchToolButtonStyle}"
+					Click="OnFavoriteClick">
+					<FontIcon Glyph="&#xE734;" FontSize="14" />
+				</Button>
+			</StackPanel>
+		</Grid>
+	</Border>
+
+	<!-- アクティブ(編集対象)の色を示すアクセント枠。コントラストの役選択や Mix タブのポッチと同じく SystemAccentColor の枠で示し、サイドバーでも編集中の色を同じ手掛かりで分かるようにする。塗りの操作を妨げないよう当たり判定は持たず、Root の上へ重ねるだけにする。アクセント色が塗りの色に近くても埋もれないよう、枠の内側へ暗・明の細い縁を重ねて塗りと分ける。 -->
+	<Border
+		x:Name="ActiveRing"
+		BorderBrush="{StaticResource ActiveSwatchAccentBrush}"
+		BorderThickness="3"
+		CornerRadius="8"
+		IsHitTestVisible="False"
+		Visibility="{x:Bind Item.ActiveRingVisibility, Mode=OneWay}">
+		<Border
+			BorderBrush="#FF000000"
+			BorderThickness="0.5"
+			CornerRadius="5">
+			<Border
+				BorderBrush="#FFFFFFFF"
+				BorderThickness="0.5"
+				CornerRadius="4.5" />
+		</Border>
+	</Border>
+	</Grid>
+</UserControl>

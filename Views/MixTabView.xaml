@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+	x:Class="Irozukume.Views.MixTabView"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:controls="using:Irozukume.Controls"
+	mc:Ignorable="d">
+
+	<!-- 多点グラデーションの2次元平面と、その右に並べた補間の設定群。平面にはサイドバーの色数ぶんの番号付きひし形ポッチが乗り、各ポッチを任意の位置へドラッグできる。平面は各色をそのポッチ位置に置いたグラデーションで塗る。右の縦並びで、混ぜる色空間・平面の塗り広げ方(空間補間)を選び、自動アレンジでポッチを整列させる。平面は正方形に縛らず、領域の幅いっぱい・残りの可視高さへコード側から合わせ、ウィンドウに追従して拡縮する。距離は画面(ピクセル)空間で測るため、非正方形でもボケや最近傍の境は歪まない。 -->
+	<Grid x:Name="LayoutRoot">
+		<Grid ColumnSpacing="16">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="Auto" />
+			</Grid.ColumnDefinitions>
+
+			<!-- 平面エリア。利用可能な領域いっぱい(幅最大・残りの可視高さ)に拡縮する。平面の実寸はコード側で領域の幅と可視高さへ合わせ、グラデーション画像はその実寸・縦横比と表示倍率に合わせて作り直す。 -->
+			<Grid
+				x:Name="PadArea"
+				Grid.Column="0"
+				SizeChanged="OnPadAreaSizeChanged">
+				<controls:MixPad
+					x:Name="Pad"
+					HorizontalAlignment="Center"
+					VerticalAlignment="Top" />
+			</Grid>
+
+			<!-- 平面の右に縦並びで、色空間・補間方式の選択と自動アレンジを置く。平面の上端に揃える。ComboBox は内容なりの幅になり親へは伸びないため、最長項目の幅が言語で変わっても揃うよう各 ComboBox へ確定幅を与える。Slider とボタンは親幅へ伸びるので、列幅(= ComboBox の確定幅)に追従する。 -->
+			<StackPanel
+				Grid.Column="1"
+				VerticalAlignment="Top"
+				Spacing="16">
+
+				<!-- 各 ComboBox の幅はこの暗黙スタイルで一括指定する。対象はこの StackPanel 配下の ComboBox 全て。幅の調整はこの Setter 一箇所で済む。 -->
+				<StackPanel.Resources>
+					<Style TargetType="ComboBox" BasedOn="{StaticResource DefaultComboBoxStyle}">
+						<Setter Property="Width" Value="144" />
+					</Style>
+				</StackPanel.Resources>
+
+				<!-- 混ぜる色空間。色空間名は言語非依存のためそのまま書く。 -->
+				<StackPanel Spacing="4">
+					<TextBlock x:Uid="MixSpaceLabel" Style="{StaticResource CaptionTextBlockStyle}" />
+					<ComboBox x:Name="SpaceCombo" SelectionChanged="OnSpaceChanged">
+						<ComboBoxItem Content="OKLCH" />
+						<ComboBoxItem Content="OKLab" />
+						<ComboBoxItem Content="CIE LCH" />
+						<ComboBoxItem Content="CIE Lab" />
+						<ComboBoxItem Content="HSL" />
+						<ComboBoxItem Content="Linear sRGB" />
+						<ComboBoxItem Content="sRGB" />
+					</ComboBox>
+				</StackPanel>
+
+				<!-- 色相を持つ色空間(OKLCH・CIE LCH・HSL)での色相の回り方。色相を持たない色空間では効かない。 -->
+				<StackPanel Spacing="4">
+					<TextBlock x:Uid="MixHueDirLabel" Style="{StaticResource CaptionTextBlockStyle}" />
+					<ComboBox x:Name="HueDirCombo" SelectionChanged="OnHueDirChanged">
+						<ComboBoxItem x:Uid="MixHueShorter" />
+						<ComboBoxItem x:Uid="MixHueLonger" />
+					</ComboBox>
+				</StackPanel>
+
+				<!-- 平面の塗り広げ方(空間補間)。 -->
+				<StackPanel Spacing="4">
+					<TextBlock x:Uid="MixMethodLabel" Style="{StaticResource CaptionTextBlockStyle}" />
+					<ComboBox x:Name="MethodCombo" SelectionChanged="OnMethodChanged">
+						<ComboBoxItem x:Uid="MixMethodIdw" />
+						<ComboBoxItem x:Uid="MixMethodGaussian" />
+						<ComboBoxItem x:Uid="MixMethodNearest" />
+					</ComboBox>
+				</StackPanel>
+
+				<!-- 重みの効き具合(とろける⇔くっきり)。最近傍では効かない。 -->
+				<StackPanel Spacing="4">
+					<TextBlock x:Uid="MixSharpnessLabel" Style="{StaticResource CaptionTextBlockStyle}" />
+					<Slider
+						x:Name="SharpnessSlider"
+						Minimum="0"
+						Maximum="1"
+						StepFrequency="0.01"
+						SmallChange="0.01"
+						LargeChange="0.1"
+						IsThumbToolTipEnabled="False"
+						ValueChanged="OnSharpnessChanged" />
+				</StackPanel>
+
+				<!-- 自動アレンジ。ポッチを四隅・正多角形・縦一列・横一列のいずれかへ整列させる。 -->
+				<Button x:Uid="MixArrangeButton" HorizontalAlignment="Stretch">
+					<Button.Flyout>
+						<MenuFlyout>
+							<MenuFlyoutItem x:Uid="MixArrangeCorners" Tag="corners" Click="OnArrangeClick" />
+							<MenuFlyoutItem x:Uid="MixArrangePolygon" Tag="polygon" Click="OnArrangeClick" />
+							<MenuFlyoutItem x:Uid="MixArrangeColumn" Tag="column" Click="OnArrangeClick" />
+							<MenuFlyoutItem x:Uid="MixArrangeRow" Tag="row" Click="OnArrangeClick" />
+						</MenuFlyout>
+					</Button.Flyout>
+				</Button>
+			</StackPanel>
+		</Grid>
+	</Grid>
+</UserControl>

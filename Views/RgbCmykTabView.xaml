@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+	x:Class="Irozukume.Views.RgbCmykTabView"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:controls="using:Irozukume.Controls"
+	xmlns:helpers="using:Irozukume.Helpers"
+	mc:Ignorable="d">
+
+	<!-- RGB 群と CMYK 群を縦に積む。群の内側は詰め(両群とも共通の SliderSpacing)、群と群の間は離す(外側 Spacing 24)。ドラッグ時のルーペは最前面オーバーレイへ描かれ切り抜かれないため、先頭の R スライダーの上に逃げ場の余白は要らない。 -->
+	<StackPanel Spacing="24">
+		<StackPanel.Resources>
+			<!-- 各行に共通の3列構成(ラベル・スライダー・数値入力)の幅を揃える。ラベル列の幅は全スライダータブ共通の SliderLabelWidth を使う。数値入力欄は ExpandingNumberBox で、普段は値だけを収める ValueRestWidth まで縮め、フォーカス時(スピンボタンのポップアップ時)に ValueWidth まで広げる。縮んだぶんは隣のスライダー列が伸びる。数値入力欄の右には全行で同じ幅(SuffixWidth)の単位スロットを置き、CMYK だけ "%" を入れる。RGB・グレーは空でも同じ幅を確保し、全行の数値欄の左端を一直線に揃える。 -->
+			<x:Double x:Key="ValueWidth">120</x:Double>
+			<x:Double x:Key="ValueRestWidth">72</x:Double>
+			<x:Double x:Key="SuffixWidth">14</x:Double>
+		</StackPanel.Resources>
+
+		<!-- RGB 群 (0–255) -->
+		<StackPanel Spacing="{StaticResource SliderSpacing}">
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="Auto" />
+				</Grid.ColumnDefinitions>
+				<TextBlock
+					x:Uid="HintRed"
+					Grid.Column="0"
+					Width="{StaticResource SliderLabelWidth}"
+					VerticalAlignment="Center"
+					Text="R" />
+				<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+					x:Uid="HintRed"
+					Grid.Column="1"
+					AutomationProperties.Name="R"
+					AutomationProperties.AutomationId="RedSlider"
+					Minimum="0"
+					Maximum="255"
+					StepFrequency="1"
+					LargeChange="{x:Bind ViewModel.RgbLargeStep, Mode=OneWay}"
+					Value="{x:Bind ViewModel.R, Mode=TwoWay}"
+					TrackBrush="{x:Bind ViewModel.RedTrackBrush, Mode=OneWay}" />
+				<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+					<controls:ExpandingNumberBox
+						x:Name="RValueBox"
+						x:Uid="HintRed"
+						FocusWidth="{StaticResource ValueWidth}"
+						RestWidth="{StaticResource ValueRestWidth}"
+						VerticalAlignment="Center"
+						SpinButtonPlacementMode="Compact"
+						Minimum="0"
+						Maximum="255"
+						Tag="R"
+						AutomationProperties.Name="R"
+						AutomationProperties.AutomationId="RedValueBox"
+						ValueChanged="OnRgbValueChanged" />
+					<TextBlock Width="{StaticResource SuffixWidth}" />
+				</StackPanel>
+			</Grid>
+
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="Auto" />
+				</Grid.ColumnDefinitions>
+				<TextBlock
+					x:Uid="HintGreen"
+					Grid.Column="0"
+					Width="{StaticResource SliderLabelWidth}"
+					VerticalAlignment="Center"
+					Text="G" />
+				<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+					x:Uid="HintGreen"
+					Grid.Column="1"
+					AutomationProperties.Name="G"
+					AutomationProperties.AutomationId="GreenSlider"
+					Minimum="0"
+					Maximum="255"
+					StepFrequency="1"
+					LargeChange="{x:Bind ViewModel.RgbLargeStep, Mode=OneWay}"
+					Value="{x:Bind ViewModel.G, Mode=TwoWay}"
+					TrackBrush="{x:Bind ViewModel.GreenTrackBrush, Mode=OneWay}" />
+				<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+					<controls:ExpandingNumberBox
+						x:Name="GValueBox"
+						x:Uid="HintGreen"
+						FocusWidth="{StaticResource ValueWidth}"
+						RestWidth="{StaticResource ValueRestWidth}"
+						VerticalAlignment="Center"
+						SpinButtonPlacementMode="Compact"
+						Minimum="0"
+						Maximum="255"
+						Tag="G"
+						AutomationProperties.Name="G"
+						AutomationProperties.AutomationId="GreenValueBox"
+						ValueChanged="OnRgbValueChanged" />
+					<TextBlock Width="{StaticResource SuffixWidth}" />
+				</StackPanel>
+			</Grid>
+
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="Auto" />
+				</Grid.ColumnDefinitions>
+				<TextBlock
+					x:Uid="HintBlue"
+					Grid.Column="0"
+					Width="{StaticResource SliderLabelWidth}"
+					VerticalAlignment="Center"
+					Text="B" />
+				<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+					x:Uid="HintBlue"
+					Grid.Column="1"
+					AutomationProperties.Name="B"
+					AutomationProperties.AutomationId="BlueSlider"
+					Minimum="0"
+					Maximum="255"
+					StepFrequency="1"
+					LargeChange="{x:Bind ViewModel.RgbLargeStep, Mode=OneWay}"
+					Value="{x:Bind ViewModel.B, Mode=TwoWay}"
+					TrackBrush="{x:Bind ViewModel.BlueTrackBrush, Mode=OneWay}" />
+				<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+					<controls:ExpandingNumberBox
+						x:Name="BValueBox"
+						x:Uid="HintBlue"
+						FocusWidth="{StaticResource ValueWidth}"
+						RestWidth="{StaticResource ValueRestWidth}"
+						VerticalAlignment="Center"
+						SpinButtonPlacementMode="Compact"
+						Minimum="0"
+						Maximum="255"
+						Tag="B"
+						AutomationProperties.Name="B"
+						AutomationProperties.AutomationId="BlueValueBox"
+						ValueChanged="OnRgbValueChanged" />
+					<TextBlock Width="{StaticResource SuffixWidth}" />
+				</StackPanel>
+			</Grid>
+
+			<!-- RGB の数値表示の単位。スライダーの値は常に 0–255 で、ここでは数値入力欄の見せ方(255 / FF / 1.0)だけを選ぶ。無彩色スライダーも同じ単位(RgbUnitIndex)に従う。スライダー列に揃えるため先頭にラベル幅の空き列を置き、RGB 群の直下に少し間を空けて添える。 -->
+			<Grid Margin="0,0,0,0">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="Auto" />
+				</Grid.ColumnDefinitions>
+				<TextBlock
+					Grid.Column="0"
+					Width="{StaticResource SliderLabelWidth}" />
+				<ComboBox
+					Grid.Column="1"
+					HorizontalAlignment="Left"
+					x:Uid="RgbTabUnit"
+					AutomationProperties.AutomationId="RgbUnitComboBox"
+					SelectedIndex="{x:Bind ViewModel.RgbUnitIndex, Mode=TwoWay}">
+					<x:String>255</x:String>
+					<x:String>FF</x:String>
+					<x:String>1.0</x:String>
+				</ComboBox>
+			</Grid>
+		</StackPanel>
+
+		<!-- CMYK 群 (0–100%) -->
+		<StackPanel Spacing="{StaticResource SliderSpacing}">
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="Auto" />
+				</Grid.ColumnDefinitions>
+				<TextBlock
+					x:Uid="HintCyan"
+					Grid.Column="0"
+					Width="{StaticResource SliderLabelWidth}"
+					VerticalAlignment="Center"
+					Text="C" />
+				<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+					x:Uid="HintCyan"
+					Grid.Column="1"
+					AutomationProperties.Name="C"
+					AutomationProperties.AutomationId="CyanSlider"
+					Minimum="0"
+					Maximum="100"
+					StepFrequency="1"
+					LargeChange="10"
+					Value="{x:Bind ViewModel.C, Mode=TwoWay}"
+					TrackBrush="{x:Bind ViewModel.CyanTrackBrush, Mode=OneWay}" />
+				<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+					<controls:ExpandingNumberBox
+						FocusWidth="{StaticResource ValueWidth}"
+						RestWidth="{StaticResource ValueRestWidth}"
+						VerticalAlignment="Center"
+						SpinButtonPlacementMode="Compact"
+						Minimum="0"
+						Maximum="100"
+						NumberFormatter="{x:Bind helpers:NumberFormatters.Integer}"
+						x:Uid="HintCyan"
+						AutomationProperties.Name="C"
+						AutomationProperties.AutomationId="CyanValueBox"
+						Value="{x:Bind ViewModel.C, Mode=TwoWay}" />
+					<TextBlock Text="%" Width="{StaticResource SuffixWidth}" VerticalAlignment="Center" />
+				</StackPanel>
+			</Grid>
+
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="Auto" />
+				</Grid.ColumnDefinitions>
+				<TextBlock
+					x:Uid="HintMagenta"
+					Grid.Column="0"
+					Width="{StaticResource SliderLabelWidth}"
+					VerticalAlignment="Center"
+					Text="M" />
+				<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+					x:Uid="HintMagenta"
+					Grid.Column="1"
+					AutomationProperties.Name="M"
+					AutomationProperties.AutomationId="MagentaSlider"
+					Minimum="0"
+					Maximum="100"
+					StepFrequency="1"
+					LargeChange="10"
+					Value="{x:Bind ViewModel.M, Mode=TwoWay}"
+					TrackBrush="{x:Bind ViewModel.MagentaTrackBrush, Mode=OneWay}" />
+				<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+					<controls:ExpandingNumberBox
+						FocusWidth="{StaticResource ValueWidth}"
+						RestWidth="{StaticResource ValueRestWidth}"
+						VerticalAlignment="Center"
+						SpinButtonPlacementMode="Compact"
+						Minimum="0"
+						Maximum="100"
+						NumberFormatter="{x:Bind helpers:NumberFormatters.Integer}"
+						x:Uid="HintMagenta"
+						AutomationProperties.Name="M"
+						AutomationProperties.AutomationId="MagentaValueBox"
+						Value="{x:Bind ViewModel.M, Mode=TwoWay}" />
+					<TextBlock Text="%" Width="{StaticResource SuffixWidth}" VerticalAlignment="Center" />
+				</StackPanel>
+			</Grid>
+
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="Auto" />
+				</Grid.ColumnDefinitions>
+				<TextBlock
+					x:Uid="HintYellow"
+					Grid.Column="0"
+					Width="{StaticResource SliderLabelWidth}"
+					VerticalAlignment="Center"
+					Text="Y" />
+				<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+					x:Uid="HintYellow"
+					Grid.Column="1"
+					AutomationProperties.Name="Y"
+					AutomationProperties.AutomationId="YellowSlider"
+					Minimum="0"
+					Maximum="100"
+					StepFrequency="1"
+					LargeChange="10"
+					Value="{x:Bind ViewModel.Y, Mode=TwoWay}"
+					TrackBrush="{x:Bind ViewModel.YellowTrackBrush, Mode=OneWay}" />
+				<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+					<controls:ExpandingNumberBox
+						FocusWidth="{StaticResource ValueWidth}"
+						RestWidth="{StaticResource ValueRestWidth}"
+						VerticalAlignment="Center"
+						SpinButtonPlacementMode="Compact"
+						Minimum="0"
+						Maximum="100"
+						NumberFormatter="{x:Bind helpers:NumberFormatters.Integer}"
+						x:Uid="HintYellow"
+						AutomationProperties.Name="Y"
+						AutomationProperties.AutomationId="YellowValueBox"
+						Value="{x:Bind ViewModel.Y, Mode=TwoWay}" />
+					<TextBlock Text="%" Width="{StaticResource SuffixWidth}" VerticalAlignment="Center" />
+				</StackPanel>
+			</Grid>
+
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="Auto" />
+				</Grid.ColumnDefinitions>
+				<TextBlock
+					x:Uid="HintKey"
+					Grid.Column="0"
+					Width="{StaticResource SliderLabelWidth}"
+					VerticalAlignment="Center"
+					Text="K" />
+				<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+					x:Uid="HintKey"
+					Grid.Column="1"
+					AutomationProperties.Name="K"
+					AutomationProperties.AutomationId="KeySlider"
+					Minimum="0"
+					Maximum="100"
+					StepFrequency="1"
+					LargeChange="10"
+					Value="{x:Bind ViewModel.K, Mode=TwoWay}"
+					TrackBrush="{x:Bind ViewModel.KeyTrackBrush, Mode=OneWay}" />
+				<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+					<controls:ExpandingNumberBox
+						FocusWidth="{StaticResource ValueWidth}"
+						RestWidth="{StaticResource ValueRestWidth}"
+						VerticalAlignment="Center"
+						SpinButtonPlacementMode="Compact"
+						Minimum="0"
+						Maximum="100"
+						NumberFormatter="{x:Bind helpers:NumberFormatters.Integer}"
+						x:Uid="HintKey"
+						AutomationProperties.Name="K"
+						AutomationProperties.AutomationId="KeyValueBox"
+						Value="{x:Bind ViewModel.K, Mode=TwoWay}" />
+					<TextBlock Text="%" Width="{StaticResource SuffixWidth}" VerticalAlignment="Center" />
+				</StackPanel>
+			</Grid>
+		</StackPanel>
+
+		<!-- 無彩色(灰)群。R=G=B を同値へ揃える1本。R・G・B・C・M・Y・K と違い、動かすと R・G・B が連動するマクロのため、独立して動かせるチャンネルの群とは分けて区別する(K のノリで掴むと全要素が動く取り違えを避ける)。値は 0–255 で、上の RGB 単位コンボ(RgbUnitIndex)に従う。ラベルは緑と同じ G を使う(無彩色に固有の1文字が無いため)が、スライダーが黒→白のグレーランプである点と、ツールチップ(グレー)で緑と見分けられる。スライダーは現在色の Rec.601 加重輝度を代表位置として示し、つまむまで脱色しない。 -->
+		<StackPanel Spacing="{StaticResource SliderSpacing}">
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="Auto" />
+				</Grid.ColumnDefinitions>
+				<TextBlock
+					x:Uid="NameGray"
+					Grid.Column="0"
+					Width="{StaticResource SliderLabelWidth}"
+					VerticalAlignment="Center"
+					Text="G" />
+				<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+					x:Name="GraySlider"
+					Grid.Column="1"
+					x:Uid="NameGray"
+					AutomationProperties.AutomationId="GraySlider"
+					Minimum="0"
+					Maximum="255"
+					StepFrequency="1"
+					LargeChange="{x:Bind ViewModel.RgbLargeStep, Mode=OneWay}"
+					ValueChanged="OnGraySliderValueChanged"
+					TrackBrush="{x:Bind ViewModel.GrayTrackBrush, Mode=OneWay}" />
+				<StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+					<controls:ExpandingNumberBox
+						x:Name="GrayValueBox"
+						FocusWidth="{StaticResource ValueWidth}"
+						RestWidth="{StaticResource ValueRestWidth}"
+						VerticalAlignment="Center"
+						SpinButtonPlacementMode="Compact"
+						Minimum="0"
+						Maximum="255"
+						Tag="Gray"
+						x:Uid="NameGray"
+						AutomationProperties.AutomationId="GrayValueBox"
+						ValueChanged="OnRgbValueChanged" />
+					<TextBlock Width="{StaticResource SuffixWidth}" />
+				</StackPanel>
+			</Grid>
+		</StackPanel>
+	</StackPanel>
+</UserControl>
