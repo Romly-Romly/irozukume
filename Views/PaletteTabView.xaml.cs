@@ -308,7 +308,14 @@ public sealed partial class PaletteTabView : UserControl
 		var rename = new MenuFlyoutItem { Text = Loc.Get("Favorite_MenuRename"), KeyboardAcceleratorTextOverride = "F2" };
 		rename.Click += async (_, _) => await RenameFavoriteAsync(row);
 
-		var delete = new MenuFlyoutItem { Text = Loc.Get("Favorite_MenuDelete"), KeyboardAcceleratorTextOverride = "Del" };
+		// 削除は元に戻せない破壊的操作なので、ごみ箱アイコンをシステムの危険色(赤)で示して警告する。色はテーマ追従の SystemFillColorCriticalBrush を引き、ライト/ダーク/ハイコントラストで適切な赤になる。キャプションは既定色のままにして、赤はアイコンだけに留める。
+		var criticalBrush = (Brush)Application.Current.Resources["SystemFillColorCriticalBrush"];
+		var delete = new MenuFlyoutItem
+		{
+			Text = Loc.Get("Favorite_MenuDelete"),
+			KeyboardAcceleratorTextOverride = "Del",
+			Icon = new SymbolIcon(Symbol.Delete) { Foreground = criticalBrush },
+		};
 		delete.Click += async (_, _) => await DeleteFavoriteAsync(row);
 
 		flyout.Items.Add(restore);

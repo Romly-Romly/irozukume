@@ -24,4 +24,10 @@ public static class ScreenPickerTuning
 
 	// 縁の屈折の強さの倍率(既定の屈折量に掛ける)。1.0 で既定どおり、0 で屈折なし、上げるほど縁が強く歪む。ガラス効果オフでは効かない。
 	public static double RefractionStrength = DefaultRefractionStrength;
+
+	// 採色セッション中にホイールで最後に使った実拡大率 bp(1ソース画素あたりの物理px)。次回の採色も前回の拡大率から始められるよう永続化する。0 は未設定で、その場合は Magnify から初期 bp を導く。拡大率の設定(Magnify)を明示的に変えたときは 0 へ戻し、新しい既定が効くようにする。
+	public static int LastBlockPx = 0;
+
+	// 採色セッション中に Ctrl+ホイールで最後に使った取得範囲の半径(ソース画素)。0 で単一画素。次回の採色も前回の範囲から始められるよう永続化する。
+	public static int LastSampleRadius = 0;
 }

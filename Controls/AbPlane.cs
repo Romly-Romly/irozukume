@@ -2,8 +2,6 @@
 // Copyright (C) 2026 Romly
 
 using System;
-using System.IO;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.UI;
@@ -12,7 +10,7 @@ using Irozukume.Models;
 
 namespace Irozukume.Controls;
 
-// 指定した明度における Lab の a・b パッドの下地を描いた画像を生成する。横軸が a(左 −上限→右 +上限)、縦軸が b(上 +上限→下 −上限)で、各画素を Lab→RGB へ変換する。Lab の a・b 断面は sRGB 色域に収まる領域が明度に応じて伸び縮みする湾曲した塊で、残りは色域外。色域内の画素は実際の色で塗る。色域外の見せ方は GamutOutOfRangeStyle で切り替える。明度・副モード・色制限・色域外の見せ方が変わるたびに作り直す想定。色制限が有効なら色域内の画素の色をその制限へ丸めて段階的にする。
+// 指定した明度における Lab の a・b パッドの下地を描いた画像を生成する。横軸が a(左=枠の下限→右=上限)、縦軸が b(上=枠の上限→下=下限)で、各画素を Lab→RGB へ変換する。表示枠は AbFitMode で決め、None は ±AbMax の固定枠、フィット時はその明度で色域が収まる範囲へ寄せて有効領域を広げる(LabColor.AbExtentFor)。Lab の a・b 断面は sRGB 色域に収まる領域が明度に応じて伸び縮みする湾曲した塊で、残りは色域外。色域内の画素は実際の色で塗る。色域外の見せ方は GamutOutOfRangeStyle で切り替える。明度・副モード・色制限・色域外の見せ方・表示枠が変わるたびに作り直す想定。色制限が有効なら色域内の画素の色をその制限へ丸めて段階的にする。
 public static class AbPlane
 {
 	// 色域外を示す斜線ハッチ。黒線と白線を密着で並べ、暗い背景では白が、明るい背景では黒が効くようにして、グラデーションのどこでも消えないようにする。線幅(垂直)0.7 DIP、周期(x+y 方向)10 DIP。45 度の線のため、x+y 方向の帯幅は線幅の √2 倍にあたる。L-C パッド(LcPlane)・水平スライダーのハッチ(GradientSlider)もこの寸法・色に合わせる。
@@ -24,12 +22,22 @@ public static class AbPlane
 	private const byte HatchWhiteAlpha = 0x4D;
 
 
-	// 指定した画素サイズ・表色系・明度・色制限設定・表示倍率・色域外の見せ方で、a・b パッドの下地を描いた WriteableBitmap を作る。色域内は実色で塗り、色域外は style に従う。ハッチは DIP 指定の寸法を表示倍率で画素へ直し、スライダーのベクターのハッチと太さ・間隔をそろえる。
-	public static WriteableBitmap Create(int pixelWidth, int pixelHeight, LchSpace space, double lightness, SnapSettings snap, double scale, GamutOutOfRangeStyle style)
+	// 指定した画素サイズ・表色系・明度・色制限設定・表示倍率・色域外の見せ方・表示枠の決め方で、a・b パッドの下地を描いた WriteableBitmap を作る。色域内は実色で塗り、色域外は style に従う。ハッチは DIP 指定の寸法を表示倍率で画素へ直し、スライダーのベクターのハッチと太さ・間隔をそろえる。画素計算(ComputePixels)とビットマップ化(LchGamutField.Blit)を続けて行う同期版。ドラッグ中の連続再生成では呼び出し側が ComputePixels を背景スレッドで回し、Blit だけ UI スレッドで行う。
+	public static WriteableBitmap Create(int pixelWidth, int pixelHeight, LchSpace space, double lightness, SnapSettings snap, double scale, GamutOutOfRangeStyle style, AbFitMode fit)
 	{
-		var bitmap = new WriteableBitmap(pixelWidth, pixelHeight);
+		return LchGamutField.Blit(ComputePixels(pixelWidth, pixelHeight, space, lightness, snap, scale, style, fit), pixelWidth, pixelHeight);
+	}
+
+
+
+
+	// a・b パッドの下地の BGRA 配列を返す。WriteableBitmap などの UI 型に触れないため背景スレッドで実行してよい。色域外のクランプ色を色相別の引き表へ前計算し、色域外の各画素はその引き表から引くだけにして画素ごとの彩度二分法を避ける最適化を含む。引数の意味は Create と同じ。
+	public static byte[] ComputePixels(int pixelWidth, int pixelHeight, LchSpace space, double lightness, SnapSettings snap, double scale, GamutOutOfRangeStyle style, AbFitMode fit)
+	{
 		byte[] pixels = new byte[pixelWidth * pixelHeight * 4];
-		double abMax = LabColor.AbMax(space);
+
+		// 表示枠。横軸 a を左端 XMin→右端 XMax、縦軸 b を上端 YMax→下端 YMin へ線形に割り当てる。None の固定枠では (−AbMax, +AbMax) の対称、フィット時は色域の広がりに合わせた非対称になりうる。
+		PlaneExtent extent = LabColor.AbExtentFor(space, lightness, fit);
 
 		double hatchPeriod = HatchPeriod * scale;
 		double hatchBand = HatchLineWidth * Math.Sqrt(2.0) * scale;
@@ -64,12 +72,12 @@ public static class AbPlane
 
 		Parallel.For(0, pixelHeight, y =>
 		{
-			double bAxis = (1.0 - (2.0 * (y + 0.5) / pixelHeight)) * abMax;
+			double bAxis = extent.YMax - ((y + 0.5) / pixelHeight) * extent.YHeight;
 			int gridRow = y * pixelWidth;
 
 			for (int x = 0; x < pixelWidth; x++)
 			{
-				double aAxis = ((2.0 * (x + 0.5) / pixelWidth) - 1.0) * abMax;
+				double aAxis = extent.XMin + ((x + 0.5) / pixelWidth) * extent.XWidth;
 				inGamut[gridRow + x] = LabColor.InGamut(space, lightness, aAxis, bAxis);
 			}
 		});
@@ -77,15 +85,15 @@ public static class AbPlane
 		// 各行は互いに素な画素範囲へ書き込むため、行単位で並列化してよい。画素数が多いとき1スレッドでは塗りきれず明度ドラッグでカクつくため、全コアへ分散する。
 		Parallel.For(0, pixelHeight, y =>
 		{
-			// 上端を b の +上限、下端を −上限とし、パッドの縦方向(上ほど黄寄り)に合わせる。
-			double bAxis = (1.0 - (2.0 * (y + 0.5) / pixelHeight)) * abMax;
+			// 上端を b の上限、下端を下限とし、パッドの縦方向(上ほど黄寄り)に合わせる。
+			double bAxis = extent.YMax - ((y + 0.5) / pixelHeight) * extent.YHeight;
 			int gridRow = y * pixelWidth;
 			int rowBase = gridRow * 4;
 
 			for (int x = 0; x < pixelWidth; x++)
 			{
-				// 左端を a の −上限、右端を +上限とする。
-				double aAxis = ((2.0 * (x + 0.5) / pixelWidth) - 1.0) * abMax;
+				// 左端を a の下限、右端を上限とする。
+				double aAxis = extent.XMin + ((x + 0.5) / pixelWidth) * extent.XWidth;
 				int gi = gridRow + x;
 				int index = rowBase + (x * 4);
 				bool ig = inGamut[gi];
@@ -194,13 +202,7 @@ public static class AbPlane
 			}
 		});
 
-		using (Stream stream = bitmap.PixelBuffer.AsStream())
-		{
-			stream.Write(pixels, 0, pixels.Length);
-		}
-
-		bitmap.Invalidate();
-		return bitmap;
+		return pixels;
 	}
 
 

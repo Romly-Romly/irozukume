@@ -57,7 +57,7 @@ internal sealed class ScreenColorPickerService
 			DesktopCaptureSession captureRef = capture;
 			CanvasDevice deviceRef = device;
 
-			var lens = new ScreenPickerLensWindow(p, capture, result =>
+			var lens = new ScreenPickerLensWindow(p, capture, ScreenPickerTuning.LastBlockPx, ScreenPickerTuning.LastSampleRadius, result =>
 			{
 				// レンズスレッドの後始末時に呼ばれる。捕捉とデバイスを畳んでから結果を確定する。
 				try
@@ -82,7 +82,13 @@ internal sealed class ScreenColorPickerService
 			handedOff = true;
 			lens.Start();
 
-			return await tcs.Task;
+			PickedColor? picked = await tcs.Task;
+
+			// 採色中にホイールで変えた拡大率と取得範囲を覚えて次回へ引き継ぐ。設定保存時にここから EditorState へ書き出される。
+			ScreenPickerTuning.LastBlockPx = lens.CurrentBlockPx;
+			ScreenPickerTuning.LastSampleRadius = lens.CurrentSampleRadius;
+
+			return picked;
 		}
 		catch
 		{

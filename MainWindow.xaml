@@ -72,6 +72,9 @@
 								</MenuFlyoutItem.Icon>
 							</MenuFlyoutItem>
 							<MenuFlyoutSeparator />
+							<!-- 管理者として再起動。通常権限では昇格ウィンドウ(管理者アプリ)の上で採色フックが効かないため、明示的に昇格セッションへ移る。トレイメニューと同じ App.RestartAsAdministrator を呼ぶ。文言と有効・無効は昇格状態に応じてコードビハインドで設定する。 -->
+							<MenuFlyoutItem x:Name="RestartAsAdminMenuItem" Click="OnRestartAsAdminClick" />
+							<MenuFlyoutSeparator />
 							<!-- アプリは終了させず、ウィンドウをトレイへ退避させる。×ボタンと同じ動作で、トレイ操作で再表示できる。実際のキー割り当ては最上位レイアウトの Ctrl+W が担い、ここの表記は見せるだけ。 -->
 							<MenuFlyoutItem x:Uid="MenuClose" Click="OnCloseMenuClick" KeyboardAcceleratorTextOverride="Ctrl+W" />
 							<MenuFlyoutItem x:Uid="MenuExit" Click="OnExitMenuClick" />

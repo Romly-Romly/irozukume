@@ -58,8 +58,8 @@
 					<tkcontrols:SettingsCard x:Uid="SettingsLanguageCard">
 						<tkcontrols:SettingsCard.HeaderIcon>
 							<FontIcon
-								FontFamily="{ThemeResource SymbolThemeFontFamily}"
-								Glyph="&#xE774;" />
+								FontFamily="ms-appx:///Assets/Fonts/romoji.ttf#Romoji"
+								Glyph="&#xE011;" />
 						</tkcontrols:SettingsCard.HeaderIcon>
 						<ComboBox SelectedIndex="{x:Bind Appearance.LanguageIndex, Mode=TwoWay}">
 							<ComboBoxItem Content="日本語" />

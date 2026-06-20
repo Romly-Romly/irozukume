@@ -2,8 +2,6 @@
 // Copyright (C) 2026 Romly
 
 using System;
-using System.IO;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.UI;
@@ -12,7 +10,7 @@ using Irozukume.Models;
 
 namespace Irozukume.Controls;
 
-// 指定した色相における LCH の明度・彩度パッドの下地を描いた画像を生成する。横軸が彩度(左 0→右=表示上限)、縦軸が明度(上=最大→下 0)で、各画素を LCH→RGB へ変換する。LCH の明度・彩度の断面は sRGB 色域に収まる領域が湾曲した塊(ヒレ状)で、残りは色域外。色域内の画素は実際の色で塗る。色域外の見せ方は GamutOutOfRangeStyle で切り替える。色相・副モード・色制限・色域外の見せ方が変わるたびに作り直す想定。色制限が有効なら色域内の画素の色をその制限へ丸めて段階的にする。
+// 指定した色相における LCH の明度・彩度パッドの下地を描いた画像を生成する。横軸が彩度(左 0→右=彩度軸の表示上限 chromaAxisMax)、縦軸が明度(上=最大→下 0)で、各画素を LCH→RGB へ変換する。彩度軸の上限は引数で受け、フィット時はその色相で色域が届く最大彩度(cusp)へ詰めて色域を横いっぱいへ広げる(LchColor.ChromaAxisMax)。LCH の明度・彩度の断面は sRGB 色域に収まる領域が湾曲した塊(ヒレ状)で、残りは色域外。色域内の画素は実際の色で塗る。色域外の見せ方は GamutOutOfRangeStyle で切り替える。色相・副モード・色制限・色域外の見せ方・彩度軸の上限が変わるたびに作り直す想定。色制限が有効なら色域内の画素の色をその制限へ丸めて段階的にする。
 public static class LcPlane
 {
 	// 色域外を示す斜線ハッチ。黒線と白線を密着で並べ、暗い背景では白が、明るい背景では黒が効くようにして、グラデーションのどこでも消えないようにする。線幅(垂直)0.7 DIP、周期(x+y 方向)10 DIP。45 度の線のため、x+y 方向の帯幅は線幅の √2 倍にあたる。水平スライダーのハッチ(GradientSlider)もこの寸法・色に合わせる。
@@ -24,13 +22,21 @@ public static class LcPlane
 	private const byte HatchWhiteAlpha = 0x4D;
 
 
-	// 指定した画素サイズ・表色系・色相・色制限設定・表示倍率・色域外の見せ方で、明度・彩度パッドの下地を描いた WriteableBitmap を作る。色域内は実色で塗り、色域外は style に従う。ハッチは DIP 指定の寸法を表示倍率で画素へ直し、スライダーのベクターのハッチと太さ・間隔をそろえる。
-	public static WriteableBitmap Create(int pixelWidth, int pixelHeight, LchSpace space, double hue, SnapSettings snap, double scale, GamutOutOfRangeStyle style)
+	// 指定した画素サイズ・表色系・色相・色制限設定・表示倍率・色域外の見せ方で、明度・彩度パッドの下地を描いた WriteableBitmap を作る。色域内は実色で塗り、色域外は style に従う。ハッチは DIP 指定の寸法を表示倍率で画素へ直し、スライダーのベクターのハッチと太さ・間隔をそろえる。画素計算(ComputePixels)とビットマップ化(LchGamutField.Blit)を続けて行う同期版。ドラッグ中の連続再生成では呼び出し側が ComputePixels を背景スレッドで回し、Blit だけ UI スレッドで行う。
+	public static WriteableBitmap Create(int pixelWidth, int pixelHeight, LchSpace space, double hue, SnapSettings snap, double scale, GamutOutOfRangeStyle style, double chromaAxisMax)
 	{
-		var bitmap = new WriteableBitmap(pixelWidth, pixelHeight);
+		return LchGamutField.Blit(ComputePixels(pixelWidth, pixelHeight, space, hue, snap, scale, style, chromaAxisMax), pixelWidth, pixelHeight);
+	}
+
+
+
+
+	// 明度・彩度パッドの下地の BGRA 配列を返す。WriteableBitmap などの UI 型に触れないため背景スレッドで実行してよい。色相固定の L-C 断面では行ごとに最大彩度が定まるため、色域内外の判定を彩度の比較に落とし、色域外のクランプ色も行で一度だけ作る。引数の意味は Create と同じ。
+	public static byte[] ComputePixels(int pixelWidth, int pixelHeight, LchSpace space, double hue, SnapSettings snap, double scale, GamutOutOfRangeStyle style, double chromaAxisMax)
+	{
 		byte[] pixels = new byte[pixelWidth * pixelHeight * 4];
 		double lMax = LchColor.LMax(space);
-		double cMax = LchColor.CMax(space);
+		double cMax = chromaAxisMax;
 
 		// DIP 指定のハッチを、ビットマップの画素寸法(表示倍率)に合わせて画素単位へ直す。周期は x+y 方向の量、線の帯幅は垂直の線幅(1.0 DIP)を 45 度の x+y 方向へ直した √2 倍。黒線をこの帯、続けて白線を同じ帯で密着させる。
 		double hatchPeriod = HatchPeriod * scale;
@@ -180,12 +186,6 @@ public static class LcPlane
 			}
 		});
 
-		using (Stream stream = bitmap.PixelBuffer.AsStream())
-		{
-			stream.Write(pixels, 0, pixels.Length);
-		}
-
-		bitmap.Invalidate();
-		return bitmap;
+		return pixels;
 	}
 }

@@ -719,16 +719,307 @@
 		<value>2次元スライダーを色相環に連動させる</value>
 	</data>
 	<data name="HwbNormalize.Content" xml:space="preserve">
-		<value>正規化</value>
+		<value>可動制限</value>
 	</data>
 	<data name="HwbNormalize.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-		<value>白み+黒みの合計を100%以内へ畳む(退化した灰を正準形に丸める)</value>
+		<value>つまみの可動を制限する。オンでは白み+黒みの合計を100%以内へ畳んで退化域へ出せなくし、オフでは合計が100%を超える退化域へもつまみを出せる</value>
+	</data>
+	<data name="HsvLayoutPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>見せ方を選ぶ</value>
+	</data>
+	<data name="HsvLayoutPicker.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>色相環エリアの見せ方(レイアウト)を選ぶ</value>
+	</data>
+	<data name="HsvLayoutRingSquare.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相リングと彩度・明度の正方形</value>
+	</data>
+	<data name="HsvLayoutRingSquare.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>外周の色相リングの中に、彩度(横)・明度(縦)の正方形パッドを置く</value>
+	</data>
+	<data name="HsvLayoutRingSquareCaption.Text" xml:space="preserve">
+		<value>リング+SV</value>
+	</data>
+	<data name="HsvLayoutWheel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相・彩度の円盤と明度の縦スライダー</value>
+	</data>
+	<data name="HsvLayoutWheel.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>角度=色相・中心からの距離=彩度の円盤を置き、明度は右の縦スライダーで決める</value>
+	</data>
+	<data name="HsvLayoutWheelCaption.Text" xml:space="preserve">
+		<value>円盤+明度</value>
+	</data>
+	<data name="HsvHvPad.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相と明度</value>
+	</data>
+	<data name="HsvLayoutPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相・明度の直交パッドと彩度の縦スライダー</value>
+	</data>
+	<data name="HsvLayoutPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>横=色相・縦=明度の四角いパッドを置き、彩度は右の縦スライダーで決める</value>
+	</data>
+	<data name="HsvLayoutPlaneCaption.Text" xml:space="preserve">
+		<value>色相×明度</value>
+	</data>
+	<data name="HsvLayoutValueWheel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相・明度の円盤と彩度の縦スライダー</value>
+	</data>
+	<data name="HsvLayoutValueWheel.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>角度=色相・中心からの距離=明度の円盤を置き、彩度は右の縦スライダーで決める</value>
+	</data>
+	<data name="HsvLayoutValueWheelCaption.Text" xml:space="preserve">
+		<value>円盤+彩度</value>
+	</data>
+	<data name="HsvLayoutHueSatPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相・彩度の直交パッドと明度の縦スライダー</value>
+	</data>
+	<data name="HsvLayoutHueSatPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>横=色相・縦=彩度の四角いパッドを置き、明度は右の縦スライダーで決める</value>
+	</data>
+	<data name="HsvLayoutHueSatPlaneCaption.Text" xml:space="preserve">
+		<value>色相×彩度</value>
+	</data>
+	<data name="HsvLayoutSvBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>彩度・明度の正方形と色相の縦スライダー</value>
+	</data>
+	<data name="HsvLayoutSvBar.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>横=彩度・縦=明度の四角いパッドを置き、色相は右の縦スライダーで決める</value>
+	</data>
+	<data name="HsvLayoutSvBarCaption.Text" xml:space="preserve">
+		<value>彩度×明度</value>
+	</data>
+	<data name="HslLayoutPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>見せ方を選ぶ</value>
+	</data>
+	<data name="HslLayoutPicker.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>色相環エリアの見せ方(レイアウト)を選ぶ</value>
+	</data>
+	<data name="HslLayoutRingTriangle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相リングと彩度・輝度の三角形</value>
+	</data>
+	<data name="HslLayoutRingTriangle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>外周の色相リングの中に、純色・白・黒を頂点とする彩度・輝度の三角形を置く</value>
+	</data>
+	<data name="HslLayoutRingTriangleCaption.Text" xml:space="preserve">
+		<value>リング+三角</value>
+	</data>
+	<data name="HslLayoutWheel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相・彩度の円盤と輝度の縦スライダー</value>
+	</data>
+	<data name="HslLayoutWheel.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>角度=色相・中心からの距離=彩度の円盤を置き、輝度は右の縦スライダーで決める</value>
+	</data>
+	<data name="HslLayoutWheelCaption.Text" xml:space="preserve">
+		<value>円盤+輝度</value>
+	</data>
+	<data name="HslLayoutLightnessWheel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相・輝度の円盤と彩度の縦スライダー</value>
+	</data>
+	<data name="HslLayoutLightnessWheel.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>角度=色相・中心からの距離=輝度の円盤を置き、彩度は右の縦スライダーで決める</value>
+	</data>
+	<data name="HslLayoutLightnessWheelCaption.Text" xml:space="preserve">
+		<value>円盤+彩度</value>
+	</data>
+	<data name="HslLayoutLightnessPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相・輝度の直交パッドと彩度の縦スライダー</value>
+	</data>
+	<data name="HslLayoutLightnessPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>横=色相・縦=輝度の四角いパッドを置き、彩度は右の縦スライダーで決める</value>
+	</data>
+	<data name="HslLayoutLightnessPlaneCaption.Text" xml:space="preserve">
+		<value>色相×輝度</value>
+	</data>
+	<data name="HslLayoutHueSatPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相・彩度の直交パッドと輝度の縦スライダー</value>
+	</data>
+	<data name="HslLayoutHueSatPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>横=色相・縦=彩度の四角いパッドを置き、輝度は右の縦スライダーで決める</value>
+	</data>
+	<data name="HslLayoutHueSatPlaneCaption.Text" xml:space="preserve">
+		<value>色相×彩度</value>
+	</data>
+	<data name="HslLayoutSlBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>彩度・輝度の正方形と色相の縦スライダー</value>
+	</data>
+	<data name="HslLayoutSlBar.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>横=彩度・縦=輝度の四角いパッドを置き、色相は右の縦スライダーで決める</value>
+	</data>
+	<data name="HslLayoutSlBarCaption.Text" xml:space="preserve">
+		<value>彩度×輝度</value>
+	</data>
+	<data name="HslSlSquarePad.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>彩度と輝度</value>
+	</data>
+	<data name="HslLayoutRingSquare.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相リングと彩度・輝度の正方形</value>
+	</data>
+	<data name="HslLayoutRingSquare.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>外周の色相リングの中に、彩度(横)・輝度(縦)の正方形パッドを置く</value>
+	</data>
+	<data name="HslLayoutRingSquareCaption.Text" xml:space="preserve">
+		<value>リング+SL</value>
+	</data>
+	<data name="HslLayoutTriangleBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>彩度・輝度の三角形と色相の縦スライダー</value>
+	</data>
+	<data name="HslLayoutTriangleBar.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>純色・白・黒を頂点とする彩度・輝度の三角形を置き、色相は右の縦スライダーで決める</value>
+	</data>
+	<data name="HslLayoutTriangleBarCaption.Text" xml:space="preserve">
+		<value>三角+色相</value>
+	</data>
+	<data name="HwbLayoutPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>見せ方を選ぶ</value>
+	</data>
+	<data name="HwbLayoutPicker.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>色相環エリアの見せ方(レイアウト)を選ぶ</value>
+	</data>
+	<data name="HwbTrianglePad.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>白みと黒み</value>
+	</data>
+	<data name="HwbLayoutRingSquare.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相リングと白み・黒みの正方形</value>
+	</data>
+	<data name="HwbLayoutRingSquare.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>外周の色相リングの中に、白み(横)・黒み(縦)の正方形パッドを置く</value>
+	</data>
+	<data name="HwbLayoutRingSquareCaption.Text" xml:space="preserve">
+		<value>リング+WB</value>
+	</data>
+	<data name="HwbLayoutRingTriangle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相リングと白み・黒みの三角形</value>
+	</data>
+	<data name="HwbLayoutRingTriangle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>外周の色相リングの中に、純色・白・黒を頂点とする白み・黒みの三角形を置く</value>
+	</data>
+	<data name="HwbLayoutRingTriangleCaption.Text" xml:space="preserve">
+		<value>リング+三角</value>
+	</data>
+	<data name="HwbLayoutTriangleBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>白み・黒みの三角形と色相の縦スライダー</value>
+	</data>
+	<data name="HwbLayoutTriangleBar.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>純色・白・黒を頂点とする白み・黒みの三角形を置き、色相は右の縦スライダーで決める</value>
+	</data>
+	<data name="HwbLayoutTriangleBarCaption.Text" xml:space="preserve">
+		<value>三角+色相</value>
+	</data>
+	<data name="HwbLayoutWhitenessWheel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相・白みの円盤と黒みの縦スライダー</value>
+	</data>
+	<data name="HwbLayoutWhitenessWheel.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>角度=色相・中心からの距離=白みの円盤を置き、黒みは右の縦スライダーで決める</value>
+	</data>
+	<data name="HwbLayoutWhitenessWheelCaption.Text" xml:space="preserve">
+		<value>円盤+黒み</value>
+	</data>
+	<data name="HwbLayoutBlacknessWheel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相・黒みの円盤と白みの縦スライダー</value>
+	</data>
+	<data name="HwbLayoutBlacknessWheel.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>角度=色相・中心からの距離=黒みの円盤を置き、白みは右の縦スライダーで決める</value>
+	</data>
+	<data name="HwbLayoutBlacknessWheelCaption.Text" xml:space="preserve">
+		<value>円盤+白み</value>
+	</data>
+	<data name="HwbLayoutBlacknessPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相・黒みの直交パッドと白みの縦スライダー</value>
+	</data>
+	<data name="HwbLayoutBlacknessPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>横=色相・縦=黒みの四角いパッドを置き、白みは右の縦スライダーで決める</value>
+	</data>
+	<data name="HwbLayoutBlacknessPlaneCaption.Text" xml:space="preserve">
+		<value>色相×黒み</value>
+	</data>
+	<data name="HwbLayoutWhitenessPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相・白みの直交パッドと黒みの縦スライダー</value>
+	</data>
+	<data name="HwbLayoutWhitenessPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>横=色相・縦=白みの四角いパッドを置き、黒みは右の縦スライダーで決める</value>
+	</data>
+	<data name="HwbLayoutWhitenessPlaneCaption.Text" xml:space="preserve">
+		<value>色相×白み</value>
+	</data>
+	<data name="HwbLayoutWbBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>白み・黒みの正方形と色相の縦スライダー</value>
+	</data>
+	<data name="HwbLayoutWbBar.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>横=白み・縦=黒みの四角いパッドを置き、色相は右の縦スライダーで決める</value>
+	</data>
+	<data name="HwbLayoutWbBarCaption.Text" xml:space="preserve">
+		<value>白み×黒み</value>
 	</data>
 	<data name="LchGamutLimit.Content" xml:space="preserve">
-		<value>色域制限</value>
+		<value>可動制限</value>
 	</data>
 	<data name="LchGamutLimit.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-		<value>彩度を sRGB 色域の境界でクランプする(オフでは色域外の彩度も保ち、表示できない範囲をハッチで示す)</value>
+		<value>つまみの可動を制限する。オンでは彩度を sRGB 色域の境界でクランプして色域外へ出せなくし、オフでは色域外へもつまみを出せる</value>
+	</data>
+	<data name="LchChromaFit.Content" xml:space="preserve">
+		<value>彩度フィット</value>
+	</data>
+	<data name="LchChromaFit.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>彩度軸を色域へ詰めて表示する。オンでは固定成分のもとで色域が届く最大彩度まで彩度軸を縮め、彩度方向にパッドいっぱいへ色域を広げて選びやすくする(固定色相の L-C 平面は cusp、固定明度の色相×彩度は全色相を通じた最大)。固定成分で縮尺が変わる。色相リング+平面・C×L 平面+色相バー・色相×彩度の平面・半径=彩度の円盤で効く</value>
+	</data>
+	<data name="LchLayoutPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>見せ方を選ぶ</value>
+	</data>
+	<data name="LchLayoutPicker.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>明度・彩度・色相を編集するエリアの見せ方(レイアウト)を選ぶ</value>
+	</data>
+	<data name="LchLayoutRingPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相リングと彩度・明度の平面</value>
+	</data>
+	<data name="LchLayoutRingPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>外周の色相リングの中に、彩度(横)・明度(縦)の平面を置く</value>
+	</data>
+	<data name="LchLayoutRingPlaneCaption.Text" xml:space="preserve">
+		<value>リング+CL</value>
+	</data>
+	<data name="LchLayoutClHueBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>明度・彩度の平面と色相の縦スライダー</value>
+	</data>
+	<data name="LchLayoutClHueBar.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>明度(横)・彩度(縦)の平面を横いっぱいに置き、色相は右の縦スライダーで決める</value>
+	</data>
+	<data name="LchLayoutClHueBarCaption.Text" xml:space="preserve">
+		<value>CL+色相</value>
+	</data>
+	<data name="LchLayoutHueLightnessWheel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相・明度の円盤と彩度の縦スライダー</value>
+	</data>
+	<data name="LchLayoutHueLightnessWheel.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>角度=色相・中心からの距離=明度の円盤を置き、彩度は右の縦スライダーで決める</value>
+	</data>
+	<data name="LchLayoutHueLightnessWheelCaption.Text" xml:space="preserve">
+		<value>円盤(明度)</value>
+	</data>
+	<data name="LchLayoutHueLightnessPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相×明度の平面と彩度の縦スライダー</value>
+	</data>
+	<data name="LchLayoutHueLightnessPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>色相(横)×明度(縦)の平面を置き、彩度は右の縦スライダーで決める</value>
+	</data>
+	<data name="LchLayoutHueLightnessPlaneCaption.Text" xml:space="preserve">
+		<value>色相×明度</value>
+	</data>
+	<data name="LchLayoutHueChromaWheel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相・彩度の円盤と明度の縦スライダー</value>
+	</data>
+	<data name="LchLayoutHueChromaWheel.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>角度=色相・中心からの距離=彩度の円盤を置き、明度は右の縦スライダーで決める</value>
+	</data>
+	<data name="LchLayoutHueChromaWheelCaption.Text" xml:space="preserve">
+		<value>円盤(彩度)</value>
+	</data>
+	<data name="LchLayoutHueChromaPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色相×彩度の平面と明度の縦スライダー</value>
+	</data>
+	<data name="LchLayoutHueChromaPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>色相(横)×彩度(縦)の平面を置き、明度は右の縦スライダーで決める</value>
+	</data>
+	<data name="LchLayoutHueChromaPlaneCaption.Text" xml:space="preserve">
+		<value>色相×彩度</value>
 	</data>
 
 	<!-- Lab タブ -->
@@ -745,13 +1036,115 @@
 		<value>a と b</value>
 	</data>
 	<data name="LabGamutLimit.Content" xml:space="preserve">
-		<value>色域制限</value>
+		<value>可動制限</value>
 	</data>
 	<data name="LabGamutLimit.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-		<value>a・b を sRGB 色域の境界でクランプする(オフでは色域外の値も保ち、表示できない範囲をハッチで示す)</value>
+		<value>つまみの可動を制限する。オンでは a・b を sRGB 色域の境界でクランプして色域外へ出せなくし、オフでは色域外へもつまみを出せる</value>
+	</data>
+	<data name="LabLayoutPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>見せ方を選ぶ</value>
+	</data>
+	<data name="LabLayoutPicker.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>L・a・b を編集するエリアの見せ方(レイアウト)を選ぶ</value>
+	</data>
+	<data name="LabLayoutAbPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>a×b 平面と明度の縦スライダー</value>
+	</data>
+	<data name="LabLayoutAbPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>a(横)×b(縦)の平面の右に、明度の縦スライダーを添える</value>
+	</data>
+	<data name="LabLayoutAbPlaneCaption.Text" xml:space="preserve">
+		<value>a×b</value>
+	</data>
+	<data name="LabLayoutAlPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>a×L 平面と b の縦スライダー</value>
+	</data>
+	<data name="LabLayoutAlPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>a(横)×明度(縦)の平面の右に、b の縦スライダーを添える</value>
+	</data>
+	<data name="LabLayoutAlPlaneCaption.Text" xml:space="preserve">
+		<value>a×L</value>
+	</data>
+	<data name="LabLayoutBlPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>b×L 平面と a の縦スライダー</value>
+	</data>
+	<data name="LabLayoutBlPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>b(横)×明度(縦)の平面の右に、a の縦スライダーを添える</value>
+	</data>
+	<data name="LabLayoutBlPlaneCaption.Text" xml:space="preserve">
+		<value>b×L</value>
+	</data>
+	<data name="YuvLayoutPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>見せ方を選ぶ</value>
+	</data>
+	<data name="YuvLayoutPicker.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>Y・Cb・Cr を編集するエリアの見せ方(レイアウト)を選ぶ</value>
+	</data>
+	<data name="YuvLayoutCbCrPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Cb×Cr 平面と輝度の縦スライダー</value>
+	</data>
+	<data name="YuvLayoutCbCrPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>Cb(横)×Cr(縦)の平面の右に、輝度 Y の縦スライダーを添える</value>
+	</data>
+	<data name="YuvLayoutCbCrPlaneCaption.Text" xml:space="preserve">
+		<value>Cb×Cr</value>
+	</data>
+	<data name="YuvLayoutCbYPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Cb×Y 平面と Cr の縦スライダー</value>
+	</data>
+	<data name="YuvLayoutCbYPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>Cb(横)×輝度(縦)の平面の右に、Cr の縦スライダーを添える</value>
+	</data>
+	<data name="YuvLayoutCbYPlaneCaption.Text" xml:space="preserve">
+		<value>Cb×Y</value>
+	</data>
+	<data name="YuvLayoutCrYPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Cr×Y 平面と Cb の縦スライダー</value>
+	</data>
+	<data name="YuvLayoutCrYPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>Cr(横)×輝度(縦)の平面の右に、Cb の縦スライダーを添える</value>
+	</data>
+	<data name="YuvLayoutCrYPlaneCaption.Text" xml:space="preserve">
+		<value>Cr×Y</value>
+	</data>
+	<data name="LabAbScaleLabel.Text" xml:space="preserve">
+		<value>色域フィット</value>
+	</data>
+	<data name="LabAbScaleSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色域フィット</value>
+	</data>
+	<data name="LabAbScaleSelector.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>a×b 平面の表示枠の決め方。等方・縦横独立は、その明度で色域が収まる範囲へ枠を寄せて有効領域を広げる(明度で縮尺が変わる)。等方は原点中心・縦横等倍、縦横独立は各軸を独立に合わせて平面いっぱいに広げる</value>
+	</data>
+	<data name="LabAbScaleNone.Content" xml:space="preserve">
+		<value>なし</value>
+	</data>
+	<data name="LabAbScaleUniform.Content" xml:space="preserve">
+		<value>等方</value>
+	</data>
+	<data name="LabAbScaleStretch.Content" xml:space="preserve">
+		<value>縦横独立</value>
 	</data>
 
 	<!-- YUV/YCbCr タブ -->
+	<data name="YuvScaleLabel.Text" xml:space="preserve">
+		<value>色域フィット</value>
+	</data>
+	<data name="YuvScaleSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>色域フィット</value>
+	</data>
+	<data name="YuvScaleSelector.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>色差平面の表示枠の決め方。等方・縦横独立は、その固定成分(Cb×Cr では輝度、Cb×Y では Cr、Cr×Y では Cb)で色域が収まる範囲へ枠を寄せて有効領域を広げる(固定成分で縮尺が変わる)。等方は無彩点 128 中心・縦横等倍、縦横独立は各軸を独立に合わせて平面いっぱいに広げる</value>
+	</data>
+	<data name="YuvScaleNone.Content" xml:space="preserve">
+		<value>なし</value>
+	</data>
+	<data name="YuvScaleUniform.Content" xml:space="preserve">
+		<value>等方</value>
+	</data>
+	<data name="YuvScaleStretch.Content" xml:space="preserve">
+		<value>縦横独立</value>
+	</data>
 	<data name="YuvCbCrPad.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
 		<value>Cb と Cr</value>
 	</data>
@@ -762,10 +1155,10 @@
 		<value>スタジオレンジ</value>
 	</data>
 	<data name="YuvGamutLimit.Content" xml:space="preserve">
-		<value>色域制限</value>
+		<value>可動制限</value>
 	</data>
 	<data name="YuvGamutLimit.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-		<value>色差(Cb・Cr)を sRGB 色域の境界でクランプする(オフでは色域外の色差も保ち、表示できない範囲をハッチで示す)</value>
+		<value>つまみの可動を制限する。オンでは色差(Cb・Cr)を sRGB 色域の境界でクランプして色域外へ出せなくし、オフでは色域外へもつまみを出せる</value>
 	</data>
 
 	<!-- RGB/CMYK タブ -->

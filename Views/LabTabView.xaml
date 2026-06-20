@@ -9,10 +9,10 @@
 	xmlns:helpers="using:Irozukume.Helpers"
 	mc:Ignorable="d">
 
-	<!-- 上段に明度レール・a-b 平面パッド・右の縦並び設定(OKLab/CIE Lab 切替・色域制限トグル)を置き、下段に a・b のスライダーを置く。パッドは横が a(左 −上限→右 +上限)、縦が b(下 −上限→上 +上限)で、sRGB 色域に収まる部分だけを実色で塗り、色域外はハッチで透かして可視化する。スライダーは表色系で上限が変わらないよう 0–1 の正規化値で束縛し、数値入力欄は各表色系の素の尺度で見せる。パッドはエリアの幅と、スライダー群および明度レール直下の数値欄を除いた残りの高さの小さい方へ正方形でコード側から合わせ、ウィンドウに追従して拡縮する。明度レールの高さもパッドに揃える。 -->
+	<!-- 上段に a-b 平面パッド・その右の明度レール・さらに右の縦並び設定(OKLab/CIE Lab 切替・色域制限トグル)を置き、下段に L・a・b のスライダーを置く。パッドは横が a(左 −上限→右 +上限)、縦が b(下 −上限→上 +上限)で、sRGB 色域に収まる部分だけを実色で塗り、色域外はハッチで透かして可視化する。スライダーは表色系で上限が変わらないよう 0–1 の正規化値で束縛し、数値入力欄は各表色系の素の尺度で見せる。明度はパッドの右の縦レールと下段の水平スライダーの2箇所で操作でき、数値入力欄は下段の L 行へ置く。パッドはエリアの幅と、スライダー群を除いた残りの高さの小さい方へ正方形でコード側から合わせ、ウィンドウに追従して拡縮する。明度レールの高さもパッドに揃える。 -->
 	<Grid x:Name="LayoutRoot" RowSpacing="16">
 		<Grid.Resources>
-			<!-- スライダー行の数値入力欄の幅を揃える。ラベル列の幅は全スライダータブ共通の SliderLabelWidth を使う。a・b の数値入力欄は符号付き表記で先頭に符号が付くため広めにとる。a・b と明度レールの入力欄はどちらも ExpandingNumberBox で、普段は LabRestWidth まで縮め、フォーカス時(スピンボタンのポップアップ時)に LabValueWidth まで広げる。横スライダーでは縮んだぶん隣のスライダー列が、明度レールでは隣の a-b 平面エリアが広がる。 -->
+			<!-- スライダー行の数値入力欄の幅を揃える。ラベル列の幅は全スライダータブ共通の SliderLabelWidth を使う。a・b の数値入力欄は符号付き表記で先頭に符号が付くため広めにとる。L・a・b の入力欄はいずれも ExpandingNumberBox で、普段は LabRestWidth まで縮め、フォーカス時(スピンボタンのポップアップ時)に LabValueWidth まで広げる。縮んだぶんは同じ行の隣のスライダー列が広がる。 -->
 			<x:Double x:Key="LabValueWidth">124</x:Double>
 			<x:Double x:Key="LabRestWidth">84</x:Double>
 		</Grid.Resources>
@@ -21,68 +21,89 @@
 			<RowDefinition Height="Auto" />
 		</Grid.RowDefinitions>
 
-		<!-- 上段: 明度レール・a-b 平面パッド・右の縦並び設定。 -->
+		<!-- 上段: a-b 平面パッドと明度レールを一定間隔で横に並べた組を中央に置き、その右に縦並び設定。 -->
 		<Grid Grid.Row="0" ColumnSpacing="16">
 			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="Auto" />
 				<ColumnDefinition Width="*" />
 				<ColumnDefinition Width="Auto" />
 			</Grid.ColumnDefinitions>
 
-			<!-- 明度 L の縦レール。高さはコード側でパッドの一辺に揃える。トラックは現在の a・b での明度ランプ(黒→明)、表示できない範囲は色域外ハッチで示す。下に 0–100 の共通尺度の数値入力欄を出す。 -->
-			<StackPanel
-				x:Name="LightnessPanel"
-				Grid.Column="0"
-				Spacing="8"
-				VerticalAlignment="Top"
-				HorizontalAlignment="Center">
-				<controls:GradientSlider
-					x:Name="LightnessSlider"
-					Orientation="Vertical"
-					Minimum="0"
-					Maximum="1"
-					StepFrequency="0.01"
-					LargeChange="0.1"
-					x:Uid="NameLabLightness"
-					AutomationProperties.AutomationId="LabLightnessSlider"
-					Value="{x:Bind ViewModel.LabLNorm, Mode=TwoWay}"
-					TrackBrush="{x:Bind ViewModel.LabLightnessTrackBrush, Mode=OneWay}"
-					OutOfGamutSegments="{x:Bind ViewModel.LabLightnessGamut, Mode=OneWay}"
-					OutOfGamutStyle="{x:Bind ViewModel.OutOfRangeStyle, Mode=OneWay}" />
-				<controls:ExpandingNumberBox
-					x:Name="LightnessValueBox"
-					FocusWidth="{StaticResource LabValueWidth}"
-					RestWidth="{StaticResource LabRestWidth}"
-					HorizontalAlignment="Center"
-					SpinButtonPlacementMode="Compact"
-					Minimum="0"
-					Maximum="100"
-					SmallChange="1"
-					NumberFormatter="{x:Bind helpers:NumberFormatters.Integer}"
-					x:Uid="NameLabLightness"
-					AutomationProperties.AutomationId="LabLightnessValueBox"
-					Value="{x:Bind ViewModel.LabL, Mode=TwoWay}" />
-			</StackPanel>
-
-			<!-- a-b 平面エリア。利用可能な領域いっぱいに、正方形を保って拡縮する。パッドの実寸はコード側で領域の短辺へ合わせ、画像は実寸と表示倍率に合わせて作り直す。操作は2軸をまとめて二次元で扱う(色域内への半径方向の寄せ)ため、つまみ位置は一方向束縛で受け、操作の反映は ValuesChanged から SetLabPad へ渡す。 -->
+			<!-- a-b 平面エリア。利用可能な領域いっぱいに、パッドと明度レールの組を正方形を保って拡縮し、その組を中央寄せにする。パッドの実寸はコード側で領域の幅(レール幅と間隔を除く)と高さの短辺へ合わせ、画像は実寸と表示倍率に合わせて作り直す。パッドとレールは一定間隔(PadRailGap)で並べ、両者の隙間が一定に保たれるようにする。操作は2軸をまとめて二次元で扱う(色域内への半径方向の寄せ)ため、つまみ位置は一方向束縛で受け、操作の反映は ValuesChanged から SetLabPad へ渡す。 -->
 			<Grid
 				x:Name="PadArea"
-				Grid.Column="1"
+				Grid.Column="0"
 				SizeChanged="OnPadAreaSizeChanged">
-				<controls:PlanarPad
-					x:Name="AbPad"
+				<!-- 既定レイアウト(a×b 平面+明度 L の縦バー)。パッドと明度レールを一定間隔(PadRailGap)で横に並べた組を中央寄せにする。 -->
+				<Grid
+					x:Name="LabAbLayoutRoot"
 					HorizontalAlignment="Center"
 					VerticalAlignment="Top"
-					x:Uid="LabAbPad"
-					XValue="{x:Bind ViewModel.LabANorm, Mode=OneWay}"
-					YValue="{x:Bind ViewModel.LabBNorm, Mode=OneWay}">
-					<Image x:Name="PlaneImage" Stretch="Fill" />
-				</controls:PlanarPad>
+					ColumnSpacing="12">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+
+					<controls:PlanarPad
+						x:Name="AbPad"
+						Grid.Column="0"
+						VerticalAlignment="Top"
+						x:Uid="LabAbPad"
+						XValue="{x:Bind ViewModel.LabPadANorm, Mode=OneWay}"
+						YValue="{x:Bind ViewModel.LabPadBNorm, Mode=OneWay}">
+						<Image x:Name="PlaneImage" Stretch="Fill" />
+					</controls:PlanarPad>
+
+					<!-- 明度 L の縦レール。パッドの右に一定間隔で添える。高さはコード側でパッドの一辺に揃える。トラックは現在の a・b での明度ランプ(黒→明)、表示できない範囲は色域外ハッチで示す。数値入力欄は下段の L 行へ置くため、レール自体は数値欄を持たない。 -->
+					<controls:GradientSlider
+						x:Name="LightnessSlider"
+						Grid.Column="1"
+						Orientation="Vertical"
+						VerticalAlignment="Top"
+						Minimum="0"
+						Maximum="1"
+						StepFrequency="0.01"
+						LargeChange="0.1"
+						x:Uid="NameLabLightness"
+						AutomationProperties.AutomationId="LabLightnessSlider"
+						Value="{x:Bind ViewModel.LabLNorm, Mode=TwoWay}"
+						TrackBrush="{x:Bind ViewModel.LabLightnessTrackBrushVertical, Mode=OneWay}"
+						OutOfGamutSegments="{x:Bind ViewModel.LabLightnessGamut, Mode=OneWay}"
+						OutOfGamutStyle="{x:Bind ViewModel.OutOfRangeStyle, Mode=OneWay}" />
+				</Grid>
+
+				<!-- 直交パッドレイアウト(片方の色軸×明度の平面と、切り出した成分の縦スライダー)。a×L 平面(b は縦)・b×L 平面(a は縦)の2種をこのホストで賄う。パッドは PlanarPad を流用し、つまみ・レンズ・矢印操作を内蔵で得る。下地画像はコードビハインドで固定成分・色域外の見せ方に合わせて作り直し、色域外はハッチで透かす。 -->
+				<Grid
+					x:Name="LabCartLayoutRoot"
+					Visibility="Collapsed"
+					HorizontalAlignment="Center"
+					VerticalAlignment="Top"
+					ColumnSpacing="12">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+
+					<controls:PlanarPad
+						x:Name="LabCartPad"
+						Grid.Column="0">
+						<Image x:Name="LabCartImage" Stretch="Fill" />
+					</controls:PlanarPad>
+
+					<!-- 直交パッドの切り出し成分(2軸に取らない側)の縦スライダー。値・値域・刻み・背景・色域外区間・名前はレイアウトに応じてコードビハインドで束ね直す。高さはパッドに揃える。 -->
+					<controls:GradientSlider
+						x:Name="LabCartSlider"
+						Grid.Column="1"
+						Orientation="Vertical"
+						VerticalAlignment="Top"
+						OutOfGamutStyle="{x:Bind ViewModel.OutOfRangeStyle, Mode=OneWay}" />
+				</Grid>
+
 			</Grid>
 
 			<!-- 右: 縦並びで副モード切替と色域制限トグル。パッドの上端に揃える。 -->
 			<StackPanel
-				Grid.Column="2"
+				Grid.Column="1"
 				VerticalAlignment="Top"
 				Spacing="16">
 
@@ -100,11 +121,112 @@
 				<CheckBox
 					x:Uid="LabGamutLimit"
 					IsChecked="{x:Bind ViewModel.LabGamutLimit, Mode=TwoWay}" />
+
+				<!-- 編集エリアの見せ方(レイアウト)を選ぶアイコンボタン。押すとサムネイル付きのフライアウトを開く。アイコン自体が現在のレイアウトの縮小見本を兼ねる。OKLab・CIE Lab の副モードで共通の見せ方のため、常に出す。 -->
+				<Button
+					x:Name="LabLayoutPickerButton"
+					HorizontalAlignment="Left"
+					Padding="4"
+					Width="36"
+					Height="36"
+					x:Uid="LabLayoutPicker">
+					<Image
+						x:Name="LabLayoutPickerIcon"
+						Width="24"
+						Height="24"
+						Stretch="Fill" />
+					<Button.Flyout>
+						<Flyout x:Name="LabLayoutPickerFlyout" Opening="OnLabLayoutFlyoutOpening">
+							<StackPanel Spacing="8">
+								<!-- 上段: a×b 平面+明度の縦バーと、a×L 平面+b の縦バー。 -->
+								<StackPanel Orientation="Horizontal" Spacing="8">
+									<Button Click="OnPickLabAbPlaneLayout" Padding="6" x:Uid="LabLayoutAbPlane">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="LabAbPlaneThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="LabAbPlaneThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="LabLayoutAbPlaneCaption" />
+										</StackPanel>
+									</Button>
+
+									<Button Click="OnPickLabAlPlaneLayout" Padding="6" x:Uid="LabLayoutAlPlane">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="LabAlPlaneThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="LabAlPlaneThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="LabLayoutAlPlaneCaption" />
+										</StackPanel>
+									</Button>
+								</StackPanel>
+
+								<!-- 下段: b×L 平面+a の縦バー。 -->
+								<StackPanel Orientation="Horizontal" Spacing="8">
+									<Button Click="OnPickLabBlPlaneLayout" Padding="6" x:Uid="LabLayoutBlPlane">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="LabBlPlaneThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="LabBlPlaneThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="LabLayoutBlPlaneCaption" />
+										</StackPanel>
+									</Button>
+								</StackPanel>
+							</StackPanel>
+						</Flyout>
+					</Button.Flyout>
+				</Button>
+
+				<!-- 2次元パッドの表示枠(スケール)の決め方。なし(固定枠)・等方(色域へ縦横等倍で寄せる)・縦横独立(各軸を独立に色域のバウンディングボックスへ合わせて平面いっぱいに広げる)。フィットは有効領域を広げる代わりに、固定成分(a×b では明度、a×L では b、b×L では a)で縮尺が変わる。三つの見せ方すべてに効くため常に出す。 -->
+				<StackPanel x:Name="ScaleOptionPanel" Spacing="4">
+					<TextBlock x:Uid="LabAbScaleLabel" Style="{StaticResource CaptionTextBlockStyle}" />
+					<ComboBox
+						x:Name="LabAbScaleSelector"
+						x:Uid="LabAbScaleSelector"
+						HorizontalAlignment="Stretch"
+						SelectedIndex="{x:Bind ViewModel.LabAbScaleIndex, Mode=TwoWay}">
+						<ComboBoxItem x:Uid="LabAbScaleNone" />
+						<ComboBoxItem x:Uid="LabAbScaleUniform" />
+						<ComboBoxItem x:Uid="LabAbScaleStretch" />
+					</ComboBox>
+				</StackPanel>
 			</StackPanel>
 		</Grid>
 
-		<!-- 下段: a・b のスライダー。a-b 平面パッドと同じ値に束縛し、どちらからでも操作できる。各行はラベル・スライダー・数値入力欄の3列。スライダーは正規化値(0–1、0.5 が 0)、数値入力欄は素の尺度に束縛する。スライダーには色域外区間を渡してハッチで可視化する。この高さを差し引いてパッドの一辺を決めるため、名前で参照する。 -->
+		<!-- 下段: L・a・b のスライダー。上段のパッド・明度レールと同じ値に束縛し、どちらからでも操作できる。各行はラベル・スライダー・数値入力欄の3列。a・b のスライダーは正規化値(0–1、0.5 が 0)、L は正規化値(0–1)で束縛し、数値入力欄は素の尺度に束縛する。スライダーには色域外区間を渡してハッチで可視化する。この高さを差し引いてパッドの一辺を決めるため、名前で参照する。 -->
 		<StackPanel Grid.Row="1" x:Name="SliderHost" Spacing="{StaticResource SliderSpacing}">
+			<!-- L 軸(明度)。共通尺度 0–100 で見せる(OKLab の 0–1 を 100 倍、CIE Lab の 0–100 はそのまま)。スライダーは上段の縦レールと同じ正規化値に束縛する。 -->
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="Auto" />
+				</Grid.ColumnDefinitions>
+				<TextBlock Grid.Column="0" Width="{StaticResource SliderLabelWidth}" VerticalAlignment="Center" Text="L" />
+				<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+					Grid.Column="1"
+					x:Uid="NameLabLightness"
+					Minimum="0"
+					Maximum="1"
+					StepFrequency="0.01"
+					LargeChange="0.1"
+					Value="{x:Bind ViewModel.LabLNorm, Mode=TwoWay}"
+					TrackBrush="{x:Bind ViewModel.LabLightnessTrackBrush, Mode=OneWay}"
+					OutOfGamutSegments="{x:Bind ViewModel.LabLightnessGamut, Mode=OneWay}"
+					OutOfGamutStyle="{x:Bind ViewModel.OutOfRangeStyle, Mode=OneWay}" />
+				<controls:ExpandingNumberBox
+					Grid.Column="2"
+					FocusWidth="{StaticResource LabValueWidth}"
+					RestWidth="{StaticResource LabRestWidth}"
+					VerticalAlignment="Center"
+					SpinButtonPlacementMode="Compact"
+					Minimum="0"
+					Maximum="100"
+					SmallChange="1"
+					NumberFormatter="{x:Bind helpers:NumberFormatters.Integer}"
+					x:Uid="NameLabLightness"
+					AutomationProperties.AutomationId="LabLightnessValueBox"
+					Value="{x:Bind ViewModel.LabL, Mode=TwoWay}" />
+			</Grid>
+
 			<!-- a 軸。負が緑寄り、正が赤寄り。数値入力欄の範囲は両表色系を覆う ±125 とし、表色系ごとの上限超過は設定時に丸める。書式とスピン刻みは表色系で切り替える。 -->
 			<Grid>
 				<Grid.ColumnDefinitions>

@@ -206,6 +206,66 @@ public static class LchColor
 
 
 
+	// 指定した色相における L-C 平面の彩度軸の表示上限。fit が偽なら表示上限 CMax をそのまま使う。真なら、その色相で色域が届く最大の彩度(cusp の彩度)まで軸を詰めて、彩度方向に色域をパッドいっぱいへ広げ選びやすくする。明度は L-C 平面で常に全域を使うため、フィットは彩度軸だけに効く。
+	public static double ChromaAxisMax(LchSpace space, double hue, bool fit)
+	{
+		double cMax = CMax(space);
+
+		if (!fit)
+		{
+			return cMax;
+		}
+
+		double cusp = MaxChroma(space, CuspLightness(space, hue), hue);
+		return FitChromaAxis(cMax, cusp);
+	}
+
+
+
+
+	// 指定した明度における色相×彩度の平面・円盤の彩度軸(円盤では半径)の表示上限。fit が偽なら表示上限 CMax。真なら、その明度で全色相を通じて色域が届く最大の彩度まで軸を詰めて、彩度方向に色域をいっぱいへ広げ選びやすくする。色相は平面の横軸・円盤の角度に全域現れるため、彩度の最大は単一色相の cusp ではなく全色相を通じた最大を取る。色相は常に全域を使うため、フィットは彩度軸だけに効く。
+	public static double ChromaAxisMaxAtLightness(LchSpace space, double l, bool fit)
+	{
+		double cMax = CMax(space);
+
+		if (!fit)
+		{
+			return cMax;
+		}
+
+		return FitChromaAxis(cMax, MaxChromaAtLightness(space, l));
+	}
+
+
+
+
+	// 指定した明度で、全色相を通じて色域に収まる最大の彩度を返す。色相を細かくサンプルし、各色相の最大色域内彩度(MaxChroma)の最大値を取る。色相×彩度の平面・円盤で彩度軸をその明度の最も鮮やかな色域端へ詰めるのに使う。全色相を色域内に収める最小値を返す MaxChromaForAllHues とは逆に、最も張り出す最大値を返す。
+	public static double MaxChromaAtLightness(LchSpace space, double l)
+	{
+		const int samples = 90;
+		double max = 0.0;
+
+		for (int i = 0; i < samples; i++)
+		{
+			double h = (double)i / samples * 360.0;
+			max = Math.Max(max, MaxChroma(space, l, h));
+		}
+
+		return max;
+	}
+
+
+
+
+	// 色域が届く最大彩度 maxInGamutChroma を、彩度軸の表示上限へ均す。境界が縁へ張り付かないよう僅かに余白を足し、色域がほぼ無い退化でも軸が潰れないよう下限を設け、表示上限 cMax は超えない。彩度軸フィットの上限算出で共通に使う。
+	private static double FitChromaAxis(double cMax, double maxInGamutChroma)
+	{
+		return Math.Min(cMax, Math.Max(maxInGamutChroma, cMax * 0.04) * 1.06);
+	}
+
+
+
+
 	// 明度・彩度の平面(色相固定)で、色域外の点 (l, c) に最も近い色域内の点を返す。色域内ならそのまま返す。色域外なら、各明度での色域境界(最大彩度)の曲線上から、明度・彩度をそれぞれの上限で正規化した距離が最小の点を選ぶ。二次元スライダーで色域外へ動かしたとき、つまみを色域の縁へ滑らかに寄せる(縁をなぞらせる)のに使う。
 	public static (double L, double C) NearestInGamut(LchSpace space, double l, double c, double hDegrees)
 	{

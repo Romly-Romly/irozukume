@@ -9,10 +9,10 @@
 	xmlns:helpers="using:Irozukume.Helpers"
 	mc:Ignorable="d">
 
-	<!-- 上段に輝度レール・色差平面パッド・右の縦並び設定を置き、下段に Cb・Cr スライダーを置く。両行とも内容の高さに収め、内容は上端へ詰めて余白を下に集める。パッドはエリアの幅と、スライダー群および輝度レール直下の数値欄を除いた残りの高さの小さい方へ正方形でコード側から合わせ、ウィンドウに追従して拡縮する。輝度レールの高さもパッドに揃える。 -->
+	<!-- 上段に色差平面パッド・その右の輝度レール・さらに右の縦並び設定を置き、下段に Y・Cb・Cr スライダーを置く。両行とも内容の高さに収め、内容は上端へ詰めて余白を下に集める。輝度はパッドの右の縦レールと下段の水平スライダーの2箇所で操作でき、数値入力欄は下段の Y 行へ置く。パッドはエリアの幅(レール幅と間隔を除く)と、スライダー群を除いた残りの高さの小さい方へ正方形でコード側から合わせ、ウィンドウに追従して拡縮する。輝度レールの高さもパッドに揃える。 -->
 	<Grid x:Name="LayoutRoot" RowSpacing="16">
 		<Grid.Resources>
-			<!-- スライダー行の数値入力欄の幅を揃える。ラベル列の幅は全スライダータブ共通の SliderLabelWidth を使う。Cb・Cr の数値入力欄は符号付き表記で先頭に符号が付くため少し広くする。Cb・Cr と輝度レールの入力欄はどちらも ExpandingNumberBox で、普段は YuvRestWidth まで縮め、フォーカス時(スピンボタンのポップアップ時)に YuvValueWidth まで広げる。横スライダーでは縮んだぶん隣のスライダー列が、輝度レールでは隣の色差平面エリアが広がる。 -->
+			<!-- スライダー行の数値入力欄の幅を揃える。ラベル列の幅は全スライダータブ共通の SliderLabelWidth を使う。Cb・Cr の数値入力欄は符号付き表記で先頭に符号が付くため少し広くする。Y・Cb・Cr の入力欄はいずれも ExpandingNumberBox で、普段は YuvRestWidth まで縮め、フォーカス時(スピンボタンのポップアップ時)に YuvValueWidth まで広げる。縮んだぶんは同じ行の隣のスライダー列が広がる。 -->
 			<x:Double x:Key="YuvValueWidth">124</x:Double>
 			<x:Double x:Key="YuvRestWidth">84</x:Double>
 		</Grid.Resources>
@@ -21,66 +21,91 @@
 			<RowDefinition Height="Auto" />
 		</Grid.RowDefinitions>
 
-		<!-- 上段: 輝度レール・色差平面パッド・右の縦並び設定。 -->
+		<!-- 上段: 色差平面パッドと輝度レールを一定間隔で横に並べた組を中央に置き、その右に縦並び設定。 -->
 		<Grid Grid.Row="0" ColumnSpacing="16">
 			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="Auto" />
 				<ColumnDefinition Width="*" />
 				<ColumnDefinition Width="Auto" />
 			</Grid.ColumnDefinitions>
 
-			<!-- 輝度 Y の縦レール。高さはコード側でパッドの一辺に揃える。トラックは現在の色差での輝度ランプ(黒→明)、下に数値入力欄を出す。輝度は 0–255 で表記の切替に依らないため、入力欄は値へ直接束縛する。 -->
-			<StackPanel
-				x:Name="LumaPanel"
-				Grid.Column="0"
-				Spacing="8"
-				VerticalAlignment="Top"
-				HorizontalAlignment="Center">
-				<controls:GradientSlider
-					x:Name="LumaSlider"
-					Orientation="Vertical"
-					Minimum="0"
-					Maximum="255"
-					StepFrequency="1"
-					x:Uid="NameLumaY"
-					AutomationProperties.AutomationId="LumaSlider"
-					Value="{x:Bind ViewModel.Luma, Mode=TwoWay}"
-					TrackBrush="{x:Bind ViewModel.LumaTrackBrush, Mode=OneWay}"
-					OutOfGamutSegments="{x:Bind ViewModel.LumaGamut, Mode=OneWay}"
-					OutOfGamutStyle="{x:Bind ViewModel.OutOfRangeStyle, Mode=OneWay}" />
-				<controls:ExpandingNumberBox
-					x:Name="LumaValueBox"
-					FocusWidth="{StaticResource YuvValueWidth}"
-					RestWidth="{StaticResource YuvRestWidth}"
-					HorizontalAlignment="Center"
-					SpinButtonPlacementMode="Compact"
-					Minimum="0"
-					Maximum="255"
-					NumberFormatter="{x:Bind helpers:NumberFormatters.Integer}"
-					x:Uid="NameLumaY"
-					AutomationProperties.AutomationId="LumaValueBox"
-					Value="{x:Bind ViewModel.Luma, Mode=TwoWay}" />
-			</StackPanel>
-
-			<!-- 色差平面エリア。利用可能な領域いっぱいに、正方形を保って拡縮する。パッドの実寸はコード側で領域の短辺へ合わせ、画像は実寸と表示倍率に合わせて作り直す。 -->
+			<!-- 色差平面エリア。利用可能な領域いっぱいに、パッドと輝度レールの組を正方形を保って拡縮し、その組を中央寄せにする。パッドの実寸はコード側で領域の幅(レール幅と間隔を除く)と高さの短辺へ合わせ、画像は実寸と表示倍率に合わせて作り直す。パッドとレールは一定間隔(PadRailGap)で並べ、両者の隙間が一定に保たれるようにする。 -->
 			<Grid
 				x:Name="PadArea"
-				Grid.Column="1"
+				Grid.Column="0"
 				SizeChanged="OnPadAreaSizeChanged">
-				<controls:PlanarPad
-					x:Name="CbCrPad"
+				<!-- 既定レイアウト(Cb×Cr 平面+輝度 Y の縦バー)。パッドと輝度レールを一定間隔(PadRailGap)で横に並べた組を中央寄せにする。 -->
+				<Grid
+					x:Name="YuvCbCrLayoutRoot"
 					HorizontalAlignment="Center"
 					VerticalAlignment="Top"
-					x:Uid="YuvCbCrPad"
-					XValue="{x:Bind ViewModel.Cb01, Mode=OneWay}"
-					YValue="{x:Bind ViewModel.Cr01, Mode=OneWay}">
-					<Image x:Name="PlaneImage" Stretch="Fill" />
-				</controls:PlanarPad>
+					ColumnSpacing="12">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+
+					<controls:PlanarPad
+						x:Name="CbCrPad"
+						Grid.Column="0"
+						VerticalAlignment="Top"
+						x:Uid="YuvCbCrPad"
+						XValue="{x:Bind ViewModel.YuvCbCrPadCbNorm, Mode=OneWay}"
+						YValue="{x:Bind ViewModel.YuvCbCrPadCrNorm, Mode=OneWay}">
+						<Image x:Name="PlaneImage" Stretch="Fill" />
+					</controls:PlanarPad>
+
+					<!-- 輝度 Y の縦レール。パッドの右に一定間隔で添える。高さはコード側でパッドの一辺に揃える。トラックは現在の色差での輝度ランプ(黒→明)、表示できない範囲は色域外ハッチで示す。数値入力欄は下段の Y 行へ置くため、レール自体は数値欄を持たない。 -->
+					<controls:GradientSlider
+						x:Name="LumaSlider"
+						Grid.Column="1"
+						Orientation="Vertical"
+						VerticalAlignment="Top"
+						Minimum="0"
+						Maximum="255"
+						StepFrequency="1"
+						x:Uid="NameLumaY"
+						AutomationProperties.AutomationId="LumaSlider"
+						Value="{x:Bind ViewModel.Luma, Mode=TwoWay}"
+						TrackBrush="{x:Bind ViewModel.LumaTrackBrushVertical, Mode=OneWay}"
+						OutOfGamutSegments="{x:Bind ViewModel.LumaGamut, Mode=OneWay}"
+						OutOfGamutStyle="{x:Bind ViewModel.OutOfRangeStyle, Mode=OneWay}" />
+				</Grid>
+
+				<!-- 直交パッドレイアウト(片方の色差×輝度の平面と、切り出した色差の縦スライダー)。Cb×Y 平面(Cr は縦)・Cr×Y 平面(Cb は縦)の2種をこのホストで賄う。パッドは PlanarPad を流用し、つまみ・レンズ・矢印操作を内蔵で得る。下地画像はコードビハインドで固定成分・色域外の見せ方に合わせて作り直し、色域外はハッチで透かす。 -->
+				<Grid
+					x:Name="YuvCartLayoutRoot"
+					Visibility="Collapsed"
+					HorizontalAlignment="Center"
+					VerticalAlignment="Top"
+					ColumnSpacing="12">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+
+					<controls:PlanarPad
+						x:Name="YuvCartPad"
+						Grid.Column="0">
+						<Image x:Name="YuvCartImage" Stretch="Fill" />
+					</controls:PlanarPad>
+
+					<!-- 直交パッドの切り出し成分(2軸に取らない側の色差)の縦スライダー。値・背景・色域外区間・名前はレイアウトに応じてコードビハインドで束ね直す。高さはパッドに揃える。 -->
+					<controls:GradientSlider
+						x:Name="YuvCartSlider"
+						Grid.Column="1"
+						Orientation="Vertical"
+						VerticalAlignment="Top"
+						Minimum="0"
+						Maximum="1"
+						StepFrequency="{x:Bind ViewModel.YuvChromaStep}"
+						LargeChange="{x:Bind ViewModel.YuvChromaLargeStep}"
+						OutOfGamutStyle="{x:Bind ViewModel.OutOfRangeStyle, Mode=OneWay}" />
+				</Grid>
 			</Grid>
 
 			<!-- 右: 縦並びで YCbCr/YUV 切替・係数規格・量子化レンジ。パッドの上端に揃える。 -->
 			<StackPanel
-				Grid.Column="2"
+				Grid.Column="1"
 				VerticalAlignment="Top"
 				Spacing="16">
 
@@ -110,11 +135,111 @@
 				<CheckBox
 					x:Uid="YuvGamutLimit"
 					IsChecked="{x:Bind ViewModel.YuvGamutLimit, Mode=TwoWay}" />
+
+				<!-- 編集エリアの見せ方(レイアウト)を選ぶアイコンボタン。押すとサムネイル付きのフライアウトを開く。アイコン自体が現在のレイアウトの縮小見本を兼ねる。係数規格・量子化レンジ・表記に依らず共通の見せ方のため、常に出す。 -->
+				<Button
+					x:Name="YuvLayoutPickerButton"
+					HorizontalAlignment="Left"
+					Padding="4"
+					Width="36"
+					Height="36"
+					x:Uid="YuvLayoutPicker">
+					<Image
+						x:Name="YuvLayoutPickerIcon"
+						Width="24"
+						Height="24"
+						Stretch="Fill" />
+					<Button.Flyout>
+						<Flyout x:Name="YuvLayoutPickerFlyout" Opening="OnYuvLayoutFlyoutOpening">
+							<StackPanel Spacing="8">
+								<!-- 上段: Cb×Cr 平面+輝度の縦バーと、Cb×Y 平面+Cr の縦バー。 -->
+								<StackPanel Orientation="Horizontal" Spacing="8">
+									<Button Click="OnPickYuvCbCrPlaneLayout" Padding="6" x:Uid="YuvLayoutCbCrPlane">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="YuvCbCrPlaneThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="YuvCbCrPlaneThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="YuvLayoutCbCrPlaneCaption" />
+										</StackPanel>
+									</Button>
+
+									<Button Click="OnPickYuvCbYPlaneLayout" Padding="6" x:Uid="YuvLayoutCbYPlane">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="YuvCbYPlaneThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="YuvCbYPlaneThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="YuvLayoutCbYPlaneCaption" />
+										</StackPanel>
+									</Button>
+								</StackPanel>
+
+								<!-- 下段: Cr×Y 平面+Cb の縦バー。 -->
+								<StackPanel Orientation="Horizontal" Spacing="8">
+									<Button Click="OnPickYuvCrYPlaneLayout" Padding="6" x:Uid="YuvLayoutCrYPlane">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="YuvCrYPlaneThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="YuvCrYPlaneThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="YuvLayoutCrYPlaneCaption" />
+										</StackPanel>
+									</Button>
+								</StackPanel>
+							</StackPanel>
+						</Flyout>
+					</Button.Flyout>
+				</Button>
+
+				<!-- 色差平面の表示枠(スケール)の決め方。なし(固定枠)・等方(色域へ縦横等倍で寄せる)・縦横独立(各軸を独立に色域の外接枠へ合わせて平面いっぱいに広げる)。フィットは有効領域を広げる代わりに、固定成分(Cb×Cr では輝度、Cb×Y では Cr、Cr×Y では Cb)で縮尺が変わる。三つの見せ方すべてに効くため常に出す。 -->
+				<StackPanel x:Name="ScaleOptionPanel" Spacing="4">
+					<TextBlock x:Uid="YuvScaleLabel" Style="{StaticResource CaptionTextBlockStyle}" />
+					<ComboBox
+						x:Name="YuvScaleSelector"
+						x:Uid="YuvScaleSelector"
+						HorizontalAlignment="Stretch"
+						SelectedIndex="{x:Bind ViewModel.YuvScaleIndex, Mode=TwoWay}">
+						<ComboBoxItem x:Uid="YuvScaleNone" />
+						<ComboBoxItem x:Uid="YuvScaleUniform" />
+						<ComboBoxItem x:Uid="YuvScaleStretch" />
+					</ComboBox>
+				</StackPanel>
 			</StackPanel>
 		</Grid>
 
-		<!-- 下段: Cb・Cr スライダー。色差平面パッドと同じ値に束縛し、どちらからでも操作できる。ラベルは YCbCr/YUV 表記に追従し、数値入力欄も表記(YCbCr 0–255 / 符号付き YUV)に合わせて範囲と値をコード側で組み替える。この高さを差し引いて色差平面パッドの一辺を決めるため、名前で参照する。 -->
+		<!-- 下段: Y・Cb・Cr スライダー。上段のパッド・輝度レールと同じ値に束縛し、どちらからでも操作できる。Y(輝度)は 0–255 で表記の切替に依らないため値へ直接束縛する。Cb・Cr のラベルは YCbCr/YUV 表記に追従し、数値入力欄も表記(YCbCr 0–255 / 符号付き YUV)に合わせて範囲と値をコード側で組み替える。この高さを差し引いて色差平面パッドの一辺を決めるため、名前で参照する。 -->
 		<StackPanel Grid.Row="1" x:Name="SliderHost" Spacing="{StaticResource SliderSpacing}">
+			<!-- Y(輝度)。0–255。スライダーは上段の縦レールと同じ値に束縛する。 -->
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="Auto" />
+				</Grid.ColumnDefinitions>
+				<TextBlock Grid.Column="0" Width="{StaticResource SliderLabelWidth}" VerticalAlignment="Center" Text="Y" />
+				<controls:GradientSlider Margin="{StaticResource SliderRowGap}"
+					Grid.Column="1"
+					x:Uid="NameLumaY"
+					Minimum="0"
+					Maximum="255"
+					StepFrequency="1"
+					Value="{x:Bind ViewModel.Luma, Mode=TwoWay}"
+					TrackBrush="{x:Bind ViewModel.LumaTrackBrush, Mode=OneWay}"
+					OutOfGamutSegments="{x:Bind ViewModel.LumaGamut, Mode=OneWay}"
+					OutOfGamutStyle="{x:Bind ViewModel.OutOfRangeStyle, Mode=OneWay}" />
+				<controls:ExpandingNumberBox
+					x:Name="LumaValueBox"
+					Grid.Column="2"
+					FocusWidth="{StaticResource YuvValueWidth}"
+					RestWidth="{StaticResource YuvRestWidth}"
+					VerticalAlignment="Center"
+					SpinButtonPlacementMode="Compact"
+					Minimum="0"
+					Maximum="255"
+					NumberFormatter="{x:Bind helpers:NumberFormatters.Integer}"
+					x:Uid="NameLumaY"
+					AutomationProperties.AutomationId="LumaValueBox"
+					Value="{x:Bind ViewModel.Luma, Mode=TwoWay}" />
+			</Grid>
+
 			<Grid>
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="Auto" />

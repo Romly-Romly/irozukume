@@ -719,16 +719,307 @@
 		<value>Sync the 2D slider with the hue ring</value>
 	</data>
 	<data name="HwbNormalize.Content" xml:space="preserve">
-		<value>Normalize</value>
+		<value>Limit travel</value>
 	</data>
 	<data name="HwbNormalize.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-		<value>Keep whiteness + blackness within 100% (round degenerate grays to canonical form)</value>
+		<value>Limit the marker's travel. On folds whiteness + blackness within 100% so the marker can't enter the degenerate range; off lets the marker move into sums above 100%.</value>
+	</data>
+	<data name="HsvLayoutPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Choose layout</value>
+	</data>
+	<data name="HsvLayoutPicker.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>Choose how the hue-wheel area is laid out</value>
+	</data>
+	<data name="HsvLayoutRingSquare.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue ring with saturation-value square</value>
+	</data>
+	<data name="HsvLayoutRingSquare.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A hue ring around a square pad of saturation (horizontal) and value (vertical)</value>
+	</data>
+	<data name="HsvLayoutRingSquareCaption.Text" xml:space="preserve">
+		<value>Ring + SV</value>
+	</data>
+	<data name="HsvLayoutWheel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue-saturation disk with a value slider</value>
+	</data>
+	<data name="HsvLayoutWheel.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A disk where angle is hue and distance from center is saturation, with value on the vertical slider at right</value>
+	</data>
+	<data name="HsvLayoutWheelCaption.Text" xml:space="preserve">
+		<value>Disk + value</value>
+	</data>
+	<data name="HsvHvPad.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue and value</value>
+	</data>
+	<data name="HsvLayoutPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue-value square with a saturation slider</value>
+	</data>
+	<data name="HsvLayoutPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A square pad with hue (horizontal) and value (vertical), with saturation on the vertical slider at right</value>
+	</data>
+	<data name="HsvLayoutPlaneCaption.Text" xml:space="preserve">
+		<value>Hue × value</value>
+	</data>
+	<data name="HsvLayoutValueWheel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue-value disk with a saturation slider</value>
+	</data>
+	<data name="HsvLayoutValueWheel.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A disk where angle is hue and distance from center is value, with saturation on the vertical slider at right</value>
+	</data>
+	<data name="HsvLayoutValueWheelCaption.Text" xml:space="preserve">
+		<value>Disk + sat.</value>
+	</data>
+	<data name="HsvLayoutHueSatPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue-saturation square with a value slider</value>
+	</data>
+	<data name="HsvLayoutHueSatPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A pad with hue (horizontal) and saturation (vertical), with value on the vertical slider at right</value>
+	</data>
+	<data name="HsvLayoutHueSatPlaneCaption.Text" xml:space="preserve">
+		<value>Hue × sat.</value>
+	</data>
+	<data name="HsvLayoutSvBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Saturation-value square with a hue slider</value>
+	</data>
+	<data name="HsvLayoutSvBar.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A square pad with saturation (horizontal) and value (vertical), with hue on the vertical slider at right</value>
+	</data>
+	<data name="HsvLayoutSvBarCaption.Text" xml:space="preserve">
+		<value>Sat × value</value>
+	</data>
+	<data name="HslLayoutPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Choose layout</value>
+	</data>
+	<data name="HslLayoutPicker.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>Choose how the hue-wheel area is laid out</value>
+	</data>
+	<data name="HslLayoutRingTriangle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue ring with saturation-lightness triangle</value>
+	</data>
+	<data name="HslLayoutRingTriangle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A hue ring around a triangle of saturation and lightness with pure color, white and black at its corners</value>
+	</data>
+	<data name="HslLayoutRingTriangleCaption.Text" xml:space="preserve">
+		<value>Ring + tri.</value>
+	</data>
+	<data name="HslLayoutWheel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue-saturation disk with a lightness slider</value>
+	</data>
+	<data name="HslLayoutWheel.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A disk where angle is hue and distance from center is saturation, with lightness on the vertical slider at right</value>
+	</data>
+	<data name="HslLayoutWheelCaption.Text" xml:space="preserve">
+		<value>Disk + light.</value>
+	</data>
+	<data name="HslLayoutLightnessWheel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue-lightness disk with a saturation slider</value>
+	</data>
+	<data name="HslLayoutLightnessWheel.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A disk where angle is hue and distance from center is lightness, with saturation on the vertical slider at right</value>
+	</data>
+	<data name="HslLayoutLightnessWheelCaption.Text" xml:space="preserve">
+		<value>Disk + sat.</value>
+	</data>
+	<data name="HslLayoutLightnessPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue-lightness square with a saturation slider</value>
+	</data>
+	<data name="HslLayoutLightnessPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A square pad with hue (horizontal) and lightness (vertical), with saturation on the vertical slider at right</value>
+	</data>
+	<data name="HslLayoutLightnessPlaneCaption.Text" xml:space="preserve">
+		<value>Hue × light.</value>
+	</data>
+	<data name="HslLayoutHueSatPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue-saturation square with a lightness slider</value>
+	</data>
+	<data name="HslLayoutHueSatPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A pad with hue (horizontal) and saturation (vertical), with lightness on the vertical slider at right</value>
+	</data>
+	<data name="HslLayoutHueSatPlaneCaption.Text" xml:space="preserve">
+		<value>Hue × sat.</value>
+	</data>
+	<data name="HslLayoutSlBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Saturation-lightness square with a hue slider</value>
+	</data>
+	<data name="HslLayoutSlBar.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A square pad with saturation (horizontal) and lightness (vertical), with hue on the vertical slider at right</value>
+	</data>
+	<data name="HslLayoutSlBarCaption.Text" xml:space="preserve">
+		<value>Sat × light.</value>
+	</data>
+	<data name="HslSlSquarePad.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Saturation and lightness</value>
+	</data>
+	<data name="HslLayoutRingSquare.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue ring with saturation-lightness square</value>
+	</data>
+	<data name="HslLayoutRingSquare.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A hue ring around a square pad of saturation (horizontal) and lightness (vertical)</value>
+	</data>
+	<data name="HslLayoutRingSquareCaption.Text" xml:space="preserve">
+		<value>Ring + SL</value>
+	</data>
+	<data name="HslLayoutTriangleBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Saturation-lightness triangle with a hue slider</value>
+	</data>
+	<data name="HslLayoutTriangleBar.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A triangle with pure color, white and black at its corners, with hue on the vertical slider at right</value>
+	</data>
+	<data name="HslLayoutTriangleBarCaption.Text" xml:space="preserve">
+		<value>Tri + hue</value>
+	</data>
+	<data name="HwbLayoutPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Choose layout</value>
+	</data>
+	<data name="HwbLayoutPicker.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>Choose how the hue-wheel area is laid out</value>
+	</data>
+	<data name="HwbTrianglePad.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Whiteness and blackness</value>
+	</data>
+	<data name="HwbLayoutRingSquare.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue ring with whiteness-blackness square</value>
+	</data>
+	<data name="HwbLayoutRingSquare.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A hue ring around a square pad of whiteness (horizontal) and blackness (vertical)</value>
+	</data>
+	<data name="HwbLayoutRingSquareCaption.Text" xml:space="preserve">
+		<value>Ring + WB</value>
+	</data>
+	<data name="HwbLayoutRingTriangle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue ring with whiteness-blackness triangle</value>
+	</data>
+	<data name="HwbLayoutRingTriangle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A hue ring around a triangle of whiteness and blackness with pure color, white and black at its corners</value>
+	</data>
+	<data name="HwbLayoutRingTriangleCaption.Text" xml:space="preserve">
+		<value>Ring + tri.</value>
+	</data>
+	<data name="HwbLayoutTriangleBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Whiteness-blackness triangle with a hue slider</value>
+	</data>
+	<data name="HwbLayoutTriangleBar.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A triangle with pure color, white and black at its corners, with hue on the vertical slider at right</value>
+	</data>
+	<data name="HwbLayoutTriangleBarCaption.Text" xml:space="preserve">
+		<value>Tri + hue</value>
+	</data>
+	<data name="HwbLayoutWhitenessWheel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue-whiteness disk with a blackness slider</value>
+	</data>
+	<data name="HwbLayoutWhitenessWheel.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A disk where angle is hue and distance from center is whiteness, with blackness on the vertical slider at right</value>
+	</data>
+	<data name="HwbLayoutWhitenessWheelCaption.Text" xml:space="preserve">
+		<value>Disk + black.</value>
+	</data>
+	<data name="HwbLayoutBlacknessWheel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue-blackness disk with a whiteness slider</value>
+	</data>
+	<data name="HwbLayoutBlacknessWheel.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A disk where angle is hue and distance from center is blackness, with whiteness on the vertical slider at right</value>
+	</data>
+	<data name="HwbLayoutBlacknessWheelCaption.Text" xml:space="preserve">
+		<value>Disk + white.</value>
+	</data>
+	<data name="HwbLayoutBlacknessPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue-blackness square with a whiteness slider</value>
+	</data>
+	<data name="HwbLayoutBlacknessPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A square pad with hue (horizontal) and blackness (vertical), with whiteness on the vertical slider at right</value>
+	</data>
+	<data name="HwbLayoutBlacknessPlaneCaption.Text" xml:space="preserve">
+		<value>Hue × black.</value>
+	</data>
+	<data name="HwbLayoutWhitenessPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue-whiteness square with a blackness slider</value>
+	</data>
+	<data name="HwbLayoutWhitenessPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A square pad with hue (horizontal) and whiteness (vertical), with blackness on the vertical slider at right</value>
+	</data>
+	<data name="HwbLayoutWhitenessPlaneCaption.Text" xml:space="preserve">
+		<value>Hue × white.</value>
+	</data>
+	<data name="HwbLayoutWbBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Whiteness-blackness square with a hue slider</value>
+	</data>
+	<data name="HwbLayoutWbBar.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A square pad with whiteness (horizontal) and blackness (vertical), with hue on the vertical slider at right</value>
+	</data>
+	<data name="HwbLayoutWbBarCaption.Text" xml:space="preserve">
+		<value>White × black</value>
 	</data>
 	<data name="LchGamutLimit.Content" xml:space="preserve">
-		<value>Gamut limit</value>
+		<value>Limit travel</value>
 	</data>
 	<data name="LchGamutLimit.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-		<value>Clamp chroma at the sRGB gamut boundary (off keeps out-of-gamut chroma and marks the undisplayable range with hatching)</value>
+		<value>Limit the marker's travel. On clamps chroma at the sRGB gamut boundary so the marker can't leave the gamut; off lets the marker move out of gamut.</value>
+	</data>
+	<data name="LchChromaFit.Content" xml:space="preserve">
+		<value>Fit chroma</value>
+	</data>
+	<data name="LchChromaFit.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>Scale the chroma axis to the gamut. On shrinks the chroma axis to the most saturated in-gamut chroma under the fixed component, so the gamut fills the pad along chroma and is easier to pick (the cusp at the fixed hue for the L-C planes; the maximum across all hues at the fixed lightness for hue × chroma). The scale changes with the fixed component. Applies to the hue ring + plane, the C×L plane + hue bar, the hue × chroma plane, and the chroma-radius wheel.</value>
+	</data>
+	<data name="LchLayoutPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Choose layout</value>
+	</data>
+	<data name="LchLayoutPicker.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>Choose the layout of the area for editing lightness, chroma, and hue</value>
+	</data>
+	<data name="LchLayoutRingPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue ring and chroma–lightness plane</value>
+	</data>
+	<data name="LchLayoutRingPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>Place a chroma (horizontal) and lightness (vertical) plane inside the outer hue ring</value>
+	</data>
+	<data name="LchLayoutRingPlaneCaption.Text" xml:space="preserve">
+		<value>Ring+CL</value>
+	</data>
+	<data name="LchLayoutClHueBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Lightness–chroma plane and hue slider</value>
+	</data>
+	<data name="LchLayoutClHueBar.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A wide lightness (horizontal) and chroma (vertical) plane, with hue on the vertical slider at right</value>
+	</data>
+	<data name="LchLayoutClHueBarCaption.Text" xml:space="preserve">
+		<value>CL+hue</value>
+	</data>
+	<data name="LchLayoutHueLightnessWheel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue–lightness disk and chroma slider</value>
+	</data>
+	<data name="LchLayoutHueLightnessWheel.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A disk of angle=hue and radius=lightness, with chroma on the vertical slider at right</value>
+	</data>
+	<data name="LchLayoutHueLightnessWheelCaption.Text" xml:space="preserve">
+		<value>Disk (L)</value>
+	</data>
+	<data name="LchLayoutHueLightnessPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue × lightness plane and chroma slider</value>
+	</data>
+	<data name="LchLayoutHueLightnessPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A hue (horizontal) × lightness (vertical) plane, with chroma on the vertical slider at right</value>
+	</data>
+	<data name="LchLayoutHueLightnessPlaneCaption.Text" xml:space="preserve">
+		<value>Hue×L</value>
+	</data>
+	<data name="LchLayoutHueChromaWheel.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue–chroma disk and lightness slider</value>
+	</data>
+	<data name="LchLayoutHueChromaWheel.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A disk of angle=hue and radius=chroma, with lightness on the vertical slider at right</value>
+	</data>
+	<data name="LchLayoutHueChromaWheelCaption.Text" xml:space="preserve">
+		<value>Disk (C)</value>
+	</data>
+	<data name="LchLayoutHueChromaPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Hue × chroma plane and lightness slider</value>
+	</data>
+	<data name="LchLayoutHueChromaPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A hue (horizontal) × chroma (vertical) plane, with lightness on the vertical slider at right</value>
+	</data>
+	<data name="LchLayoutHueChromaPlaneCaption.Text" xml:space="preserve">
+		<value>Hue×C</value>
 	</data>
 
 	<!-- Lab tab -->
@@ -745,13 +1036,115 @@
 		<value>a and b</value>
 	</data>
 	<data name="LabGamutLimit.Content" xml:space="preserve">
-		<value>Gamut limit</value>
+		<value>Limit travel</value>
 	</data>
 	<data name="LabGamutLimit.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-		<value>Clamp a and b at the sRGB gamut boundary (off keeps out-of-gamut values and marks the undisplayable range with hatching)</value>
+		<value>Limit the marker's travel. On clamps a and b at the sRGB gamut boundary so the marker can't leave the gamut; off lets the marker move out of gamut.</value>
+	</data>
+	<data name="LabLayoutPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Choose layout</value>
+	</data>
+	<data name="LabLayoutPicker.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>Choose the layout of the area for editing L, a, and b</value>
+	</data>
+	<data name="LabLayoutAbPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>a × b plane and lightness slider</value>
+	</data>
+	<data name="LabLayoutAbPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>An a (horizontal) × b (vertical) plane, with lightness on the vertical slider at right</value>
+	</data>
+	<data name="LabLayoutAbPlaneCaption.Text" xml:space="preserve">
+		<value>a×b</value>
+	</data>
+	<data name="LabLayoutAlPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>a × L plane and b slider</value>
+	</data>
+	<data name="LabLayoutAlPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>An a (horizontal) × lightness (vertical) plane, with b on the vertical slider at right</value>
+	</data>
+	<data name="LabLayoutAlPlaneCaption.Text" xml:space="preserve">
+		<value>a×L</value>
+	</data>
+	<data name="LabLayoutBlPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>b × L plane and a slider</value>
+	</data>
+	<data name="LabLayoutBlPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A b (horizontal) × lightness (vertical) plane, with a on the vertical slider at right</value>
+	</data>
+	<data name="LabLayoutBlPlaneCaption.Text" xml:space="preserve">
+		<value>b×L</value>
+	</data>
+	<data name="YuvLayoutPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Choose layout</value>
+	</data>
+	<data name="YuvLayoutPicker.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>Choose the layout of the area for editing Y, Cb, and Cr</value>
+	</data>
+	<data name="YuvLayoutCbCrPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Cb × Cr plane and luma slider</value>
+	</data>
+	<data name="YuvLayoutCbCrPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A Cb (horizontal) × Cr (vertical) plane, with luma Y on the vertical slider at right</value>
+	</data>
+	<data name="YuvLayoutCbCrPlaneCaption.Text" xml:space="preserve">
+		<value>Cb×Cr</value>
+	</data>
+	<data name="YuvLayoutCbYPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Cb × Y plane and Cr slider</value>
+	</data>
+	<data name="YuvLayoutCbYPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A Cb (horizontal) × luma (vertical) plane, with Cr on the vertical slider at right</value>
+	</data>
+	<data name="YuvLayoutCbYPlaneCaption.Text" xml:space="preserve">
+		<value>Cb×Y</value>
+	</data>
+	<data name="YuvLayoutCrYPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Cr × Y plane and Cb slider</value>
+	</data>
+	<data name="YuvLayoutCrYPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A Cr (horizontal) × luma (vertical) plane, with Cb on the vertical slider at right</value>
+	</data>
+	<data name="YuvLayoutCrYPlaneCaption.Text" xml:space="preserve">
+		<value>Cr×Y</value>
+	</data>
+	<data name="LabAbScaleLabel.Text" xml:space="preserve">
+		<value>Gamut fit</value>
+	</data>
+	<data name="LabAbScaleSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Gamut fit</value>
+	</data>
+	<data name="LabAbScaleSelector.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>How the a×b plane is framed. Uniform and Stretch zoom the frame to the in-gamut area at the current lightness to enlarge the usable region (the scale changes with lightness). Uniform keeps the origin centered with equal axes; Stretch fits each axis independently to fill the plane</value>
+	</data>
+	<data name="LabAbScaleNone.Content" xml:space="preserve">
+		<value>None</value>
+	</data>
+	<data name="LabAbScaleUniform.Content" xml:space="preserve">
+		<value>Uniform</value>
+	</data>
+	<data name="LabAbScaleStretch.Content" xml:space="preserve">
+		<value>Stretch</value>
 	</data>
 
 	<!-- YUV/YCbCr tab -->
+	<data name="YuvScaleLabel.Text" xml:space="preserve">
+		<value>Gamut fit</value>
+	</data>
+	<data name="YuvScaleSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Gamut fit</value>
+	</data>
+	<data name="YuvScaleSelector.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>How the chroma plane is framed. Uniform and Stretch zoom the frame to the in-gamut area at the current fixed component (luma for Cb×Cr, Cr for Cb×Y, Cb for Cr×Y) to enlarge the usable region (the scale changes with the fixed component). Uniform keeps the neutral point 128 centered with equal axes; Stretch fits each axis independently to fill the plane</value>
+	</data>
+	<data name="YuvScaleNone.Content" xml:space="preserve">
+		<value>None</value>
+	</data>
+	<data name="YuvScaleUniform.Content" xml:space="preserve">
+		<value>Uniform</value>
+	</data>
+	<data name="YuvScaleStretch.Content" xml:space="preserve">
+		<value>Stretch</value>
+	</data>
 	<data name="YuvCbCrPad.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
 		<value>Cb and Cr</value>
 	</data>
@@ -762,10 +1155,10 @@
 		<value>Studio range</value>
 	</data>
 	<data name="YuvGamutLimit.Content" xml:space="preserve">
-		<value>Gamut limit</value>
+		<value>Limit travel</value>
 	</data>
 	<data name="YuvGamutLimit.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-		<value>Clamp the chroma (Cb and Cr) at the sRGB gamut boundary (off keeps out-of-gamut chroma and marks the undisplayable range with hatching)</value>
+		<value>Limit the marker's travel. On clamps the chroma (Cb and Cr) at the sRGB gamut boundary so the marker can't leave the gamut; off lets the marker move out of gamut.</value>
 	</data>
 
 	<!-- RGB/CMYK tab -->

@@ -40,15 +40,112 @@
 					x:Uid="NameHue"
 					Value="{x:Bind ViewModel.LchH, Mode=TwoWay}">
 
-					<!-- 中央に明度・彩度の L-C パッドを置く。横が彩度(左0→右が表示上限)、縦が明度(上が最大→下0)。下地は色域内を実色、色域外をハッチで透かした画像をコード側で作って差し込む。操作は2軸をまとめて二次元で扱う(色域内への最近傍寄せ)ため、つまみ位置は一方向束縛で受け、操作の反映は ValuesChanged から SetLchPad へ渡す。 -->
+					<!-- 中央に明度・彩度の L-C パッドを置く。横が彩度(左0→右が彩度軸の上限)、縦が明度(上が最大→下0)。彩度軸はフィット時にその色相の cusp まで詰まるため、つまみの横位置は彩度軸の上限を介す LchPadCNorm で受ける(下段の彩度スライダーは全域の LchCNorm)。下地は色域内を実色、色域外をハッチで透かした画像をコード側で作って差し込む。操作は2軸をまとめて二次元で扱う(色域内への最近傍寄せ)ため、つまみ位置は一方向束縛で受け、操作の反映は ValuesChanged から SetLchPad へ渡す。 -->
 					<controls:PlanarPad
 						x:Name="LcPad"
 						x:Uid="LchLcPad"
-						XValue="{x:Bind ViewModel.LchCNorm, Mode=OneWay}"
+						XValue="{x:Bind ViewModel.LchPadCNorm, Mode=OneWay}"
 						YValue="{x:Bind ViewModel.LchLNorm, Mode=OneWay}">
 						<Image x:Name="LcImage" Stretch="Fill" />
 					</controls:PlanarPad>
 				</controls:RingSlider>
+
+				<!-- 円盤レイアウト(角度=色相の円盤と、切り出した成分の縦スライダー)。半径=明度(彩度は縦)・半径=彩度(明度は縦)の2種をこのホストで賄い、色相リング+平面と入れ替える。円盤画像・つまみ位置・操作・レンズはコードビハインドが司る。色域外はハッチで透かすため、円盤画像は LcPlane と同じく生成済みビットマップをレンズが読む。 -->
+				<Grid
+					x:Name="LchDiskLayoutRoot"
+					Visibility="Collapsed"
+					HorizontalAlignment="Center"
+					VerticalAlignment="Top"
+					ColumnSpacing="12">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+
+					<!-- 円盤本体。背景を透明にして円の外側の余白でもポインタを拾い、ドラッグで縁の外へ出ても半径成分を縁(1)へ留める。 -->
+					<Grid
+						x:Name="DiskHost"
+						Grid.Column="0"
+						Background="Transparent"
+						IsTabStop="True"
+						UseSystemFocusVisuals="True"
+						PointerPressed="OnDiskPointerPressed"
+						PointerMoved="OnDiskPointerMoved"
+						PointerReleased="OnDiskPointerReleased"
+						PointerCaptureLost="OnDiskPointerCaptureLost"
+						KeyDown="OnDiskKeyDown"
+						SizeChanged="OnDiskHostSizeChanged">
+						<Image x:Name="DiskImage" Stretch="Fill" />
+						<!-- 二重の輪のつまみ。明暗どちらの円盤上でも縁が見えるよう、白い輪の外へ半透明の暗い輪を重ねる。 -->
+						<Ellipse
+							x:Name="DiskThumbDark"
+							Width="20"
+							Height="20"
+							HorizontalAlignment="Center"
+							VerticalAlignment="Center"
+							IsHitTestVisible="False"
+							Fill="Transparent"
+							Stroke="#80000000"
+							StrokeThickness="4">
+							<Ellipse.RenderTransform>
+								<TranslateTransform x:Name="DiskThumbDarkOffset" />
+							</Ellipse.RenderTransform>
+						</Ellipse>
+						<Ellipse
+							x:Name="DiskThumb"
+							Width="20"
+							Height="20"
+							HorizontalAlignment="Center"
+							VerticalAlignment="Center"
+							IsHitTestVisible="False"
+							Fill="Transparent"
+							Stroke="White"
+							StrokeThickness="2">
+							<Ellipse.RenderTransform>
+								<TranslateTransform x:Name="DiskThumbOffset" />
+							</Ellipse.RenderTransform>
+						</Ellipse>
+
+						<!-- レンズ(ルーペ)の置き場。実体は最前面オーバーレイへ載るが、座標変換の基準として円盤と同座標に置く。ポインタは透過させる。 -->
+						<Canvas x:Name="DiskLens" IsHitTestVisible="False" />
+					</Grid>
+
+					<!-- 円盤の切り出し成分(半径に取らない側)の縦スライダー。値・値域・刻み・背景・色域外区間・名前はレイアウトに応じてコードビハインドで束ね直す。高さは円盤に揃える。 -->
+					<controls:GradientSlider
+						x:Name="LchDiskSlider"
+						Grid.Column="1"
+						Orientation="Vertical"
+						VerticalAlignment="Top"
+						OutOfGamutStyle="{x:Bind ViewModel.OutOfRangeStyle, Mode=OneWay}" />
+				</Grid>
+
+				<!-- 直交パッドレイアウト(2成分の平面と、切り出した成分の縦スライダー)。彩度×明度(色相は縦)・色相×明度(彩度は縦)・色相×彩度(明度は縦)の3種をこのホストで賄う。パッドは PlanarPad を流用し、つまみ・レンズ・矢印操作を内蔵で得る。下地画像はコードビハインドで固定成分・色域外の見せ方に合わせて作り直し、色域外はハッチで透かす。 -->
+				<Grid
+					x:Name="LchCartLayoutRoot"
+					Visibility="Collapsed"
+					HorizontalAlignment="Center"
+					VerticalAlignment="Top"
+					ColumnSpacing="12">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+
+					<!-- 直交パッド。横軸・縦軸の成分はレイアウトに応じてコードビハインドで束ね直す。下地画像も同様に作り直す。 -->
+					<controls:PlanarPad
+						x:Name="LcCartPad"
+						Grid.Column="0">
+						<Image x:Name="LcCartImage" Stretch="Fill" />
+					</controls:PlanarPad>
+
+					<!-- 直交パッドの切り出し成分(2軸に取らない側)の縦スライダー。値・値域・刻み・背景・色域外区間・名前はレイアウトに応じてコードビハインドで束ね直す。高さはパッドに揃える。 -->
+					<controls:GradientSlider
+						x:Name="LchCartSlider"
+						Grid.Column="1"
+						Orientation="Vertical"
+						VerticalAlignment="Top"
+						OutOfGamutStyle="{x:Bind ViewModel.OutOfRangeStyle, Mode=OneWay}" />
+				</Grid>
 			</Grid>
 
 			<!-- 色相環の右に縦並びで、副モード切替と色域制限トグルを置く。色相環の上端に揃える。 -->
@@ -71,6 +168,92 @@
 				<CheckBox
 					x:Uid="LchGamutLimit"
 					IsChecked="{x:Bind ViewModel.GamutLimit, Mode=TwoWay}" />
+
+				<!-- 彩度軸を色域へ詰めて表示するトグル。オン時はその色相で色域が届く最大彩度(cusp)まで彩度軸を縮め、彩度方向に色域をパッドいっぱいへ広げて選びやすくする(明度は常に全域)。固定色相の L-C 平面(色相リング+平面・C×L 平面+色相バー)でだけ意味を持つため、それ以外の見せ方ではコード側で隠す。 -->
+				<CheckBox
+					x:Name="ChromaFitPanel"
+					x:Uid="LchChromaFit"
+					IsChecked="{x:Bind ViewModel.LchChromaFit, Mode=TwoWay}" />
+
+				<!-- 編集エリアの見せ方(レイアウト)を選ぶアイコンボタン。押すとサムネイル付きのフライアウトを開く。アイコン自体が現在のレイアウトの縮小見本を兼ねる。OKLCH・CIE LCH の副モードで共通の見せ方のため、常に出す。 -->
+				<Button
+					x:Name="LchLayoutPickerButton"
+					HorizontalAlignment="Left"
+					Padding="4"
+					Width="36"
+					Height="36"
+					x:Uid="LchLayoutPicker">
+					<Image
+						x:Name="LchLayoutPickerIcon"
+						Width="24"
+						Height="24"
+						Stretch="Fill" />
+					<Button.Flyout>
+						<Flyout x:Name="LchLayoutPickerFlyout" Opening="OnLchLayoutFlyoutOpening">
+							<StackPanel Spacing="8">
+								<!-- 上段: 色相リング+平面と、角度=色相の円盤2種(半径=明度・半径=彩度)。 -->
+								<StackPanel Orientation="Horizontal" Spacing="8">
+									<Button Click="OnPickLchRingPlaneLayout" Padding="6" x:Uid="LchLayoutRingPlane">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="LchRingPlaneThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="LchRingPlaneThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="LchLayoutRingPlaneCaption" />
+										</StackPanel>
+									</Button>
+
+									<Button Click="OnPickLchHueLightnessWheelLayout" Padding="6" x:Uid="LchLayoutHueLightnessWheel">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="LchHueLightnessWheelThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="LchHueLightnessWheelThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="LchLayoutHueLightnessWheelCaption" />
+										</StackPanel>
+									</Button>
+
+									<Button Click="OnPickLchHueChromaWheelLayout" Padding="6" x:Uid="LchLayoutHueChromaWheel">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="LchHueChromaWheelThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="LchHueChromaWheelThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="LchLayoutHueChromaWheelCaption" />
+										</StackPanel>
+									</Button>
+								</StackPanel>
+
+								<!-- 下段: 直交パッド3種(彩度×明度+色相バー・色相×明度・色相×彩度)。 -->
+								<StackPanel Orientation="Horizontal" Spacing="8">
+									<Button Click="OnPickLchClHueBarLayout" Padding="6" x:Uid="LchLayoutClHueBar">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="LchClHueBarThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="LchClHueBarThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="LchLayoutClHueBarCaption" />
+										</StackPanel>
+									</Button>
+
+									<Button Click="OnPickLchHueLightnessPlaneLayout" Padding="6" x:Uid="LchLayoutHueLightnessPlane">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="LchHueLightnessPlaneThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="LchHueLightnessPlaneThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="LchLayoutHueLightnessPlaneCaption" />
+										</StackPanel>
+									</Button>
+
+									<Button Click="OnPickLchHueChromaPlaneLayout" Padding="6" x:Uid="LchLayoutHueChromaPlane">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="LchHueChromaPlaneThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="LchHueChromaPlaneThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="LchLayoutHueChromaPlaneCaption" />
+										</StackPanel>
+									</Button>
+								</StackPanel>
+							</StackPanel>
+						</Flyout>
+					</Button.Flyout>
+				</Button>
 			</StackPanel>
 		</Grid>
 

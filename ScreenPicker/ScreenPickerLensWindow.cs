@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Geometry;
 using Windows.Graphics.DirectX;
 using Windows.UI;
 using Irozukume.Helpers;
@@ -19,7 +20,7 @@ namespace Irozukume.ScreenPicker;
 // 各フレームで「カーソル位置→所在モニタ→（必要なら）捕捉張り替え→背後（=カーソル周辺）の FP16 領域読み戻し→sRGB8 へ変換してガラスへ→中心レチクル上描き→中心画素の色を保持」を行う。
 // 採色の正確さは FP16 経路（中心画素の scRGB を厳密変換）が担い、ガラスの見た目は sRGB8 へ落とした表示経路が担う。両経路を分離することで、ガラスは 8bit 前提の調律のまま崩れず動く。
 // 描画・読み戻し・確定/中止のフックはすべてこの専用スレッドのメッセージループ上で行う。共有デバイスを複数スレッドから操作すると落ちるため。
-// 左クリックで中心画素の色を確定し、Esc または右クリックで中止する。フックでその入力を握り潰し、採色のための1操作が裏のウィンドウへ漏れないようにする。
+// 左クリックで中心画素の色を確定し、Esc または右クリックで中止する。マウスホイールで拡大率を増減する。フックでこれらの入力を握り潰し、採色のための操作が裏のウィンドウへ漏れないようにする。
 internal sealed class ScreenPickerLensWindow
 {
 	private static readonly UIntPtr RenderTimerId = (UIntPtr)1;
@@ -31,6 +32,13 @@ internal sealed class ScreenPickerLensWindow
 	// カラーピッカーはレチクルと採色画素の一致が要件のため、ブロック方式を使う範囲を広めに取る。画素が見分けづらいごく低い倍率でのみビットマップ方式へ落とす。
 	private const int HybridBpThreshold = 5;
 
+	// マウスホイールで増減できる拡大率の範囲。実拡大率 bp(1ソース画素を何物理pxへ拡大するか)そのもので、下限5倍、上限はとりあえず32倍。DPI倍率に依らずこの範囲で増減できるよう、Magnify 単位ではなく bp で持つ。
+	private const int WheelBpMin = 5;
+	private const int WheelBpMax = 32;
+
+	// Ctrl+ホイールで増減できる取得範囲の半径。採色点を中心とした正方形の半辺(ソース画素)で、辺は 2×半径+1 になる。0 で 1×1(単一画素)、上限はとりあえず 7(15×15)。
+	private const int WheelSampleRadiusMax = 7;
+
 	// レンズ窓のウィンドウクラス名をセッションごとに一意にするための連番。同名クラスの二重登録を避け、ピッカーを繰り返し開けるようにする。
 	private static int _classSeq;
 
@@ -39,6 +47,10 @@ internal sealed class ScreenPickerLensWindow
 	private readonly GlassRenderer _renderer = new();
 	private readonly CanvasDevice _device;
 	private readonly Action<PickedColor?> _onCompleted;
+
+	// 採色開始時の初期値(永続化された前回の最終値)。_initialBlockPx が 0 のときは設定の拡大率(Magnify)から初期 bp を導く。
+	private readonly int _initialBlockPx;
+	private readonly int _initialSampleRadius;
 
 	// WndProc とフックのデリゲートを GC から守るために保持する。関数ポインタを Win32 へ渡したあとデリゲートが回収されると落ちるため。
 	private PickerNativeMethods.WndProcDelegate? _wndProcKeepAlive;
@@ -77,12 +89,28 @@ internal sealed class ScreenPickerLensWindow
 	private int _bodyPhysW;
 	private int _bodyPhysH;
 
+	// 現在の実拡大率 bp(1ソース画素あたりの物理px)。初期値は設定由来の _p.Magnify を現在のDPI倍率で割った値で、マウスホイールで増減する。フック専用スレッドが書き、描画スレッドが毎フレーム読むため Volatile で受け渡す。
+	private int _blockPx;
+
+	// マウスホイールの回転量の端数。WHEEL_DELTA に満たない回転を取りこぼさないため貯める。フック専用スレッドだけが触れる。
+	private int _wheelResidual;
+
+	// 現在の取得範囲の半径(ソース画素)。0 で単一画素、n で (2n+1)² 画素をリニア平均して採る。Ctrl+ホイールで増減する。フック専用スレッドが書き、描画スレッドが毎フレーム読むため Volatile で受け渡す。
+	private int _sampleRadius;
+
+	// Ctrl+ホイールの回転量の端数。拡大率用(_wheelResidual)とは別に貯める。フック専用スレッドだけが触れる。
+	private int _sampleWheelResidual;
+
 	// レンズの画面上の左上位置(物理ピクセル)。毎フレーム、カーソル中心に追従して更新する。
 	private int _lensX;
 	private int _lensY;
 
 	// レンズ中心が今いるモニタ。これが変わったらキャプチャ対象を切り替える。
 	private IntPtr _currentMon;
+
+	// 上端弧へ出すモニタ表記(例: "Monitor 1: LG HDR 4K")と、それを組んだモニタ。DisplayConfig の照会は重いため、モニタが変わったときだけ引き直してキャッシュする。
+	private string _monitorLabel = string.Empty;
+	private IntPtr _labeledMon;
 
 	// レンズ画像を毎フレーム描く Win2D の中間ターゲットと、それを UpdateLayeredWindow へ渡すための GDI 資源。
 	private CanvasRenderTarget? _rt;
@@ -97,13 +125,24 @@ internal sealed class ScreenPickerLensWindow
 
 
 
-	public ScreenPickerLensWindow(GlassParams p, DesktopCaptureSession capture, Action<PickedColor?> onCompleted)
+	public ScreenPickerLensWindow(GlassParams p, DesktopCaptureSession capture, int initialBlockPx, int initialSampleRadius, Action<PickedColor?> onCompleted)
 	{
 		_p = p;
 		_capture = capture;
 		_device = capture.Device;
+		_initialBlockPx = initialBlockPx;
+		_initialSampleRadius = initialSampleRadius;
 		_onCompleted = onCompleted;
 	}
+
+
+
+
+	// 採色中にホイールで最後に到達した実拡大率 bp。セッション終了後にサービスが読み、永続化する。
+	public int CurrentBlockPx => Volatile.Read(ref _blockPx);
+
+	// 採色中に Ctrl+ホイールで最後に到達した取得範囲の半径。セッション終了後にサービスが読み、永続化する。
+	public int CurrentSampleRadius => Volatile.Read(ref _sampleRadius);
 
 
 
@@ -127,6 +166,12 @@ internal sealed class ScreenPickerLensWindow
 		try
 		{
 			_scale = (float)(_capture.DpiX / 96.0);
+
+			// 初期拡大率。永続化された前回の bp があればそれを使い、無ければ設定の拡大率(Magnify)から導く。取得範囲も前回値から始める。
+			_blockPx = _initialBlockPx > 0
+				? Math.Clamp(_initialBlockPx, WheelBpMin, WheelBpMax)
+				: Math.Clamp((int)Math.Round(_p.Magnify / _scale), WheelBpMin, WheelBpMax);
+			_sampleRadius = Math.Clamp(_initialSampleRadius, 0, WheelSampleRadiusMax);
 
 			_renderer.Rebuild(_device, _p);
 
@@ -334,9 +379,63 @@ internal sealed class ScreenPickerLensWindow
 				BeginClose();
 				return (IntPtr)1;
 			}
+
+			if (msg == PickerNativeMethods.WM_MOUSEWHEEL)
+			{
+				var ms = Marshal.PtrToStructure<PickerNativeMethods.MSLLHOOKSTRUCT>(lParam);
+				short delta = (short)(ms.mouseData >> 16);
+
+				// Ctrl 押下中は取得範囲、それ以外は拡大率を増減する。Ctrl の状態は MSLLHOOKSTRUCT に入らないため、この瞬間の物理キー状態を照会する。
+				if ((PickerNativeMethods.GetAsyncKeyState(PickerNativeMethods.VK_CONTROL) & 0x8000) != 0)
+				{
+					AdjustSampleRadius(delta);
+				}
+				else
+				{
+					AdjustMagnify(delta);
+				}
+
+				return (IntPtr)1;
+			}
 		}
 
 		return PickerNativeMethods.CallNextHookEx(IntPtr.Zero, nCode, wParam, lParam);
+	}
+
+
+
+
+	// マウスホイールの回転量から実拡大率 bp を増減し、範囲内へ収める。1ノッチ(WHEEL_DELTA)あたり bp を1段動かし、満たない回転は端数として貯めて取りこぼさない。描画スレッドが次フレームで読む _blockPx へ Volatile で書く。フック専用スレッドから呼ぶ。
+	private void AdjustMagnify(int wheelDelta)
+	{
+		_wheelResidual += wheelDelta;
+		int notches = _wheelResidual / PickerNativeMethods.WHEEL_DELTA;
+		if (notches == 0)
+		{
+			return;
+		}
+
+		_wheelResidual -= notches * PickerNativeMethods.WHEEL_DELTA;
+		int next = Math.Clamp(Volatile.Read(ref _blockPx) + notches, WheelBpMin, WheelBpMax);
+		Volatile.Write(ref _blockPx, next);
+	}
+
+
+
+
+	// Ctrl+ホイールの回転量から取得範囲の半径を増減し、範囲内へ収める。1ノッチ(WHEEL_DELTA)あたり半径を1段動かし、満たない回転は端数として貯めて取りこぼさない。描画スレッドが次フレームで読む _sampleRadius へ Volatile で書く。フック専用スレッドから呼ぶ。
+	private void AdjustSampleRadius(int wheelDelta)
+	{
+		_sampleWheelResidual += wheelDelta;
+		int notches = _sampleWheelResidual / PickerNativeMethods.WHEEL_DELTA;
+		if (notches == 0)
+		{
+			return;
+		}
+
+		_sampleWheelResidual -= notches * PickerNativeMethods.WHEEL_DELTA;
+		int next = Math.Clamp(Volatile.Read(ref _sampleRadius) + notches, 0, WheelSampleRadiusMax);
+		Volatile.Write(ref _sampleRadius, next);
 	}
 
 
@@ -363,10 +462,50 @@ internal sealed class ScreenPickerLensWindow
 					BeginClose();
 					return (IntPtr)1;
 				}
+
+				// 矢印キーでカーソルを1物理ピクセルずつ動かし、採色点を微調整する。握り潰して裏のアプリへ漏らさない。
+				if (TryNudgeCursor(kb.vkCode))
+				{
+					return (IntPtr)1;
+				}
 			}
 		}
 
 		return PickerNativeMethods.CallNextHookEx(IntPtr.Zero, nCode, wParam, lParam);
+	}
+
+
+
+
+	// 矢印キーなら現在のカーソル位置を1物理ピクセルだけ動かす。プロセスは Per-Monitor V2 のため SetCursorPos は物理ピクセル座標で効き、1移動が採色対象の1ソース画素ぶんに正確に対応する。描画スレッドは次フレームでこの新位置を読んで追従する。矢印キーを処理したら true を返す。フック専用スレッドから呼ぶ。
+	private static bool TryNudgeCursor(uint vkCode)
+	{
+		int dx = 0;
+		int dy = 0;
+		switch (vkCode)
+		{
+			case PickerNativeMethods.VK_LEFT:
+				dx = -1;
+				break;
+			case PickerNativeMethods.VK_RIGHT:
+				dx = 1;
+				break;
+			case PickerNativeMethods.VK_UP:
+				dy = -1;
+				break;
+			case PickerNativeMethods.VK_DOWN:
+				dy = 1;
+				break;
+			default:
+				return false;
+		}
+
+		if (PickerNativeMethods.GetCursorPos(out PickerNativeMethods.POINT cur))
+		{
+			PickerNativeMethods.SetCursorPos(cur.X + dx, cur.Y + dy);
+		}
+
+		return true;
 	}
 
 
@@ -428,6 +567,42 @@ internal sealed class ScreenPickerLensWindow
 
 
 
+	// 採色点を中心とした (2r+1)² 画素を scRGB(リニア)で平均する。r=0 なら中心画素そのもの。読み戻し領域(n×n)の縁で範囲がはみ出すぶんは、取り込める画素だけで平均する。
+	private static ScRgbColor AverageRegion(ScRgbColor[] px, int n, int halfSpan, int r)
+	{
+		if (r <= 0)
+		{
+			return px[halfSpan * n + halfSpan];
+		}
+
+		int x0 = Math.Max(0, halfSpan - r);
+		int x1 = Math.Min(n - 1, halfSpan + r);
+		int y0 = Math.Max(0, halfSpan - r);
+		int y1 = Math.Min(n - 1, halfSpan + r);
+
+		double sumR = 0;
+		double sumG = 0;
+		double sumB = 0;
+		int count = 0;
+		for (int y = y0; y <= y1; y++)
+		{
+			int row = y * n;
+			for (int x = x0; x <= x1; x++)
+			{
+				ScRgbColor c = px[row + x];
+				sumR += c.R;
+				sumG += c.G;
+				sumB += c.B;
+				count++;
+			}
+		}
+
+		return new ScRgbColor((float)(sumR / count), (float)(sumG / count), (float)(sumB / count), 1f);
+	}
+
+
+
+
 	// レンズ画面位置の背後デスクトップを FP16 で読み戻し、sRGB8 へ変換して屈折描画し、中心レチクルを重ねて per-pixel alpha のビットマップへ焼き、UpdateLayeredWindow で位置ごと反映する。
 	// 同じ読み戻しから中心画素(=カーソル下)の sRGB8 を厳密変換で取り出し、確定用に保持する。
 	private void RenderFrame()
@@ -459,7 +634,7 @@ internal sealed class ScreenPickerLensWindow
 
 		// 拡大は自前の整数ブロック描画で行う。Win2D の変換に潜む内部丸めを経由しないので位相を完全に支配でき、採色画素を本体中心へ正確に置ける。
 		// bp は 1 ソース画素を何物理ピクセルへ拡大するか(整数)。blockDip はその DIP 値。FillRectangle は DIP を素直に ×scale して物理化するため、ブロックもレチクルも同じ系で揃う。
-		int bp = Math.Max(1, (int)Math.Round(_p.Magnify / _scale));
+		int bp = Volatile.Read(ref _blockPx);
 		double blockDip = bp / (double)_scale;
 
 		// 必要なソース画素だけ読む。本体中心から地図の縁(margin+card/2)までを覆う範囲＋余裕。これで読み戻し領域が大きく縮む。
@@ -482,8 +657,9 @@ internal sealed class ScreenPickerLensWindow
 			return;
 		}
 
-		// 中心画素(=カーソル下)。採色値として厳密変換で保持する。
-		ScRgbColor center = px[halfSpan * n + halfSpan];
+		// 採色値。取得範囲が単一画素なら中心画素(=カーソル下)そのもの、広げていれば採色点を中心とした (2r+1)² 画素をリニア(scRGB)で平均する。ガンマ空間で平均すると濁るため、リニアのまま平均してから sRGB8 へ落とす。
+		int sampleRadius = Volatile.Read(ref _sampleRadius);
+		ScRgbColor center = AverageRegion(px, n, halfSpan, sampleRadius);
 		Color centerSdr = ScRgbColorMath.ScRgbToSrgb8(center, _capture.SdrWhiteScale);
 		Volatile.Write(ref _centerPacked, (1 << 24) | (centerSdr.R << 16) | (centerSdr.G << 8) | centerSdr.B);
 
@@ -551,17 +727,55 @@ internal sealed class ScreenPickerLensWindow
 
 		(double highlightRot, double highlightElev) = ComputeHighlightTransform(cur, monL, monT);
 
+		// モニタが変わったときだけモニタ表記を引き直す(DisplayConfig 照会は重いため)。
+		if (_currentMon != _labeledMon)
+		{
+			_monitorLabel = MonitorNaming.GetLabel(_currentMon);
+			_labeledMon = _currentMon;
+		}
+
+		// 上端弧へ出す補助情報。カーソルの絶対座標・モニタ表記・現在モニタ内の相対座標・モニタのDPIを並べる。
+		string topText = $"{cur.X}, {cur.Y} - {_monitorLabel} ({cur.X - monL}, {cur.Y - monT}) - DPI:{_capture.DpiX}";
+
+		// 下端弧へ出す情報。拡大率・採色した色・状態タグを並べる。色が SDR 白より明るい(HDR)か sRGB 色域外(WCG)なら、#rrggbb はクランプされた近似値のため頭に ~ を冠し、該当タグを添える。
+		bool hdr = ScRgbColorMath.IsBrighterThanSdrWhite(center, _capture.SdrWhiteScale);
+		bool wcg = ScRgbColorMath.IsOutsideSrgbGamut(center);
+		string hex = $"#{centerSdr.R:x2}{centerSdr.G:x2}{centerSdr.B:x2}";
+		if (hdr || wcg)
+		{
+			hex = "~" + hex;
+		}
+
+		string tags = hdr ? "[HDR]" : string.Empty;
+		if (wcg)
+		{
+			tags += tags.Length > 0 ? " [WCG]" : "[WCG]";
+		}
+
+		// 取得範囲を広げているときは、色の前に範囲の寸法(N×N)を出す。単一画素のときは既定の採色のため出さない。
+		int sampleSide = 2 * sampleRadius + 1;
+		string sample = sampleSide > 1 ? $"{sampleSide}×{sampleSide} - " : string.Empty;
+
+		// カラーコードの前に採色色の見本(■)を置く。■ は GlassRenderer 側で採色色そのもので塗られる。
+		string bottomText = tags.Length > 0 ? $"×{bp} - {sample}■ {hex} - {tags}" : $"×{bp} - {sample}■ {hex}";
+
 		using (CanvasDrawingSession ds = _rt.CreateDrawingSession())
 		{
 			ds.Clear(Color.FromArgb(0, 0, 0, 0));
-			_renderer.Draw(ds, _device, _p, localBg, -g.Margin, -g.Margin, bp, highlightRot, highlightElev);
-			// レチクル枠の開口を拡大ブロック1個(blockDip)に一致させる。ブロック方式では本体中心に置いたブロックと完全一致する。
-			DrawReticle(ds, g.CardW / 2.0, g.CardH / 2.0, blockDip, _scale);
+			_renderer.Draw(ds, _device, _p, localBg, -g.Margin, -g.Margin, bottomText, topText, centerSdr, highlightRot, highlightElev);
 
-			// 昇格ウィンドウの上では採色フックが効かないため、禁止マークを重ねて採れないことを示す。
-			if (_blockedByElevation)
+			// レチクルと禁止マークはガラス本体の上に重ねる装飾のため、本体と同じ角丸(円)形でクリップして描く。取得範囲を広げ拡大率も高いとレチクルの開口や腕が本体外へはみ出すので、円の内側へ収める。
+			using (CanvasGeometry bodyClip = CanvasGeometry.CreateRoundedRectangle(_device, 0, 0, g.CardW, g.CardH, (float)g.Radius, (float)g.Radius))
+			using (ds.CreateLayer(1f, bodyClip))
 			{
-				DrawBlockedIcon(ds, g.CardW / 2.0, g.CardH / 2.0, g.CardW);
+				// レチクル枠の開口を取得範囲((2r+1)ブロック)に一致させる。範囲が単一画素なら拡大ブロック1個(blockDip)、広げていればそのぶん開口も広がり、平均に取り込む画素が枠で見える。
+				DrawReticle(ds, g.CardW / 2.0, g.CardH / 2.0, (2 * sampleRadius + 1) * blockDip, _scale);
+
+				// 昇格ウィンドウの上では採色フックが効かないため、禁止マークを重ねて採れないことを示す。
+				if (_blockedByElevation)
+				{
+					DrawBlockedIcon(ds, g.CardW / 2.0, g.CardH / 2.0, g.CardW);
+				}
 			}
 		}
 

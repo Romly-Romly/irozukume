@@ -162,6 +162,17 @@ public sealed partial class MainWindow : Window
 		this.InitializeComponent();
 		this.Title = Loc.Get("AppName");
 
+		// ファイルメニューの「管理者として再起動」の文言と有効状態を昇格状態へ合わせる。トレイメニューと同じ文字列・方針で、既に管理者なら現状を示して無効化する。
+		if (ElevationHelper.IsElevated)
+		{
+			RestartAsAdminMenuItem.Text = Loc.Get("Tray_RunningAsAdmin");
+			RestartAsAdminMenuItem.IsEnabled = false;
+		}
+		else
+		{
+			RestartAsAdminMenuItem.Text = Loc.Get("Tray_RestartAsAdmin");
+		}
+
 		// タスクバーと Alt+Tab に出るウィンドウアイコンを明示する。exe 埋め込みアイコンとは別に AppWindow へ当てないと、非パッケージのWinUIウィンドウは既定アイコンのままになる。ico の実体は出力フォルダへコピーしている。
 		var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Irozukume.ico");
 		AppWindow.SetIcon(iconPath);
@@ -1194,6 +1205,15 @@ public sealed partial class MainWindow : Window
 	private void OnExitMenuClick(object sender, RoutedEventArgs e)
 	{
 		((App)Application.Current).ExitApplication();
+	}
+
+
+
+
+	// ファイルメニューの「管理者として再起動」。トレイメニューの同項目と同じ App.RestartAsAdministrator を呼び、UAC を経て昇格セッションへ移る。
+	private void OnRestartAsAdminClick(object sender, RoutedEventArgs e)
+	{
+		((App)Application.Current).RestartAsAdministrator();
 	}
 
 

@@ -100,8 +100,180 @@
 							<!-- 白み(横: 左0→右1)と黒み(縦: 上0→下1)の正方形。純色を左上・白を右上・黒を左下・灰を右下に取り、白み+黒みが1を超える右下は灰へ退化する。色相に依って塗りが変わり、純色・白・黒の加法混合は重ねたグラデーションでは描けないため、コード側で画像を作って差し込む。 -->
 							<Image x:Name="HwbImage" Stretch="Fill" />
 						</controls:PlanarPad>
+
+						<controls:PlanarPad
+							x:Name="SlSquarePad"
+							Visibility="Collapsed"
+							x:Uid="HslSlSquarePad"
+							XValue="{x:Bind ViewModel.HslSaturation01, Mode=TwoWay}"
+							YValue="{x:Bind ViewModel.Lightness01, Mode=TwoWay}"
+							PadRotation="{x:Bind ViewModel.SlSquarePadRotation, Mode=OneWay}">
+
+							<!-- 彩度(横: 左0→右1)と輝度(縦: 下0→上1)の正方形。上辺が全白(輝度1)・下辺が全黒(輝度0)へ退化し、純色は右辺中央(彩度1・輝度0.5)に現れる。色相に依って塗りが変わるためコード側で画像を作って差し込む。 -->
+							<Image x:Name="SlSquareImage" Stretch="Fill" />
+						</controls:PlanarPad>
+
+						<controls:TrianglePad
+							x:Name="HwbTrianglePad"
+							Visibility="Collapsed"
+							x:Uid="HwbTrianglePad"
+							ValueModel="Hwb"
+							XValue="{x:Bind ViewModel.Whiteness01, Mode=TwoWay}"
+							YValue="{x:Bind ViewModel.Blackness01, Mode=TwoWay}"
+							PadRotation="{x:Bind ViewModel.HwbTrianglePadRotation, Mode=OneWay}">
+
+							<!-- 純色・白・黒を頂点とする白み・黒みの三角形。HWB は純色・白・黒の線形補間のため、色相に依って塗りが変わる。コード側で画像を作って差し込む。 -->
+							<Image x:Name="HwbTriangleImage" Stretch="Fill" />
+						</controls:TrianglePad>
 					</Grid>
 				</controls:RingSlider>
+
+				<!-- 円盤レイアウト(角度=色相・半径=彩度の円盤と、明度の縦スライダー)。HSV モードでセレクタから選んだときだけ表示し、色相リング+正方形と入れ替える。大きさ・円盤画像・つまみ位置・操作はコードビハインドで司る。 -->
+				<Grid
+					x:Name="WheelLayoutRoot"
+					Visibility="Collapsed"
+					HorizontalAlignment="Center"
+					VerticalAlignment="Top"
+					ColumnSpacing="12">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+
+					<!-- 円盤本体。背景を透明にして円の外側の余白でもポインタを拾い、ドラッグで縁の外へ出ても彩度を縁(1)へ留める。 -->
+					<Grid
+						x:Name="WheelDisk"
+						Grid.Column="0"
+						Background="Transparent"
+						IsTabStop="True"
+						UseSystemFocusVisuals="True"
+						PointerPressed="OnWheelPointerPressed"
+						PointerMoved="OnWheelPointerMoved"
+						PointerReleased="OnWheelPointerReleased"
+						PointerCaptureLost="OnWheelPointerCaptureLost"
+						KeyDown="OnWheelKeyDown"
+						SizeChanged="OnWheelDiskSizeChanged">
+						<Image x:Name="WheelImage" Stretch="Fill" />
+						<!-- 二重の輪のつまみ。明暗どちらの円盤上でも縁が見えるよう、白い輪の外へ半透明の暗い輪を重ねる。 -->
+						<Ellipse
+							x:Name="WheelThumbDark"
+							Width="20"
+							Height="20"
+							HorizontalAlignment="Center"
+							VerticalAlignment="Center"
+							IsHitTestVisible="False"
+							Fill="Transparent"
+							Stroke="#80000000"
+							StrokeThickness="4">
+							<Ellipse.RenderTransform>
+								<TranslateTransform x:Name="WheelThumbDarkOffset" />
+							</Ellipse.RenderTransform>
+						</Ellipse>
+						<Ellipse
+							x:Name="WheelThumb"
+							Width="20"
+							Height="20"
+							HorizontalAlignment="Center"
+							VerticalAlignment="Center"
+							IsHitTestVisible="False"
+							Fill="Transparent"
+							Stroke="White"
+							StrokeThickness="2">
+							<Ellipse.RenderTransform>
+								<TranslateTransform x:Name="WheelThumbOffset" />
+							</Ellipse.RenderTransform>
+						</Ellipse>
+
+						<!-- レンズ(ルーペ)の置き場。実体は最前面オーバーレイへ載るが、座標変換の基準として円盤と同座標に置く。ポインタは透過させる。 -->
+						<Canvas x:Name="WheelLens" IsHitTestVisible="False" />
+					</Grid>
+
+					<!-- 円盤の切り出し成分(半径に取らない側)の縦スライダー。値・値域・刻み・背景・名前はレイアウトに応じてコードビハインドで束ね直す。高さは円盤に揃える。 -->
+					<controls:GradientSlider
+						x:Name="DiskSlider"
+						Grid.Column="1"
+						Orientation="Vertical"
+						VerticalAlignment="Top" />
+				</Grid>
+
+				<!-- 色相×明度の直交パッドレイアウト(横=色相・縦=明度の正方パッドと、彩度の縦スライダー)。HSV モードでセレクタから選んだときだけ表示する。パッドは PlanarPad を流用し、つまみ・レンズ・矢印操作を内蔵で得る。色相×明度の下地画像はコードビハインドで彩度・色制限に合わせて作り直す。 -->
+				<Grid
+					x:Name="PlaneLayoutRoot"
+					Visibility="Collapsed"
+					HorizontalAlignment="Center"
+					VerticalAlignment="Top"
+					ColumnSpacing="12">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+
+					<!-- 直交パッド。横軸・縦軸の成分はレイアウトに応じてコードビハインドで束ね直す。下地画像も同様に作り直す。 -->
+					<controls:PlanarPad
+						x:Name="HvPad"
+						Grid.Column="0">
+						<Image x:Name="HvImage" Stretch="Fill" />
+					</controls:PlanarPad>
+
+					<!-- 直交パッドの切り出し成分(2軸に取らない側)の縦スライダー。値・値域・刻み・背景・名前はレイアウトに応じてコードビハインドで束ね直す。高さはパッドに揃える。 -->
+					<controls:GradientSlider
+						x:Name="CartSlider"
+						Grid.Column="1"
+						Orientation="Vertical"
+						VerticalAlignment="Top" />
+				</Grid>
+
+				<!-- 三角形+色相の縦スライダーのレイアウト。HSL・HWB モードでセレクタから選んだときだけ表示する。三角形は TrianglePad を流用し、つまみ・レンズ・矢印操作を内蔵で得る。色相環を使わないため、色相は右の縦スライダーで決め、三角形は追従回転しない(PadRotation は既定の0)。HSL と HWB の三角形を同じ列へ重ね、モードで表示を入れ替える。三角形画像はコードビハインドで色相・色制限・大きさに合わせて作り直す。 -->
+				<Grid
+					x:Name="TriangleLayoutRoot"
+					Visibility="Collapsed"
+					HorizontalAlignment="Center"
+					VerticalAlignment="Top"
+					ColumnSpacing="12">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+
+					<!-- HSL の三角形本体。純色・白・黒を頂点とする彩度・輝度の三角形。色相に依って塗りが変わるためコード側で画像を作って差し込む。 -->
+					<controls:TrianglePad
+						x:Name="TriangleBarPad"
+						Grid.Column="0"
+						x:Uid="HsvSlPad"
+						FillBox="True"
+						XValue="{x:Bind ViewModel.HslSaturation01, Mode=TwoWay}"
+						YValue="{x:Bind ViewModel.Lightness01, Mode=TwoWay}">
+						<Image x:Name="TriangleBarImage" Stretch="Fill" />
+					</controls:TrianglePad>
+
+					<!-- HWB の三角形本体。純色・白・黒を頂点とする白み・黒みの三角形。HSL と同じ列へ重ね、モードで表示を入れ替える。 -->
+					<controls:TrianglePad
+						x:Name="HwbTriangleBarPad"
+						Grid.Column="0"
+						Visibility="Collapsed"
+						x:Uid="HwbTrianglePad"
+						FillBox="True"
+						ValueModel="Hwb"
+						XValue="{x:Bind ViewModel.Whiteness01, Mode=TwoWay}"
+						YValue="{x:Bind ViewModel.Blackness01, Mode=TwoWay}">
+						<Image x:Name="HwbTriangleBarImage" Stretch="Fill" />
+					</controls:TrianglePad>
+
+					<!-- 色相の縦スライダー。下端=色相0度・上端=色相360度。高さは三角形に揃える。 -->
+					<controls:GradientSlider
+						x:Name="HueBarSlider"
+						Grid.Column="1"
+						Orientation="Vertical"
+						VerticalAlignment="Top"
+						x:Uid="NameHue"
+						Minimum="0"
+						Maximum="360"
+						StepFrequency="1"
+						LargeChange="10"
+						Value="{x:Bind ViewModel.H, Mode=TwoWay}"
+						TrackBrush="{x:Bind ViewModel.HueTrackBrushVertical, Mode=OneWay}" />
+				</Grid>
+
 			</Grid>
 
 			<!-- 色相環の右に縦並びで、HSV/HSL 切替と回転トグルを置く。色相環の上端に揃える。既定の RadioButton・CheckBox は MinWidth(120) を持ち、短いラベルでも列の右に空きが出て色相環の幅を奪うため、この列では最小幅を外して内容の幅に詰める。 -->
@@ -135,10 +307,297 @@
 					x:Uid="HsvFollow"
 					IsChecked="{x:Bind ViewModel.FollowHue, Mode=TwoWay}" />
 
-				<!-- HWB の白み+黒みを正規化(合計を100%以内へ畳む)するトグル。HWB モードのときだけ表示する。ラベルは短く、説明はツールチップに置く。 -->
+				<!-- 色相環エリアの見せ方(レイアウト)を選ぶアイコンボタン。HSV モードのときだけ出し、押すとサムネイル付きのフライアウトを開く。アイコン自体が現在のレイアウトの縮小見本を兼ねる。直交パッドを横いっぱいに広げると右上の隅は彩度スライダーと重なるため、色相環の脇のこの列へ置く。 -->
+				<Button
+					x:Name="LayoutPickerButton"
+					Visibility="Collapsed"
+					HorizontalAlignment="Left"
+					Padding="4"
+					Width="36"
+					Height="36"
+					x:Uid="HsvLayoutPicker">
+					<Image
+						x:Name="LayoutPickerIcon"
+						Width="24"
+						Height="24"
+						Stretch="Fill" />
+					<Button.Flyout>
+						<Flyout x:Name="LayoutPickerFlyout" Opening="OnLayoutFlyoutOpening">
+							<StackPanel Spacing="8">
+								<!-- 上段: 色相リングと、角度=色相の円盤2種(半径=彩度・半径=明度)。 -->
+								<StackPanel Orientation="Horizontal" Spacing="8">
+									<Button Click="OnPickRingSquareLayout" Padding="6" x:Uid="HsvLayoutRingSquare">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="RingThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="RingThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HsvLayoutRingSquareCaption" />
+										</StackPanel>
+									</Button>
+
+									<Button Click="OnPickWheelLayout" Padding="6" x:Uid="HsvLayoutWheel">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="WheelThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="WheelThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HsvLayoutWheelCaption" />
+										</StackPanel>
+									</Button>
+
+									<Button Click="OnPickValueWheelLayout" Padding="6" x:Uid="HsvLayoutValueWheel">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="ValueWheelThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="ValueWheelThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HsvLayoutValueWheelCaption" />
+										</StackPanel>
+									</Button>
+								</StackPanel>
+
+								<!-- 下段: 直交パッド3種(色相×明度・色相×彩度・彩度×明度)。 -->
+								<StackPanel Orientation="Horizontal" Spacing="8">
+									<Button Click="OnPickPlaneLayout" Padding="6" x:Uid="HsvLayoutPlane">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="PlaneThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="PlaneThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HsvLayoutPlaneCaption" />
+										</StackPanel>
+									</Button>
+
+									<Button Click="OnPickHueSatPlaneLayout" Padding="6" x:Uid="HsvLayoutHueSatPlane">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="HueSatPlaneThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="HueSatPlaneThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HsvLayoutHueSatPlaneCaption" />
+										</StackPanel>
+									</Button>
+
+									<Button Click="OnPickSvBarLayout" Padding="6" x:Uid="HsvLayoutSvBar">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="SvBarThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="SvBarThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HsvLayoutSvBarCaption" />
+										</StackPanel>
+									</Button>
+								</StackPanel>
+							</StackPanel>
+						</Flyout>
+					</Button.Flyout>
+				</Button>
+
+				<!-- HSL モードの見せ方(レイアウト)を選ぶアイコンボタン。HSL モードのときだけ出す。HSV とは別の選択(HslLayoutIndex)を保つため、別のボタン・別のフライアウトにする。上段は色相リング+三角形と角度=色相の円盤2種、下段は直交パッド3種。新ホストの要る色相リング+正方形・三角形+色相バーは段Bで足すため、ここではまだ出さない。 -->
+				<Button
+					x:Name="HslLayoutPickerButton"
+					Visibility="Collapsed"
+					HorizontalAlignment="Left"
+					Padding="4"
+					Width="36"
+					Height="36"
+					x:Uid="HslLayoutPicker">
+					<Image
+						x:Name="HslLayoutPickerIcon"
+						Width="24"
+						Height="24"
+						Stretch="Fill" />
+					<Button.Flyout>
+						<Flyout x:Name="HslLayoutPickerFlyout" Opening="OnHslLayoutFlyoutOpening">
+							<StackPanel Spacing="8">
+								<!-- 上段: 形(三角形・正方形)を中央に置く3種。色相リング+三角形・色相リング+彩度輝度の正方形・三角形+色相の縦スライダー。 -->
+								<StackPanel Orientation="Horizontal" Spacing="8">
+									<Button Click="OnPickHslRingTriangleLayout" Padding="6" x:Uid="HslLayoutRingTriangle">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="HslRingThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="HslRingThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HslLayoutRingTriangleCaption" />
+										</StackPanel>
+									</Button>
+
+									<Button Click="OnPickHslRingSquareLayout" Padding="6" x:Uid="HslLayoutRingSquare">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="HslRingSquareThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="HslRingSquareThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HslLayoutRingSquareCaption" />
+										</StackPanel>
+									</Button>
+
+									<Button Click="OnPickHslTriangleBarLayout" Padding="6" x:Uid="HslLayoutTriangleBar">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="HslTriangleBarThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="HslTriangleBarThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HslLayoutTriangleBarCaption" />
+										</StackPanel>
+									</Button>
+								</StackPanel>
+
+								<!-- 中段: 角度=色相の円盤2種(半径=彩度・半径=輝度)。 -->
+								<StackPanel Orientation="Horizontal" Spacing="8">
+									<Button Click="OnPickHslWheelLayout" Padding="6" x:Uid="HslLayoutWheel">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="HslWheelThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="HslWheelThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HslLayoutWheelCaption" />
+										</StackPanel>
+									</Button>
+
+									<Button Click="OnPickHslLightnessWheelLayout" Padding="6" x:Uid="HslLayoutLightnessWheel">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="HslLightnessWheelThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="HslLightnessWheelThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HslLayoutLightnessWheelCaption" />
+										</StackPanel>
+									</Button>
+								</StackPanel>
+
+								<!-- 下段: 直交パッド3種(色相×輝度・色相×彩度・彩度×輝度)。 -->
+								<StackPanel Orientation="Horizontal" Spacing="8">
+									<Button Click="OnPickHslLightnessPlaneLayout" Padding="6" x:Uid="HslLayoutLightnessPlane">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="HslLightnessPlaneThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="HslLightnessPlaneThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HslLayoutLightnessPlaneCaption" />
+										</StackPanel>
+									</Button>
+
+									<Button Click="OnPickHslHueSatPlaneLayout" Padding="6" x:Uid="HslLayoutHueSatPlane">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="HslHueSatPlaneThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="HslHueSatPlaneThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HslLayoutHueSatPlaneCaption" />
+										</StackPanel>
+									</Button>
+
+									<Button Click="OnPickHslBarLayout" Padding="6" x:Uid="HslLayoutSlBar">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="HslSlBarThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="HslSlBarThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HslLayoutSlBarCaption" />
+										</StackPanel>
+									</Button>
+								</StackPanel>
+							</StackPanel>
+						</Flyout>
+					</Button.Flyout>
+				</Button>
+
+				<!-- HWB モードの見せ方(レイアウト)を選ぶアイコンボタン。HWB モードのときだけ出す。HSV・HSL とは別の選択(HwbLayoutIndex)を保つため別のボタン・別のフライアウトにする。上段は形(正方形・三角形)、中段は角度=色相の円盤2種、下段は直交パッド3種。 -->
+				<Button
+					x:Name="HwbLayoutPickerButton"
+					Visibility="Collapsed"
+					HorizontalAlignment="Left"
+					Padding="4"
+					Width="36"
+					Height="36"
+					x:Uid="HwbLayoutPicker">
+					<Image
+						x:Name="HwbLayoutPickerIcon"
+						Width="24"
+						Height="24"
+						Stretch="Fill" />
+					<Button.Flyout>
+						<Flyout x:Name="HwbLayoutPickerFlyout" Opening="OnHwbLayoutFlyoutOpening">
+							<StackPanel Spacing="8">
+								<!-- 上段: 形(正方形・三角形)を中央に置く3種。色相リング+白み黒みの正方形・色相リング+三角形・三角形+色相の縦スライダー。 -->
+								<StackPanel Orientation="Horizontal" Spacing="8">
+									<Button Click="OnPickHwbRingSquareLayout" Padding="6" x:Uid="HwbLayoutRingSquare">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="HwbRingSquareThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="HwbRingSquareThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HwbLayoutRingSquareCaption" />
+										</StackPanel>
+									</Button>
+
+									<Button Click="OnPickHwbRingTriangleLayout" Padding="6" x:Uid="HwbLayoutRingTriangle">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="HwbRingTriangleThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="HwbRingTriangleThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HwbLayoutRingTriangleCaption" />
+										</StackPanel>
+									</Button>
+
+									<Button Click="OnPickHwbTriangleBarLayout" Padding="6" x:Uid="HwbLayoutTriangleBar">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="HwbTriangleBarThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="HwbTriangleBarThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HwbLayoutTriangleBarCaption" />
+										</StackPanel>
+									</Button>
+								</StackPanel>
+
+								<!-- 中段: 角度=色相の円盤2種(半径=白み・半径=黒み)。 -->
+								<StackPanel Orientation="Horizontal" Spacing="8">
+									<Button Click="OnPickHwbWhitenessWheelLayout" Padding="6" x:Uid="HwbLayoutWhitenessWheel">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="HwbWheelThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="HwbWheelThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HwbLayoutWhitenessWheelCaption" />
+										</StackPanel>
+									</Button>
+
+									<Button Click="OnPickHwbBlacknessWheelLayout" Padding="6" x:Uid="HwbLayoutBlacknessWheel">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="HwbBlacknessWheelThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="HwbBlacknessWheelThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HwbLayoutBlacknessWheelCaption" />
+										</StackPanel>
+									</Button>
+								</StackPanel>
+
+								<!-- 下段: 直交パッド3種(色相×黒み・色相×白み・白み×黒み)。 -->
+								<StackPanel Orientation="Horizontal" Spacing="8">
+									<Button Click="OnPickHwbBlacknessPlaneLayout" Padding="6" x:Uid="HwbLayoutBlacknessPlane">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="HwbBlacknessPlaneThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="HwbBlacknessPlaneThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HwbLayoutBlacknessPlaneCaption" />
+										</StackPanel>
+									</Button>
+
+									<Button Click="OnPickHwbWhitenessPlaneLayout" Padding="6" x:Uid="HwbLayoutWhitenessPlane">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="HwbWhitenessPlaneThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="HwbWhitenessPlaneThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HwbLayoutWhitenessPlaneCaption" />
+										</StackPanel>
+									</Button>
+
+									<Button Click="OnPickHwbBarLayout" Padding="6" x:Uid="HwbLayoutWbBar">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="HwbWbBarThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="HwbWbBarThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="HwbLayoutWbBarCaption" />
+										</StackPanel>
+									</Button>
+								</StackPanel>
+							</StackPanel>
+						</Flyout>
+					</Button.Flyout>
+				</Button>
+
+				<!-- HWB の白み+黒みを正規化(合計を100%以内へ畳む)するトグル。HWB モードのときだけ操作・表示する。ただし Collapsed にすると右列の幅が縮み、モードで RingArea(三角形等)の幅が変わってレイアウトがズレるため、非 HWB でも場所(幅)は確保したまま透明・非操作にする。見え方の切り替えは ApplyMode が Opacity と IsHitTestVisible/IsEnabled で行う。ラベルは短く、説明はツールチップに置く。 -->
 				<CheckBox
 					x:Name="NormalizeCheck"
-					Visibility="Collapsed"
+					Opacity="0"
+					IsHitTestVisible="False"
+					IsEnabled="False"
 					x:Uid="HwbNormalize"
 					IsChecked="{x:Bind ViewModel.NormalizeHwb, Mode=TwoWay}" />
 			</StackPanel>

@@ -208,8 +208,20 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 	// HSV/HSL タブの副モードの位置 (0=HSV, 1=HSL, 2=HWB)。タブのラジオの選択を保ち、保存して次回起動へ引き継ぐ。
 	private int _hsvSubModeIndex;
 
+	// HSV モードの見せ方 (0=色相リング+正方形パッド, 1=角度=色相・半径=彩度の円盤+明度の縦スライダー)。レイアウトのセレクタの選択を保ち、保存して次回起動へ引き継ぐ。HSL・HWB の副モードでは色相リング+パッドに固定で、この値は HSV のときだけ効く。
+	private int _hsvLayoutIndex;
+
+	// HSL モードの見せ方の位置 (0=色相リング+正方形, 1=色相・彩度の円盤+輝度の縦スライダー, 2=色相×輝度の直交パッド+彩度の縦スライダー, 3=色相・輝度の円盤+彩度の縦スライダー, 4=色相×彩度の直交パッド+輝度の縦スライダー, 5=彩度×輝度の正方形+色相の縦スライダー, 6=色相リング+三角形, 7=三角形+色相の縦スライダー)。HSV とは別に保ち、保存して次回起動へ引き継ぐ。既定は HSL らしい色相リング+三角形(6)。HSL のときだけ効く。
+	private int _hslLayoutIndex = 6;
+
+	// HWB モードの見せ方の位置 (0=色相リング+正方形, 1=色相・白みの円盤+黒みの縦スライダー, 2=色相×黒みの直交パッド+白みの縦スライダー, 3=色相・黒みの円盤+白みの縦スライダー, 4=色相×白みの直交パッド+黒みの縦スライダー, 5=白み×黒みの正方形+色相の縦スライダー, 6=色相リング+三角形, 7=三角形+色相の縦スライダー)。HSV・HSL とは別に保ち、保存して次回起動へ引き継ぐ。既定は現行の色相リング+正方形(0)。HWB のときだけ効く。
+	private int _hwbLayoutIndex;
+
 	// LCH タブの副モード (0=OKLCH, 1=CIE LCH)。明度・彩度・色相をどちらの表色系で読むかを保ち、保存して次回起動へ引き継ぐ。
 	private int _lchSpaceIndex;
+
+	// LCH タブの見せ方の位置 (0=色相リング+彩度明度の平面, 1=彩度×明度の平面+色相の縦スライダー, 2=角度=色相・半径=明度の円盤+彩度の縦スライダー, 3=色相×明度の平面+彩度の縦スライダー, 4=角度=色相・半径=彩度の円盤+明度の縦スライダー, 5=色相×彩度の平面+明度の縦スライダー)。レイアウトのセレクタの選択を保ち、保存して次回起動へ引き継ぐ。OKLCH・CIE LCH の副モードで共通に効く。既定は色相リング+平面(0)。
+	private int _lchLayoutIndex;
 
 	// LCH 編集で利用者が入れた明度・彩度・色相を、現在の副モード(_lchSpaceIndex)の素の尺度で保持する。色1が無彩色で色相が定まらない間や、色域外の彩度を制限せず保つ間も、これらを保って操作を破綻させない。
 	private double _cachedLchL;
@@ -219,11 +231,20 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 	// LCH の彩度を sRGB 色域へ制限(色域境界でクランプ)するか。既定はオフで、色域外の彩度もそのまま保ち、表示できない範囲をスライダー上に可視化する。
 	private bool _lchGamutLimit;
 
+	// LCH の L-C 平面(色相リング+平面・C×L 平面+色相バー)で、彩度軸を色域へ詰めて表示するか。オン時はその色相で色域が届く最大彩度(cusp)まで彩度軸を縮め、彩度方向にパッドいっぱいへ色域を広げて選びやすくする。明度は常に全域を使う。色1の RGB は不変で、彩度軸の見せ方だけが変わる。保存して次回起動へ引き継ぐ。
+	private bool _lchChromaFit;
+
 	// LCH の編集を反映している最中か。真の間は NotifyLchDerived がキャッシュの RGB からの取り直しをせず、編集で入れた明度・彩度・色相(色域外を含む)を保つ。
 	private bool _lchEditing;
 
 	// Lab タブの副モード (0=OKLab, 1=CIE Lab)。明度・a 軸・b 軸をどちらの表色系で読むかを保ち、保存して次回起動へ引き継ぐ。
 	private int _labSpaceIndex;
+
+	// Lab タブの見せ方の位置 (0=a×b 平面+明度の縦バー, 1=a×L 平面+b の縦バー, 2=b×L 平面+a の縦バー, 3=a-b 円盤(角度=色相・半径=彩度)+明度の縦バー)。レイアウトのセレクタの選択を保ち、保存して次回起動へ引き継ぐ。OKLab・CIE Lab の副モードで共通に効く。既定は a×b 平面+明度の縦バー(0)。
+	private int _labLayoutIndex;
+
+	// Lab タブの a×b 平面の表示枠(スケール)の決め方の位置 (0=None=固定枠, 1=Isotropic=等方フィット, 2=Anisotropic=縦横独立フィット)。AbFitMode と同じ並び。フィットは明度ごとの色域の広がりへ枠を寄せて有効領域を広げる。セレクタの選択を保ち、保存して次回起動へ引き継ぐ。a×b 平面の見せ方のときだけ効く。
+	private int _labAbScaleIndex;
 
 	// Lab 編集で利用者が入れた明度・a 軸・b 軸を、現在の副モード(_labSpaceIndex)の素の尺度で保持する。色域外の値を制限せず保つ間も、これらを保って操作を破綻させない。
 	private double _cachedLabL;
@@ -248,6 +269,12 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 	// YCbCr の色差を sRGB 色域へ制限(色域境界でクランプ)するか。既定はオフで、色域外の色差もそのまま保ち、表示できない範囲を色差平面上に可視化する。
 	private bool _yuvGamutLimit;
+
+	// YUV/YCbCr タブの見せ方(レイアウト)の位置 (0=Cb×Cr 平面+Y の縦バー, 1=Cb×Y 平面+Cr の縦バー, 2=Cr×Y 平面+Cb の縦バー)。色1の RGB は不変で、見せ方だけが変わる。
+	private int _yuvLayoutIndex;
+
+	// YUV/YCbCr タブの色差平面の表示枠(スケール)の決め方の位置 (0=固定枠, 1=等方フィット, 2=縦横独立フィット)。AbFitMode と同じ並びで、フィットは固定成分(Cb×Cr では輝度、Cb×Y では Cr、Cr×Y では Cb)ごとの色域の広がりへ枠を寄せて有効領域を広げる(枠は固定成分で縮尺が変わる)。色1の RGB は不変。
+	private int _yuvScaleIndex;
 
 	// YCbCr の編集を反映している最中か。真の間は NotifyYuvDerived がキャッシュの RGB からの取り直しをせず、編集で入れた輝度・色差(色域外を含む)を保つ。
 	private bool _yuvEditing;
@@ -318,10 +345,19 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			_yuvFullRange = state.YuvFullRange;
 			_yuvSignedMode = state.YuvSigned;
 			_yuvGamutLimit = state.YuvGamutLimit;
+			_yuvLayoutIndex = ResolveYuvLayout(state.YuvLayout);
+			_yuvScaleIndex = ResolveYuvScale(state.YuvScale);
 			_hsvSubModeIndex = ResolveHsvSubMode(state.HsvSubMode);
+			_hsvLayoutIndex = ResolveHsvLayout(state.HsvLayout);
+			_hslLayoutIndex = ResolveHslLayout(state.HslLayout);
+			_hwbLayoutIndex = ResolveHwbLayout(state.HwbLayout);
 			_lchSpaceIndex = ResolveLchSpace(state.LchSubMode);
+			_lchLayoutIndex = ResolveLchLayout(state.LchLayout);
 			_lchGamutLimit = state.LchGamutLimit;
+			_lchChromaFit = state.LchChromaFit;
 			_labSpaceIndex = ResolveLabSpace(state.LabSubMode);
+			_labLayoutIndex = ResolveLabLayout(state.LabLayout);
+			_labAbScaleIndex = ResolveLabAbScale(state.LabAbScale);
 			_labGamutLimit = state.LabGamutLimit;
 			_followHue = state.HsvFollowHue;
 			_normalizeHwb = state.HwbNormalize;
@@ -364,6 +400,10 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			_screenPickerDiameter = state.ScreenPickerDiameter;
 			_screenPickerGlassEffect = state.ScreenPickerGlassEffect;
 			_screenPickerRefractionStrength = state.ScreenPickerRefractionStrength;
+
+			// 採色中にホイールで最後に使った拡大率・取得範囲を復元する。設定スライダーで編集する値ではなくセッションのライブ値のため、ViewModel のフィールドを介さず静的な保持先へ直接戻す。
+			Helpers.ScreenPickerTuning.LastBlockPx = state.ScreenPickerBlockPx;
+			Helpers.ScreenPickerTuning.LastSampleRadius = state.ScreenPickerSampleRadius;
 		}
 
 		// レンズの効きの全体設定を、描画コントロールおよび画面ピッカーが読む静的な保持先へ反映する。以後の変更は各プロパティの setter が反映する。
@@ -414,10 +454,19 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			YuvFullRange = _yuvFullRange,
 			YuvSigned = _yuvSignedMode,
 			YuvGamutLimit = _yuvGamutLimit,
+			YuvLayout = YuvLayoutToString(_yuvLayoutIndex),
+			YuvScale = YuvScaleToString(_yuvScaleIndex),
 			HsvSubMode = HsvSubModeToString(_hsvSubModeIndex),
+			HsvLayout = HsvLayoutToString(_hsvLayoutIndex),
+			HslLayout = HslLayoutToString(_hslLayoutIndex),
+			HwbLayout = HwbLayoutToString(_hwbLayoutIndex),
 			LchSubMode = LchSpaceToString(_lchSpaceIndex),
+			LchLayout = LchLayoutToString(_lchLayoutIndex),
 			LchGamutLimit = _lchGamutLimit,
+			LchChromaFit = _lchChromaFit,
 			LabSubMode = LabSpaceToString(_labSpaceIndex),
+			LabLayout = LabLayoutToString(_labLayoutIndex),
+			LabAbScale = LabAbScaleToString(_labAbScaleIndex),
 			LabGamutLimit = _labGamutLimit,
 			HsvFollowHue = _followHue,
 			HwbNormalize = _normalizeHwb,
@@ -454,6 +503,8 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			ScreenPickerDiameter = _screenPickerDiameter,
 			ScreenPickerGlassEffect = _screenPickerGlassEffect,
 			ScreenPickerRefractionStrength = _screenPickerRefractionStrength,
+			ScreenPickerBlockPx = Helpers.ScreenPickerTuning.LastBlockPx,
+			ScreenPickerSampleRadius = Helpers.ScreenPickerTuning.LastSampleRadius,
 		};
 	}
 
@@ -1638,6 +1689,16 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 
 
+	// 色相を 0–1 で扱う束縛用。色相×明度の直交パッドの横方向が束縛する。0 を色相 0 度、1 を 360 度とし、設定時は度へ直して色相の本体(H)へ渡す。
+	public double HueFraction01
+	{
+		get => _cachedHue / 360.0;
+		set => SetHue(Math.Clamp(value, 0.0, 1.0) * 360.0);
+	}
+
+
+
+
 	// 彩度(0–100%)。表示と数値入力に使う。設定時は 0–1 へ直して彩度の本体(Saturation01)へ渡す。
 	public double S
 	{
@@ -1705,6 +1766,454 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 
 
+	// HSV モードの見せ方 (0=色相リング+正方形パッド, 1=角度=色相・半径=彩度の円盤+明度の縦スライダー, 2=色相×明度の直交パッド+彩度の縦スライダー, 3=角度=色相・半径=明度の円盤+彩度の縦スライダー, 4=色相×彩度の直交パッド+明度の縦スライダー, 5=彩度×明度の正方形+色相の縦スライダー)。レイアウトのセレクタが束縛し、保存して次回起動へ引き継ぐ。色1の RGB は不変で、見せ方だけが変わる。HSL・HWB の副モードでは色相リング+パッドに固定で、この値はそのとき表示に反映されない。
+	public int HsvLayoutIndex
+	{
+		get => _hsvLayoutIndex;
+		set
+		{
+			int clamped = Math.Clamp(value, 0, 5);
+
+			if (_hsvLayoutIndex == clamped)
+			{
+				return;
+			}
+
+			_hsvLayoutIndex = clamped;
+			OnPropertyChanged(nameof(HsvLayoutIndex));
+		}
+	}
+
+
+
+
+	// HSL モードの見せ方 (0=色相リング+正方形パッド, 1=角度=色相・半径=彩度の円盤+輝度の縦スライダー, 2=色相×輝度の直交パッド+彩度の縦スライダー, 3=角度=色相・半径=輝度の円盤+彩度の縦スライダー, 4=色相×彩度の直交パッド+輝度の縦スライダー, 5=彩度×輝度の正方形+色相の縦スライダー, 6=色相リング+三角形, 7=三角形+色相の縦スライダー)。レイアウトのセレクタが束縛し、保存して次回起動へ引き継ぐ。色1の RGB は不変で、見せ方だけが変わる。HSV・HWB の副モードではこの値は表示に反映されない。
+	public int HslLayoutIndex
+	{
+		get => _hslLayoutIndex;
+		set
+		{
+			int clamped = Math.Clamp(value, 0, 7);
+
+			if (_hslLayoutIndex == clamped)
+			{
+				return;
+			}
+
+			_hslLayoutIndex = clamped;
+			OnPropertyChanged(nameof(HslLayoutIndex));
+		}
+	}
+
+
+
+
+	// HWB モードの見せ方 (0=色相リング+正方形パッド, 1=角度=色相・半径=白みの円盤+黒みの縦スライダー, 2=色相×黒みの直交パッド+白みの縦スライダー, 3=角度=色相・半径=黒みの円盤+白みの縦スライダー, 4=色相×白みの直交パッド+黒みの縦スライダー, 5=白み×黒みの正方形+色相の縦スライダー, 6=色相リング+三角形, 7=三角形+色相の縦スライダー)。レイアウトのセレクタが束縛し、保存して次回起動へ引き継ぐ。色1の RGB は不変で、見せ方だけが変わる。HSV・HSL の副モードではこの値は表示に反映されない。
+	public int HwbLayoutIndex
+	{
+		get => _hwbLayoutIndex;
+		set
+		{
+			int clamped = Math.Clamp(value, 0, 7);
+
+			if (_hwbLayoutIndex == clamped)
+			{
+				return;
+			}
+
+			_hwbLayoutIndex = clamped;
+			OnPropertyChanged(nameof(HwbLayoutIndex));
+		}
+	}
+
+
+
+
+	// LCH モードの見せ方 (0=色相リング+彩度明度の平面, 1=彩度×明度の平面+色相の縦スライダー, 2=角度=色相・半径=明度の円盤+彩度の縦スライダー, 3=色相×明度の平面+彩度の縦スライダー, 4=角度=色相・半径=彩度の円盤+明度の縦スライダー, 5=色相×彩度の平面+明度の縦スライダー)。レイアウトのセレクタが束縛し、保存して次回起動へ引き継ぐ。OKLCH・CIE LCH の副モードで共通の見せ方を使う。色1の RGB は不変で、見せ方だけが変わる。
+	public int LchLayoutIndex
+	{
+		get => _lchLayoutIndex;
+		set
+		{
+			int clamped = Math.Clamp(value, 0, 5);
+
+			if (_lchLayoutIndex == clamped)
+			{
+				return;
+			}
+
+			_lchLayoutIndex = clamped;
+			OnPropertyChanged(nameof(LchLayoutIndex));
+		}
+	}
+
+
+
+
+	// Lab モードの見せ方 (0=a×b 平面+明度の縦バー, 1=a×L 平面+b の縦バー, 2=b×L 平面+a の縦バー)。レイアウトのセレクタが束縛し、保存して次回起動へ引き継ぐ。OKLab・CIE Lab の副モードで共通の見せ方を使う。色1の RGB は不変で、見せ方だけが変わる。
+	public int LabLayoutIndex
+	{
+		get => _labLayoutIndex;
+		set
+		{
+			int clamped = Math.Clamp(value, 0, 2);
+
+			if (_labLayoutIndex == clamped)
+			{
+				return;
+			}
+
+			_labLayoutIndex = clamped;
+			OnPropertyChanged(nameof(LabLayoutIndex));
+		}
+	}
+
+
+
+
+	// YUV/YCbCr タブの見せ方(レイアウト)の位置 (0=Cb×Cr 平面+Y の縦バー, 1=Cb×Y 平面+Cr の縦バー, 2=Cr×Y 平面+Cb の縦バー)。見せ方を変えても色1の RGB は変わらない。保存して次回起動へ引き継ぐ。
+	public int YuvLayoutIndex
+	{
+		get => _yuvLayoutIndex;
+		set
+		{
+			int clamped = Math.Clamp(value, 0, 2);
+
+			if (_yuvLayoutIndex == clamped)
+			{
+				return;
+			}
+
+			_yuvLayoutIndex = clamped;
+			OnPropertyChanged(nameof(YuvLayoutIndex));
+		}
+	}
+
+
+
+
+	// YUV/YCbCr タブの色差平面の表示枠(スケール)の決め方の位置 (0=固定枠, 1=等方フィット, 2=縦横独立フィット)。AbFitMode と同じ並びで、フィットは固定成分ごとの色域の広がりへ枠を寄せて有効領域を広げる(枠は固定成分で縮尺が変わる)。三つの見せ方すべてに効く。スケールが変わると下地・つまみ位置の座標と値の読み替え方(枠)が変わるため、既定 Cb×Cr パッドのつまみ位置の正規化値を通知し直す(直交パッドはコードビハインドが UpdateCartThumb で合わせ直す)。保存して次回起動へ引き継ぐ。色1の RGB は不変。
+	public int YuvScaleIndex
+	{
+		get => _yuvScaleIndex;
+		set
+		{
+			int clamped = Math.Clamp(value, 0, 2);
+
+			if (_yuvScaleIndex == clamped)
+			{
+				return;
+			}
+
+			_yuvScaleIndex = clamped;
+			OnPropertyChanged(nameof(YuvScaleIndex));
+			OnPropertyChanged(nameof(YuvCbCrPadCbNorm));
+			OnPropertyChanged(nameof(YuvCbCrPadCrNorm));
+		}
+	}
+
+
+
+
+	// 現在のスケールの決め方。YuvScaleIndex を AbFitMode へ読み替える。表示枠の算出に使う。
+	private AbFitMode YuvFit => (AbFitMode)_yuvScaleIndex;
+
+
+
+
+	// 現在の符号化形式・輝度・スケールの決め方で求めた Cb×Cr 平面の表示枠の覚え書き。下地の生成・つまみ位置の正規化(YuvCbCrPadCbNorm/YuvCbCrPadCrNorm)・パッド操作の値の読み替え(SetYuvPad)で同じ枠を使うため、輝度ドラッグ中に色域の外接枠の走査を毎回やり直さずに済むよう、鍵(形式・輝度・スケール)が変わらない限り使い回す。
+	private YCbCrFormat _yuvCbCrExtentFormat;
+	private double _yuvCbCrExtentLuma = double.NaN;
+	private AbFitMode _yuvCbCrExtentFit = (AbFitMode)(-1);
+	private bool _yuvCbCrExtentValid;
+	private PlaneExtent _yuvCbCrExtentCache;
+
+
+
+
+	// 現在の符号化形式・輝度・スケールの決め方に対応する Cb×Cr 平面の表示枠を返す。鍵が変わらなければ覚えた枠をそのまま返し、変わったときだけ作り直す。
+	private PlaneExtent CurrentYuvCbCrExtent()
+	{
+		AbFitMode fit = YuvFit;
+		YCbCrFormat format = Format;
+
+		if (_yuvCbCrExtentValid && format.Standard == _yuvCbCrExtentFormat.Standard && format.FullRange == _yuvCbCrExtentFormat.FullRange && _cachedY == _yuvCbCrExtentLuma && fit == _yuvCbCrExtentFit)
+		{
+			return _yuvCbCrExtentCache;
+		}
+
+		_yuvCbCrExtentCache = YuvColor.CbCrExtentFor(format, _cachedY, fit);
+		_yuvCbCrExtentFormat = format;
+		_yuvCbCrExtentLuma = _cachedY;
+		_yuvCbCrExtentFit = fit;
+		_yuvCbCrExtentValid = true;
+		return _yuvCbCrExtentCache;
+	}
+
+
+
+
+	// 現在の符号化形式・固定色差・スケールの決め方で求めた Cb×Y・Cr×Y 平面の表示枠の覚え書き。下地の生成・つまみ位置の正規化・パッド操作の値の読み替えで同じ枠を使うため、固定色差ドラッグ中に二次元の外接枠の走査を毎回やり直さずに済むよう、鍵が変わらない限り使い回す。Cb×Y と Cr×Y は同時には活性にならないため一枠だけ覚える。
+	private YCbCrFormat _yuvLumaExtentFormat;
+	private bool _yuvLumaExtentHorizontalIsCb;
+	private double _yuvLumaExtentFixed = double.NaN;
+	private AbFitMode _yuvLumaExtentFit = (AbFitMode)(-1);
+	private bool _yuvLumaExtentValid;
+	private PlaneExtent _yuvLumaExtentCache;
+
+
+
+
+	// 現在の符号化形式・固定色差・スケールの決め方に対応する Cb×Y・Cr×Y 平面の表示枠を返す。horizontalIsCb が真なら横軸が Cb で固定成分は Cr(Cb×Y)、偽なら横軸が Cr で固定成分は Cb(Cr×Y)。鍵が変わらなければ覚えた枠をそのまま返し、変わったときだけ作り直す。
+	private PlaneExtent YuvLumaExtent(bool horizontalIsCb)
+	{
+		double fixedChroma = horizontalIsCb ? _cachedCr : _cachedCb;
+		AbFitMode fit = YuvFit;
+		YCbCrFormat format = Format;
+
+		if (_yuvLumaExtentValid && format.Standard == _yuvLumaExtentFormat.Standard && format.FullRange == _yuvLumaExtentFormat.FullRange && horizontalIsCb == _yuvLumaExtentHorizontalIsCb && fixedChroma == _yuvLumaExtentFixed && fit == _yuvLumaExtentFit)
+		{
+			return _yuvLumaExtentCache;
+		}
+
+		_yuvLumaExtentCache = horizontalIsCb
+			? YuvColor.CbLumaExtentFor(format, fixedChroma, fit)
+			: YuvColor.CrLumaExtentFor(format, fixedChroma, fit);
+		_yuvLumaExtentFormat = format;
+		_yuvLumaExtentHorizontalIsCb = horizontalIsCb;
+		_yuvLumaExtentFixed = fixedChroma;
+		_yuvLumaExtentFit = fit;
+		_yuvLumaExtentValid = true;
+		return _yuvLumaExtentCache;
+	}
+
+
+
+
+	// 既定 Cb×Cr パッドのつまみの横位置(0–1)。横軸は Cb。下段の Cb スライダー(常に 0–255 の固定尺度)と違い、パッドは表示枠(CurrentYuvCbCrExtent)を介して読む。固定枠のときは Cb01 と一致し、フィットのときは枠の縮尺・中心に追従する。枠は輝度で変わるため、輝度が変わるとつまみ位置も移る。読み取り専用(操作の反映は SetYuvPad)。
+	public double YuvCbCrPadCbNorm
+	{
+		get
+		{
+			PlaneExtent extent = CurrentYuvCbCrExtent();
+			return extent.XWidth <= 0.0 ? 0.5 : Math.Clamp((_cachedCb - extent.XMin) / extent.XWidth, 0.0, 1.0);
+		}
+	}
+
+
+
+
+	// 既定 Cb×Cr パッドのつまみの縦位置(0–1)。0 が枠の下端(Cr の下限)、1 が上端(上限)。横位置(YuvCbCrPadCbNorm)と同じく表示枠を介して読む。
+	public double YuvCbCrPadCrNorm
+	{
+		get
+		{
+			PlaneExtent extent = CurrentYuvCbCrExtent();
+			return extent.YHeight <= 0.0 ? 0.5 : Math.Clamp((_cachedCr - extent.YMin) / extent.YHeight, 0.0, 1.0);
+		}
+	}
+
+
+
+
+	// Cb×Y パッドのつまみの横位置(0–1)。横軸は Cb。固定成分は Cr。表示枠(YuvLumaExtent)を介して読む。読み取り専用(操作の反映は SetYuvCbLumaPad)。
+	public double YuvCbLumaPadCbNorm
+	{
+		get
+		{
+			PlaneExtent extent = YuvLumaExtent(true);
+			return extent.XWidth <= 0.0 ? 0.5 : Math.Clamp((_cachedCb - extent.XMin) / extent.XWidth, 0.0, 1.0);
+		}
+	}
+
+
+
+
+	// Cb×Y パッドのつまみの縦位置(0–1)。縦軸は輝度 Y。0 が枠の下端、1 が上端。横位置(YuvCbLumaPadCbNorm)と同じく表示枠を介して読む。フィットのときは色域に入る輝度の帯に詰まる。
+	public double YuvCbLumaPadYNorm
+	{
+		get
+		{
+			PlaneExtent extent = YuvLumaExtent(true);
+			return extent.YHeight <= 0.0 ? 0.5 : Math.Clamp((_cachedY - extent.YMin) / extent.YHeight, 0.0, 1.0);
+		}
+	}
+
+
+
+
+	// Cr×Y パッドのつまみの横位置(0–1)。横軸は Cr。固定成分は Cb。表示枠(YuvLumaExtent)を介して読む。読み取り専用(操作の反映は SetYuvCrLumaPad)。
+	public double YuvCrLumaPadCrNorm
+	{
+		get
+		{
+			PlaneExtent extent = YuvLumaExtent(false);
+			return extent.XWidth <= 0.0 ? 0.5 : Math.Clamp((_cachedCr - extent.XMin) / extent.XWidth, 0.0, 1.0);
+		}
+	}
+
+
+
+
+	// Cr×Y パッドのつまみの縦位置(0–1)。縦軸は輝度 Y。0 が枠の下端、1 が上端。横位置(YuvCrLumaPadCrNorm)と同じく表示枠を介して読む。フィットのときは色域に入る輝度の帯に詰まる。
+	public double YuvCrLumaPadYNorm
+	{
+		get
+		{
+			PlaneExtent extent = YuvLumaExtent(false);
+			return extent.YHeight <= 0.0 ? 0.5 : Math.Clamp((_cachedY - extent.YMin) / extent.YHeight, 0.0, 1.0);
+		}
+	}
+
+
+
+
+	// Lab タブの a×b 平面の表示枠(スケール)の決め方の位置 (0=固定枠, 1=等方フィット, 2=縦横独立フィット)。AbFitMode と同じ並びで、フィットは明度ごとの色域の広がりへ枠を寄せて有効領域を広げる(枠は明度で縮尺が変わる)。a×b 平面の見せ方のときだけ効く。スケールが変わると下地・つまみ位置の座標と値の読み替え方(枠)が変わるため、パッドのつまみ位置の正規化値を通知し直す。保存して次回起動へ引き継ぐ。色1の RGB は不変。
+	public int LabAbScaleIndex
+	{
+		get => _labAbScaleIndex;
+		set
+		{
+			int clamped = Math.Clamp(value, 0, 2);
+
+			if (_labAbScaleIndex == clamped)
+			{
+				return;
+			}
+
+			_labAbScaleIndex = clamped;
+			OnPropertyChanged(nameof(LabAbScaleIndex));
+			OnPropertyChanged(nameof(LabPadANorm));
+			OnPropertyChanged(nameof(LabPadBNorm));
+		}
+	}
+
+
+
+
+	// 現在のスケールの決め方。LabAbScaleIndex を AbFitMode へ読み替える。表示枠の算出に使う。
+	private AbFitMode LabAbFit => (AbFitMode)_labAbScaleIndex;
+
+
+
+
+	// 現在の副モード・明度・スケールの決め方で求めた a×b 平面の表示枠の覚え書き。下地の生成・つまみ位置の正規化(LabPadANorm/LabPadBNorm)・パッド操作の値の読み替え(SetLabPad)で同じ枠を使うため、明度ドラッグ中に色相を一周しての境界探索を毎回やり直さずに済むよう、鍵(副モード・明度・スケール)が変わらない限り使い回す。
+	private LchSpace _abExtentSpace = (LchSpace)(-1);
+	private double _abExtentL = double.NaN;
+	private AbFitMode _abExtentFit = (AbFitMode)(-1);
+	private PlaneExtent _abExtentCache;
+
+
+
+
+	// 現在の副モード・明度・スケールの決め方に対応する a×b 平面の表示枠を返す。鍵が変わらなければ覚えた枠をそのまま返し、変わったときだけ作り直す。
+	private PlaneExtent CurrentAbExtent()
+	{
+		AbFitMode fit = LabAbFit;
+		LchSpace space = LabColorSpace;
+
+		if (space == _abExtentSpace && _cachedLabL == _abExtentL && fit == _abExtentFit)
+		{
+			return _abExtentCache;
+		}
+
+		_abExtentCache = LabColor.AbExtentFor(space, _cachedLabL, fit);
+		_abExtentSpace = space;
+		_abExtentL = _cachedLabL;
+		_abExtentFit = fit;
+		return _abExtentCache;
+	}
+
+
+
+
+	// 現在の副モード・固定成分・スケールの決め方で求めた a×L・b×L 平面の表示枠の覚え書き。下地の生成・つまみ位置の正規化・パッド操作の値の読み替えで同じ枠を使うため、固定成分ドラッグ中に二次元の境界走査を毎回やり直さずに済むよう、鍵が変わらない限り使い回す。a×L と b×L は同時には活性にならないため一枠だけ覚える。
+	private LchSpace _cartExtentSpace = (LchSpace)(-1);
+	private bool _cartExtentHorizontalIsA;
+	private double _cartExtentFixed = double.NaN;
+	private AbFitMode _cartExtentFit = (AbFitMode)(-1);
+	private bool _cartExtentValid;
+	private PlaneExtent _cartExtentCache;
+
+
+
+
+	// 現在の副モード・固定成分・スケールの決め方に対応する a×L・b×L 平面の表示枠を返す。horizontalIsA が真なら横軸が a で固定成分は b(a×L)、偽なら横軸が b で固定成分は a(b×L)。鍵が変わらなければ覚えた枠をそのまま返し、変わったときだけ作り直す。
+	private PlaneExtent CartExtent(bool horizontalIsA)
+	{
+		double fixedValue = horizontalIsA ? _cachedLabB : _cachedLabA;
+		AbFitMode fit = LabAbFit;
+		LchSpace space = LabColorSpace;
+
+		if (_cartExtentValid && space == _cartExtentSpace && horizontalIsA == _cartExtentHorizontalIsA && fixedValue == _cartExtentFixed && fit == _cartExtentFit)
+		{
+			return _cartExtentCache;
+		}
+
+		_cartExtentCache = LabColor.CartExtentFor(space, fixedValue, horizontalIsA, fit);
+		_cartExtentSpace = space;
+		_cartExtentHorizontalIsA = horizontalIsA;
+		_cartExtentFixed = fixedValue;
+		_cartExtentFit = fit;
+		_cartExtentValid = true;
+		return _cartExtentCache;
+	}
+
+
+
+
+	// a×L パッドのつまみの横位置(0–1)。横軸は a。下段の a スライダー(常に ±AbMax の固定尺度)と違い、a×L パッドは表示枠(CartExtent)を介して読む。固定枠のときは LabANorm と一致し、フィットのときは枠の縮尺・中心に追従する。枠は固定成分 b で変わるため、b が変わるとつまみ位置も移る。読み取り専用(操作の反映は SetLabALPad)。
+	public double LabAlPadXNorm
+	{
+		get
+		{
+			PlaneExtent extent = CartExtent(true);
+			return extent.XWidth <= 0.0 ? 0.5 : Math.Clamp((_cachedLabA - extent.XMin) / extent.XWidth, 0.0, 1.0);
+		}
+	}
+
+
+
+
+	// a×L パッドのつまみの縦位置(0–1)。縦軸は明度 L。0 が枠の下端、1 が上端。横位置(LabAlPadXNorm)と同じく表示枠を介して読む。フィットのときは色域に入る明度の帯に詰まる。
+	public double LabAlPadYNorm
+	{
+		get
+		{
+			PlaneExtent extent = CartExtent(true);
+			return extent.YHeight <= 0.0 ? 0.5 : Math.Clamp((_cachedLabL - extent.YMin) / extent.YHeight, 0.0, 1.0);
+		}
+	}
+
+
+
+
+	// b×L パッドのつまみの横位置(0–1)。横軸は b。固定成分は a。表示枠(CartExtent)を介して読む。
+	public double LabBlPadXNorm
+	{
+		get
+		{
+			PlaneExtent extent = CartExtent(false);
+			return extent.XWidth <= 0.0 ? 0.5 : Math.Clamp((_cachedLabB - extent.XMin) / extent.XWidth, 0.0, 1.0);
+		}
+	}
+
+
+
+
+	// b×L パッドのつまみの縦位置(0–1)。縦軸は明度 L。0 が枠の下端、1 が上端。横位置(LabBlPadXNorm)と同じく表示枠を介して読む。
+	public double LabBlPadYNorm
+	{
+		get
+		{
+			PlaneExtent extent = CartExtent(false);
+			return extent.YHeight <= 0.0 ? 0.5 : Math.Clamp((_cachedLabL - extent.YMin) / extent.YHeight, 0.0, 1.0);
+		}
+	}
+
+
+
+
 	// 中央の2次元パッドを色相環の現在位置へ追従させて回すかどうか。真のとき、最大彩度・最大明度の角が色相環のつまみの方向を向くようパッドを回す。
 	public bool FollowHue
 	{
@@ -1719,8 +2228,10 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			_followHue = value;
 			OnPropertyChanged(nameof(FollowHue));
 			OnPropertyChanged(nameof(SvPadRotation));
+			OnPropertyChanged(nameof(SlSquarePadRotation));
 			OnPropertyChanged(nameof(SlPadRotation));
 			OnPropertyChanged(nameof(HwbPadRotation));
+			OnPropertyChanged(nameof(HwbTrianglePadRotation));
 		}
 	}
 
@@ -1729,6 +2240,12 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 	// 中央の2次元パッドの回転角(度)。追従が有効なときは、最大彩度・最大明度の角(未回転では真上から時計回りに45度の位置)が色相環のつまみ(色相の角度)を向くよう、色相から45度引いた角度にする。無効なときは0。
 	public double SvPadRotation => _followHue ? _cachedHue - 45.0 : 0.0;
+
+
+
+
+	// HSL の彩度・輝度の正方形パッド(リング内)の回転角(度)。追従が有効なときは、純色(彩度1・輝度0.5、未回転では右辺中央=真上から時計回りに90度の位置)が色相環のつまみ(色相の角度)を向くよう、色相から90度引いた角度にする。無効なときは0。
+	public double SlSquarePadRotation => _followHue ? _cachedHue - 90.0 : 0.0;
 
 
 
@@ -1754,10 +2271,13 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 		_cachedHue = normalized;
 		OnPropertyChanged(nameof(H));
+		OnPropertyChanged(nameof(HueFraction01));
 		OnPropertyChanged(nameof(SvBaseColorBrush));
 		OnPropertyChanged(nameof(SvPadRotation));
+		OnPropertyChanged(nameof(SlSquarePadRotation));
 		OnPropertyChanged(nameof(SlPadRotation));
 		OnPropertyChanged(nameof(HwbPadRotation));
+		OnPropertyChanged(nameof(HwbTrianglePadRotation));
 		NotifySliderTrackBrushes();
 		ApplyHsv();
 	}
@@ -1909,6 +2429,7 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 		OnPropertyChanged(nameof(Value01));
 		OnPropertyChanged(nameof(SvBaseColorBrush));
 		OnPropertyChanged(nameof(SvPadRotation));
+		OnPropertyChanged(nameof(SlSquarePadRotation));
 	}
 
 
@@ -1956,6 +2477,12 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 	// 中央の三角形パッドの回転角(度)。追従が有効なときは、純色の頂点(未回転では真上)が色相環のつまみ(色相の角度)を向くよう色相と同じ角度にする。無効なときは0。
 	public double SlPadRotation => _followHue ? _cachedHue : 0.0;
+
+
+
+
+	// HWB の白み・黒みの三角形パッド(リング内)の回転角(度)。HSL の三角形と同じく純色の頂点が未回転で真上にあるため、追従時は色相と同じ角度にする。無効なときは0。SlPadRotation と同値だが、表色系ごとに束縛先を分けて意味を明確にする。
+	public double HwbTrianglePadRotation => _followHue ? _cachedHue : 0.0;
 
 
 
@@ -2276,6 +2803,7 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 		OnPropertyChanged(nameof(HwbW));
 		OnPropertyChanged(nameof(HwbB));
 		OnPropertyChanged(nameof(HwbPadRotation));
+		OnPropertyChanged(nameof(HwbTrianglePadRotation));
 	}
 
 
@@ -2380,11 +2908,120 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 
 
-	// 彩度を 0–1 で扱う束縛用。1 は現在の表色系の表示上限(CMax)に対応する。
+	// 彩度を 0–1 で扱う束縛用。1 は現在の表色系の表示上限(CMax)に対応する。下段の彩度スライダーが束縛する全域の尺度で、L-C パッドのつまみ(LchPadCNorm)とは別に常に CMax を基準にする。
 	public double LchCNorm
 	{
 		get => _cachedLchChroma / LchColor.CMax(LchColorSpace);
 		set => SetLchChroma(Math.Clamp(value, 0.0, 1.0) * LchColor.CMax(LchColorSpace));
+	}
+
+
+
+
+	// L-C 平面(色相リング+平面・C×L 平面+色相バー)で彩度軸を色域へ詰めて表示するか。オン時はその色相の cusp 彩度まで彩度軸を縮め、色域を彩度方向へパッドいっぱいに広げる。L-C 平面の下地・つまみ位置(LchPadCNorm)・パッド操作(SetLchPad)が彩度軸の上限(CurrentChromaAxisMax)を介して座標と値を読み替える。スケールが変わるとつまみ位置の正規化も変わるため通知し直す。色1の RGB は不変。
+	public bool LchChromaFit
+	{
+		get => _lchChromaFit;
+		set
+		{
+			if (_lchChromaFit == value)
+			{
+				return;
+			}
+
+			_lchChromaFit = value;
+			OnPropertyChanged(nameof(LchChromaFit));
+			OnPropertyChanged(nameof(LchPadCNorm));
+			OnPropertyChanged(nameof(LchHueChromaCNorm));
+		}
+	}
+
+
+
+
+	// 現在の副モード・色相・彩度フィットの有無で求めた L-C 平面の彩度軸の表示上限の覚え書き。下地の生成・つまみ位置の正規化(LchPadCNorm)・パッド操作の値の読み替え(SetLchPad)で同じ上限を使うため、色相ドラッグ中に cusp 探索を毎回やり直さずに済むよう、鍵(副モード・色相・フィット)が変わらない限り使い回す。
+	private LchSpace _chromaAxisSpace = (LchSpace)(-1);
+	private double _chromaAxisHue = double.NaN;
+	private bool _chromaAxisFit;
+	private bool _chromaAxisValid;
+	private double _chromaAxisCache;
+
+
+
+
+	// 現在の副モード・色相・彩度フィットの有無に対応する L-C 平面の彩度軸の表示上限を返す。鍵が変わらなければ覚えた値をそのまま返し、変わったときだけ求め直す。
+	private double CurrentChromaAxisMax()
+	{
+		LchSpace space = LchColorSpace;
+
+		if (_chromaAxisValid && space == _chromaAxisSpace && _cachedLchHue == _chromaAxisHue && _lchChromaFit == _chromaAxisFit)
+		{
+			return _chromaAxisCache;
+		}
+
+		_chromaAxisCache = LchColor.ChromaAxisMax(space, _cachedLchHue, _lchChromaFit);
+		_chromaAxisSpace = space;
+		_chromaAxisHue = _cachedLchHue;
+		_chromaAxisFit = _lchChromaFit;
+		_chromaAxisValid = true;
+		return _chromaAxisCache;
+	}
+
+
+
+
+	// L-C パッドのつまみの彩度位置(0–1)。下段の彩度スライダー(常に CMax 基準の LchCNorm)と違い、パッドは彩度軸の表示上限(CurrentChromaAxisMax)を介して読む。フィット無効のときは LchCNorm と一致し、有効のときはその色相の cusp を 1 とする尺度に追従する。彩度軸の上限は色相で変わるため、色相が変わるとつまみ位置も移る。読み取り専用(操作の反映は SetLchPad)。
+	public double LchPadCNorm
+	{
+		get
+		{
+			double axisMax = CurrentChromaAxisMax();
+			return axisMax <= 0.0 ? 0.0 : Math.Clamp(_cachedLchChroma / axisMax, 0.0, 1.0);
+		}
+	}
+
+
+
+
+	// 現在の副モード・明度・彩度フィットの有無で求めた色相×彩度の平面・円盤の彩度軸(円盤では半径)の表示上限の覚え書き。下地の生成・つまみ位置の正規化(LchHueChromaCNorm)・パッド/円盤操作の値の読み替え(SetLchHueChroma)で同じ上限を使うため、明度ドラッグ中に全色相の最大彩度探索を毎回やり直さずに済むよう、鍵(副モード・明度・フィット)が変わらない限り使い回す。固定成分が明度のため、固定成分が色相の L-C 平面(CurrentChromaAxisMax)とは別に持つ。
+	private LchSpace _chromaAtLSpace = (LchSpace)(-1);
+	private double _chromaAtLLightness = double.NaN;
+	private bool _chromaAtLFit;
+	private bool _chromaAtLValid;
+	private double _chromaAtLCache;
+
+
+
+
+	// 現在の副モード・明度・彩度フィットの有無に対応する色相×彩度の彩度軸の表示上限を返す。鍵が変わらなければ覚えた値をそのまま返し、変わったときだけ求め直す。
+	private double CurrentChromaAxisMaxAtL()
+	{
+		LchSpace space = LchColorSpace;
+
+		if (_chromaAtLValid && space == _chromaAtLSpace && _cachedLchL == _chromaAtLLightness && _lchChromaFit == _chromaAtLFit)
+		{
+			return _chromaAtLCache;
+		}
+
+		_chromaAtLCache = LchColor.ChromaAxisMaxAtLightness(space, _cachedLchL, _lchChromaFit);
+		_chromaAtLSpace = space;
+		_chromaAtLLightness = _cachedLchL;
+		_chromaAtLFit = _lchChromaFit;
+		_chromaAtLValid = true;
+		return _chromaAtLCache;
+	}
+
+
+
+
+	// 色相×彩度の平面・円盤のつまみの彩度位置(平面は縦、円盤は半径)を 0–1 で扱う束縛・表示用。下段の彩度スライダー(常に CMax 基準の LchCNorm)と違い、彩度軸の表示上限(CurrentChromaAxisMaxAtL)を介して読む。フィット無効のときは LchCNorm と一致し、有効のときはその明度で全色相を通じた最大彩度を 1 とする尺度に追従する。彩度軸の上限は明度で変わるため、明度が変わるとつまみ位置も移る。読み取り専用(操作の反映は SetLchHueChroma)。
+	public double LchHueChromaCNorm
+	{
+		get
+		{
+			double axisMax = CurrentChromaAxisMaxAtL();
+			return axisMax <= 0.0 ? 0.0 : Math.Clamp(_cachedLchChroma / axisMax, 0.0, 1.0);
+		}
 	}
 
 
@@ -2482,6 +3119,58 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			}
 
 			return MakeTrackBrush(t => LchColor.ToRgb(space, lightness, chroma, t * 360.0), new Point(0.0, 0.5), new Point(1.0, 0.5), 48);
+		}
+	}
+
+
+
+
+	// 明度スライダー(縦向き)の背景。LchLightnessTrackBrush と同じ色変化を、下端=明度 0・上端=最大の縦のグラデーションで描く。見せ方が円盤・直交パッドのとき、切り出した明度の縦スライダーが使う。
+	public Brush LchLightnessTrackBrushVertical
+	{
+		get
+		{
+			LchSpace space = LchColorSpace;
+			double lMax = LchColor.LMax(space);
+			double chroma = _showActualColor ? _cachedLchChroma : 0.0;
+			double hue = _showActualColor ? _cachedLchHue : 0.0;
+			return MakeTrackBrush(t => LchColor.ToRgb(space, t * lMax, chroma, hue), new Point(0.5, 1.0), new Point(0.5, 0.0), 16);
+		}
+	}
+
+
+
+
+	// 彩度スライダー(縦向き)の背景。LchChromaTrackBrush と同じ色変化を、下端=彩度 0・上端=表示上限の縦のグラデーションで描く。見せ方が円盤・直交パッドのとき、切り出した彩度の縦スライダーが使う。
+	public Brush LchChromaTrackBrushVertical
+	{
+		get
+		{
+			LchSpace space = LchColorSpace;
+			double cMax = LchColor.CMax(space);
+			double lightness = _showActualColor ? _cachedLchL : LchColor.LMax(space) * 0.5;
+			return MakeTrackBrush(t => LchColor.ToRgb(space, lightness, t * cMax, _cachedLchHue), new Point(0.5, 1.0), new Point(0.5, 0.0), 16);
+		}
+	}
+
+
+
+
+	// 色相スライダー(縦向き)の背景。LchHueTrackBrush と同じ色変化を、下端=色相 0 度・上端=360 度の縦のグラデーションで描く。見せ方が彩度×明度の平面+色相の縦スライダーのとき、切り出した色相の縦スライダーが使う。
+	public Brush LchHueTrackBrushVertical
+	{
+		get
+		{
+			LchSpace space = LchColorSpace;
+			double lightness = _cachedLchL;
+			double chroma = _cachedLchChroma;
+
+			if (!_showActualColor)
+			{
+				(lightness, chroma) = LchHueBaseline();
+			}
+
+			return MakeTrackBrush(t => LchColor.ToRgb(space, lightness, chroma, t * 360.0), new Point(0.5, 1.0), new Point(0.5, 0.0), 48);
 		}
 	}
 
@@ -2616,7 +3305,9 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 		LchSpace space = LchColorSpace;
 		double l = Math.Clamp(lightnessNorm, 0.0, 1.0) * LchColor.LMax(space);
-		double c = Math.Clamp(chromaNorm, 0.0, 1.0) * LchColor.CMax(space);
+
+		// 彩度は彩度軸の表示上限(CurrentChromaAxisMax)を介して素の値へ戻す。フィット無効のときは CMax、有効のときはその色相の cusp 彩度を 1 とする尺度になる。
+		double c = Math.Clamp(chromaNorm, 0.0, 1.0) * CurrentChromaAxisMax();
 
 		if (_lchGamutLimit)
 		{
@@ -2630,6 +3321,72 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 		_cachedLchL = l;
 		_cachedLchChroma = c;
+		ApplyLchFromCache();
+	}
+
+
+
+
+	// 色相×明度の2次元コントロール(色相×明度の平面、半径=明度の円盤)の操作で、色相と明度を同時に設定する。彩度は固定成分(縦スライダー)が司るため現在値を保つ。色域制限オンのときは、その明度・色相で sRGB 色域に収まる最大彩度まで彩度を詰めて色域内へ収める(明度・色相は動かさない)。オフのときは色域外もそのまま受け、つまみをカーソルへ追従させる。値は正規化(0–1)で受け取る。
+	public void SetLchHueLightness(double hueNorm, double lightnessNorm)
+	{
+		if (_lchEditing)
+		{
+			return;
+		}
+
+		LchSpace space = LchColorSpace;
+		double h = Math.Clamp(hueNorm, 0.0, 1.0) * 360.0;
+		double l = Math.Clamp(lightnessNorm, 0.0, 1.0) * LchColor.LMax(space);
+		double c = _cachedLchChroma;
+
+		if (_lchGamutLimit)
+		{
+			c = Math.Min(c, LchColor.MaxChroma(space, l, h));
+		}
+
+		if (l == _cachedLchL && c == _cachedLchChroma && h == _cachedLchHue)
+		{
+			return;
+		}
+
+		_cachedLchL = l;
+		_cachedLchChroma = c;
+		_cachedLchHue = h;
+		ApplyLchFromCache();
+	}
+
+
+
+
+	// 色相×彩度の2次元コントロール(色相×彩度の平面、半径=彩度の円盤)の操作で、色相と彩度を同時に設定する。明度は固定成分(縦スライダー)が司るため現在値を保つ。色域制限オンのときは、その明度・色相で sRGB 色域に収まる最大彩度まで彩度を詰めて色域内へ収める。オフのときは色域外もそのまま受け、つまみをカーソルへ追従させる。値は正規化(0–1)で受け取る。
+	public void SetLchHueChroma(double hueNorm, double chromaNorm)
+	{
+		if (_lchEditing)
+		{
+			return;
+		}
+
+		LchSpace space = LchColorSpace;
+		double h = Math.Clamp(hueNorm, 0.0, 1.0) * 360.0;
+
+		// 彩度は彩度軸の表示上限(CurrentChromaAxisMaxAtL)を介して素の値へ戻す。フィット無効のときは CMax、有効のときはその明度で全色相を通じた最大彩度を 1 とする尺度になる。
+		double c = Math.Clamp(chromaNorm, 0.0, 1.0) * CurrentChromaAxisMaxAtL();
+		double l = _cachedLchL;
+
+		if (_lchGamutLimit)
+		{
+			c = Math.Min(c, LchColor.MaxChroma(space, l, h));
+		}
+
+		if (l == _cachedLchL && c == _cachedLchChroma && h == _cachedLchHue)
+		{
+			return;
+		}
+
+		_cachedLchL = l;
+		_cachedLchChroma = c;
+		_cachedLchHue = h;
 		ApplyLchFromCache();
 	}
 
@@ -2727,6 +3484,10 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 		OnPropertyChanged(nameof(LchLNorm));
 		OnPropertyChanged(nameof(LchCNorm));
 		OnPropertyChanged(nameof(LchHNorm));
+
+		// L-C パッドのつまみの彩度位置は彩度軸の表示上限を介して読むため、彩度・色相のいずれが変わっても通知し直す(色相が変わると cusp が変わり、彩度が同じでもつまみが移る)。色相×彩度のつまみは明度ごとの最大彩度を介すため、明度が変わってもつまみが移る。
+		OnPropertyChanged(nameof(LchPadCNorm));
+		OnPropertyChanged(nameof(LchHueChromaCNorm));
 	}
 
 
@@ -2738,6 +3499,9 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 		OnPropertyChanged(nameof(LchLightnessTrackBrush));
 		OnPropertyChanged(nameof(LchChromaTrackBrush));
 		OnPropertyChanged(nameof(LchHueTrackBrush));
+		OnPropertyChanged(nameof(LchLightnessTrackBrushVertical));
+		OnPropertyChanged(nameof(LchChromaTrackBrushVertical));
+		OnPropertyChanged(nameof(LchHueTrackBrushVertical));
 		OnPropertyChanged(nameof(LchLightnessGamut));
 		OnPropertyChanged(nameof(LchChromaGamut));
 		OnPropertyChanged(nameof(LchHueGamut));
@@ -2865,6 +3629,32 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 
 
+	// a×b パッドのつまみの横位置(0–1)。下段の a スライダー(常に ±AbMax の固定尺度)と違い、パッドは表示枠(CurrentAbExtent)を介して読む。固定枠のときは LabANorm と一致し、フィットのときは枠の縮尺・中心に追従する。枠は明度で変わるため、明度が変わるとつまみ位置も移る。読み取り専用(操作の反映は SetLabPad)。
+	public double LabPadANorm
+	{
+		get
+		{
+			PlaneExtent extent = CurrentAbExtent();
+			return extent.XWidth <= 0.0 ? 0.5 : Math.Clamp((_cachedLabA - extent.XMin) / extent.XWidth, 0.0, 1.0);
+		}
+	}
+
+
+
+
+	// a×b パッドのつまみの縦位置(0–1)。0 が枠の下端(b の下限)、1 が上端(上限)。横位置(LabPadANorm)と同じく表示枠を介して読む。
+	public double LabPadBNorm
+	{
+		get
+		{
+			PlaneExtent extent = CurrentAbExtent();
+			return extent.YHeight <= 0.0 ? 0.5 : Math.Clamp((_cachedLabB - extent.YMin) / extent.YHeight, 0.0, 1.0);
+		}
+	}
+
+
+
+
 	// a・b の数値入力欄の表示書式。OKLab の小さな値は3桁、CIE Lab の大きな値は2桁の小数で見せる。
 	public Windows.Globalization.NumberFormatting.DecimalFormatter LabAbFormatter => LabColorSpace == LchSpace.Oklch ? NumberFormatters.ThreeDecimal : NumberFormatters.TwoDecimal;
 
@@ -2889,8 +3679,24 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 
 
-	// 明度レール(縦スライダー)の背景。明度を 0→最大に振った色変化を示す。ShowActualColor が真なら現在の a・b のもとで描き、偽なら a・b を 0 に固定して現在色には依らない黒→白のグレースケールにする。色域外の明度は色域内へ収めた色で描き、表示できない範囲は LabLightnessGamut が示す。明度に対して RGB は非線形のため複数の刻みで標本化する。縦レール用に下→上のグラデーションで作る。
+	// 明度スライダーの背景。明度を 0→最大に振った色変化を示す。ShowActualColor が真なら現在の a・b のもとで描き、偽なら a・b を 0 に固定して現在色には依らない黒→白のグレースケールにする。色域外の明度は色域内へ収めた色で描き、表示できない範囲は LabLightnessGamut が示す。明度に対して RGB は非線形のため複数の刻みで標本化する。下段の水平スライダー用に左→右のグラデーションで作る。
 	public Brush LabLightnessTrackBrush
+	{
+		get
+		{
+			LchSpace space = LabColorSpace;
+			double lMax = LabColor.LMax(space);
+			double aAxis = _showActualColor ? _cachedLabA : 0.0;
+			double bAxis = _showActualColor ? _cachedLabB : 0.0;
+			return MakeTrackBrush(t => LabColor.ToRgb(space, t * lMax, aAxis, bAxis), new Point(0.0, 0.5), new Point(1.0, 0.5), 16);
+		}
+	}
+
+
+
+
+	// 明度レール(縦スライダー)の背景。LabLightnessTrackBrush と同じ色変化を、下端=明度 0・上端=最大の縦のグラデーションで描く。上段のパッド右の明度レールが使う。
+	public Brush LabLightnessTrackBrushVertical
 	{
 		get
 		{
@@ -2931,6 +3737,38 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			double lightness = _showActualColor ? _cachedLabL : LabColor.LMax(space) * 0.5;
 			double aAxis = _showActualColor ? _cachedLabA : 0.0;
 			return MakeTrackBrush(t => LabColor.ToRgb(space, lightness, aAxis, ((t * 2.0) - 1.0) * abMax), new Point(0.0, 0.5), new Point(1.0, 0.5), 16);
+		}
+	}
+
+
+
+
+	// a スライダー(縦向き)の背景。LabATrackBrush と同じ色変化を、下端=a の −上限・上端=+上限の縦のグラデーションで描く。見せ方が b×L 平面+a の縦バーのとき、切り出した a の縦スライダーが使う。
+	public Brush LabATrackBrushVertical
+	{
+		get
+		{
+			LchSpace space = LabColorSpace;
+			double abMax = LabColor.AbMax(space);
+			double lightness = _showActualColor ? _cachedLabL : LabColor.LMax(space) * 0.5;
+			double bAxis = _showActualColor ? _cachedLabB : 0.0;
+			return MakeTrackBrush(t => LabColor.ToRgb(space, lightness, ((t * 2.0) - 1.0) * abMax, bAxis), new Point(0.5, 1.0), new Point(0.5, 0.0), 16);
+		}
+	}
+
+
+
+
+	// b スライダー(縦向き)の背景。LabBTrackBrush と同じ色変化を、下端=b の −上限・上端=+上限の縦のグラデーションで描く。見せ方が a×L 平面+b の縦バーのとき、切り出した b の縦スライダーが使う。
+	public Brush LabBTrackBrushVertical
+	{
+		get
+		{
+			LchSpace space = LabColorSpace;
+			double abMax = LabColor.AbMax(space);
+			double lightness = _showActualColor ? _cachedLabL : LabColor.LMax(space) * 0.5;
+			double aAxis = _showActualColor ? _cachedLabA : 0.0;
+			return MakeTrackBrush(t => LabColor.ToRgb(space, lightness, aAxis, ((t * 2.0) - 1.0) * abMax), new Point(0.5, 1.0), new Point(0.5, 0.0), 16);
 		}
 	}
 
@@ -3061,9 +3899,10 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			return;
 		}
 
-		double abMax = LabColor.AbMax(LabColorSpace);
-		double aAxis = ((Math.Clamp(aNorm, 0.0, 1.0) * 2.0) - 1.0) * abMax;
-		double bAxis = ((Math.Clamp(bNorm, 0.0, 1.0) * 2.0) - 1.0) * abMax;
+		// 正規化値(0–1)を表示枠(CurrentAbExtent)を介して素の a・b へ戻す。横は左端 XMin→右端 XMax、縦は下端 YMin→上端 YMax。固定枠のときは ±AbMax の対称、フィットのときは色域の広がりに合わせた枠になる。
+		PlaneExtent extent = CurrentAbExtent();
+		double aAxis = extent.XMin + Math.Clamp(aNorm, 0.0, 1.0) * extent.XWidth;
+		double bAxis = extent.YMin + Math.Clamp(bNorm, 0.0, 1.0) * extent.YHeight;
 
 		if (_labGamutLimit)
 		{
@@ -3077,6 +3916,72 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 		_cachedLabA = aAxis;
 		_cachedLabB = bAxis;
+		ApplyLabFromCache();
+	}
+
+
+
+
+	// a×L 平面の操作で a と明度を同時に設定する。b は固定して保つ。色域制限オンのときは、b を保ったまま a・明度を色域内へ寄せる(色相が a:b の比で変わるため、色域寄せは a×b パッドの半径方向の寄せと異なり、a・b 平面ではなく a を境界の最大彩度に応じて詰める)。値は正規化(0–1、a は 0.5 が 0、明度は下端 0・上端 最大)で受け取る。
+	public void SetLabALPad(double aNorm, double lNorm)
+	{
+		if (_labEditing)
+		{
+			return;
+		}
+
+		// 正規化値(0–1)を表示枠(CartExtent)を介して素の a・明度へ戻す。横は左端 XMin→右端 XMax、縦は下端 YMin→上端 YMax。固定枠のときは a が ±AbMax・明度が 0–LMax、フィットのときは色域の広がりに合わせた枠になる。b は固定して保つ。
+		PlaneExtent extent = CartExtent(true);
+		double aAxis = extent.XMin + Math.Clamp(aNorm, 0.0, 1.0) * extent.XWidth;
+		double lightness = extent.YMin + Math.Clamp(lNorm, 0.0, 1.0) * extent.YHeight;
+		double bAxis = _cachedLabB;
+
+		if (_labGamutLimit)
+		{
+			(aAxis, bAxis) = LabColor.NearestInGamut(LabColorSpace, lightness, aAxis, bAxis);
+		}
+
+		if (aAxis == _cachedLabA && bAxis == _cachedLabB && lightness == _cachedLabL)
+		{
+			return;
+		}
+
+		_cachedLabA = aAxis;
+		_cachedLabB = bAxis;
+		_cachedLabL = lightness;
+		ApplyLabFromCache();
+	}
+
+
+
+
+	// b×L 平面の操作で b と明度を同時に設定する。a は固定して保つ。色域制限オンのときは、a を保ったまま b・明度を色域内へ寄せる。値は正規化(0–1、b は 0.5 が 0、明度は下端 0・上端 最大)で受け取る。
+	public void SetLabBLPad(double bNorm, double lNorm)
+	{
+		if (_labEditing)
+		{
+			return;
+		}
+
+		// 正規化値(0–1)を表示枠(CartExtent)を介して素の b・明度へ戻す。横は左端 XMin→右端 XMax、縦は下端 YMin→上端 YMax。固定枠のときは b が ±AbMax・明度が 0–LMax、フィットのときは色域の広がりに合わせた枠になる。a は固定して保つ。
+		PlaneExtent extent = CartExtent(false);
+		double bAxis = extent.XMin + Math.Clamp(bNorm, 0.0, 1.0) * extent.XWidth;
+		double lightness = extent.YMin + Math.Clamp(lNorm, 0.0, 1.0) * extent.YHeight;
+		double aAxis = _cachedLabA;
+
+		if (_labGamutLimit)
+		{
+			(aAxis, bAxis) = LabColor.NearestInGamut(LabColorSpace, lightness, aAxis, bAxis);
+		}
+
+		if (aAxis == _cachedLabA && bAxis == _cachedLabB && lightness == _cachedLabL)
+		{
+			return;
+		}
+
+		_cachedLabA = aAxis;
+		_cachedLabB = bAxis;
+		_cachedLabL = lightness;
 		ApplyLabFromCache();
 	}
 
@@ -3170,6 +4075,10 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 		OnPropertyChanged(nameof(LabLNorm));
 		OnPropertyChanged(nameof(LabANorm));
 		OnPropertyChanged(nameof(LabBNorm));
+
+		// a×b パッドのつまみ位置は表示枠を介して読むため、明度・a・b のいずれが変わっても通知し直す(明度が変わるとフィット枠の縮尺が変わり、a・b が同じでもつまみが移る)。
+		OnPropertyChanged(nameof(LabPadANorm));
+		OnPropertyChanged(nameof(LabPadBNorm));
 	}
 
 
@@ -3179,8 +4088,11 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 	private void NotifyLabTrackBrushes()
 	{
 		OnPropertyChanged(nameof(LabLightnessTrackBrush));
+		OnPropertyChanged(nameof(LabLightnessTrackBrushVertical));
 		OnPropertyChanged(nameof(LabATrackBrush));
+		OnPropertyChanged(nameof(LabATrackBrushVertical));
 		OnPropertyChanged(nameof(LabBTrackBrush));
+		OnPropertyChanged(nameof(LabBTrackBrushVertical));
 		OnPropertyChanged(nameof(LabLightnessGamut));
 		OnPropertyChanged(nameof(LabAGamut));
 		OnPropertyChanged(nameof(LabBGamut));
@@ -3277,8 +4189,22 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 
 
-	// 輝度スライダーの背景。輝度を 0→255 に振ったときの色変化を、下(0)から上(255)への縦グラデーションで示す。ShowActualColor が真なら現在の Cb・Cr のもとで描き、偽なら Cb・Cr を無彩色の 128 に固定して現在色には依らない黒→白のグレースケールにする。クランプの非線形を拾うため複数の刻みで標本化する。
+	// 輝度スライダーの背景。輝度を 0→255 に振ったときの色変化を示す。ShowActualColor が真なら現在の Cb・Cr のもとで描き、偽なら Cb・Cr を無彩色の 128 に固定して現在色には依らない黒→白のグレースケールにする。クランプの非線形を拾うため複数の刻みで標本化する。下段の水平スライダー用に左→右のグラデーションで作る。
 	public Brush LumaTrackBrush
+	{
+		get
+		{
+			(double _, double cb, double cr) = _showActualColor ? (_cachedY, _cachedCb, _cachedCr) : (0.0, 128.0, 128.0);
+			YCbCrFormat format = Format;
+			return MakeTrackBrush(t => OpaqueColor(ColorConversion.YCbCrToRgb(t * 255.0, cb, cr, format)), new Point(0.0, 0.5), new Point(1.0, 0.5), 8);
+		}
+	}
+
+
+
+
+	// 輝度レール(縦スライダー)の背景。LumaTrackBrush と同じ色変化を、下端=輝度 0・上端=255 の縦のグラデーションで描く。上段のパッド右の輝度レールが使う。
+	public Brush LumaTrackBrushVertical
 	{
 		get
 		{
@@ -3305,6 +4231,20 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 
 
+	// Cb スライダー(縦向き)の背景。CbTrackBrush と同じ色変化を、下端=Cb 0・上端=255 の縦のグラデーションで描く。見せ方が Cr×Y 平面+Cb の縦バーのとき、切り出した Cb の縦スライダーが使う。
+	public Brush CbTrackBrushVertical
+	{
+		get
+		{
+			(double y, double _, double cr) = _showActualColor ? (_cachedY, _cachedCb, _cachedCr) : (128.0, 0.0, 128.0);
+			YCbCrFormat format = Format;
+			return MakeTrackBrush(t => OpaqueColor(ColorConversion.YCbCrToRgb(y, t * 255.0, cr, format)), new Point(0.5, 1.0), new Point(0.5, 0.0), 8);
+		}
+	}
+
+
+
+
 	// Cr スライダーの背景。Cr を 0→255 に振った色変化を示す。ShowActualColor が真なら現在の輝度・Cb のもとで描き、偽なら輝度を中間の 128・Cb を無彩色の 128 に固定して現在色には依らない基準にする。色差は中間輝度のとき最もよく見える。ガモット外のクランプを拾うため複数の刻みで標本化する。
 	public Brush CrTrackBrush
 	{
@@ -3313,6 +4253,20 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			(double y, double cb, double _) = _showActualColor ? (_cachedY, _cachedCb, _cachedCr) : (128.0, 128.0, 0.0);
 			YCbCrFormat format = Format;
 			return MakeTrackBrush(t => OpaqueColor(ColorConversion.YCbCrToRgb(y, cb, t * 255.0, format)), new Point(0.0, 0.5), new Point(1.0, 0.5), 8);
+		}
+	}
+
+
+
+
+	// Cr スライダー(縦向き)の背景。CrTrackBrush と同じ色変化を、下端=Cr 0・上端=255 の縦のグラデーションで描く。見せ方が Cb×Y 平面+Cr の縦バーのとき、切り出した Cr の縦スライダーが使う。
+	public Brush CrTrackBrushVertical
+	{
+		get
+		{
+			(double y, double cb, double _) = _showActualColor ? (_cachedY, _cachedCb, _cachedCr) : (128.0, 128.0, 0.0);
+			YCbCrFormat format = Format;
+			return MakeTrackBrush(t => OpaqueColor(ColorConversion.YCbCrToRgb(y, cb, t * 255.0, format)), new Point(0.5, 1.0), new Point(0.5, 0.0), 8);
 		}
 	}
 
@@ -3532,7 +4486,7 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 
 
-	// Cb-Cr パッドの操作で両軸を同時に設定する。色域制限オンのときは、無彩色 128 から見た方向(Cb:Cr の比)を保ったままカーソル位置を色域境界の縁へ半径方向で寄せて、つまみを色域の縁へ滑らかに沿わせる。横や縦に押し込んでもつまみが境界に貼り付いて止まる感触を和らげる。オフのときは色域外もそのまま受け、つまみをカーソルへ追従させる。輝度はパッドでは変えないため保つ。値は正規化(0–1)で受け取る。
+	// Cb-Cr パッドの操作で両軸を同時に設定する。色域制限オンのときは、無彩色 128 から見た方向(Cb:Cr の比)を保ったままカーソル位置を色域境界の縁へ半径方向で寄せて、つまみを色域の縁へ滑らかに沿わせる。横や縦に押し込んでもつまみが境界に貼り付いて止まる感触を和らげる。オフのときは色域外もそのまま受け、つまみをカーソルへ追従させる。輝度はパッドでは変えないため保つ。値は正規化(0–1)で受け取る。正規化値は表示枠(CurrentYuvCbCrExtent)を介して素の Cb・Cr のコード値へ戻す。横は左端 XMin→右端 XMax、縦は下端 YMin→上端 YMax。固定枠のときは 0–255 の全域、フィットのときは色域の広がりに合わせた枠になる。
 	public void SetYuvPad(double cb01, double cr01)
 	{
 		if (_yuvEditing)
@@ -3540,8 +4494,9 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			return;
 		}
 
-		double cb = Math.Clamp(cb01, 0.0, 1.0) * 255.0;
-		double cr = Math.Clamp(cr01, 0.0, 1.0) * 255.0;
+		PlaneExtent extent = CurrentYuvCbCrExtent();
+		double cb = extent.XMin + Math.Clamp(cb01, 0.0, 1.0) * extent.XWidth;
+		double cr = extent.YMin + Math.Clamp(cr01, 0.0, 1.0) * extent.YHeight;
 
 		if (_yuvGamutLimit)
 		{
@@ -3553,6 +4508,70 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			return;
 		}
 
+		_cachedCb = cb;
+		_cachedCr = cr;
+		ApplyYuvFromCache();
+	}
+
+
+
+
+	// Cb×Y パッドの操作で Cb と輝度 Y を同時に設定する。Cr は固定して保つ。色域制限オンのときは、新しい輝度のもとで Cr を保ったまま Cb を無彩色 128 から見た方向で色域境界へ寄せる(SetYuvPad と同じ半径方向の寄せ)。Cb・輝度はともに正規化(0–1)で受け取る。正規化値は表示枠(YuvLumaExtent)を介して素の Cb・輝度のコード値へ戻す。横は左端 XMin→右端 XMax、縦は下端 YMin→上端 YMax。固定枠のときは横 0–255・縦 0–255、フィットのときは色域の広がりに合わせた枠になる。Cr は固定して保つ。
+	public void SetYuvCbLumaPad(double cb01, double lumaNorm)
+	{
+		if (_yuvEditing)
+		{
+			return;
+		}
+
+		PlaneExtent extent = YuvLumaExtent(true);
+		double cb = extent.XMin + Math.Clamp(cb01, 0.0, 1.0) * extent.XWidth;
+		double luma = extent.YMin + Math.Clamp(lumaNorm, 0.0, 1.0) * extent.YHeight;
+		double cr = _cachedCr;
+
+		if (_yuvGamutLimit)
+		{
+			(cb, cr) = YuvColor.NearestInGamut(Format, luma, cb, cr);
+		}
+
+		if (cb == _cachedCb && cr == _cachedCr && luma == _cachedY)
+		{
+			return;
+		}
+
+		_cachedY = luma;
+		_cachedCb = cb;
+		_cachedCr = cr;
+		ApplyYuvFromCache();
+	}
+
+
+
+
+	// Cr×Y パッドの操作で Cr と輝度 Y を同時に設定する。Cb は固定して保つ。色域制限オンのときは、新しい輝度のもとで Cb を保ったまま Cr を無彩色 128 から見た方向で色域境界へ寄せる(SetYuvPad と同じ半径方向の寄せ)。Cr・輝度はともに正規化(0–1)で受け取る。正規化値は表示枠(YuvLumaExtent)を介して素の Cr・輝度のコード値へ戻す。横は左端 XMin→右端 XMax、縦は下端 YMin→上端 YMax。固定枠のときは横 0–255・縦 0–255、フィットのときは色域の広がりに合わせた枠になる。Cb は固定して保つ。
+	public void SetYuvCrLumaPad(double cr01, double lumaNorm)
+	{
+		if (_yuvEditing)
+		{
+			return;
+		}
+
+		PlaneExtent extent = YuvLumaExtent(false);
+		double cr = extent.XMin + Math.Clamp(cr01, 0.0, 1.0) * extent.XWidth;
+		double luma = extent.YMin + Math.Clamp(lumaNorm, 0.0, 1.0) * extent.YHeight;
+		double cb = _cachedCb;
+
+		if (_yuvGamutLimit)
+		{
+			(cb, cr) = YuvColor.NearestInGamut(Format, luma, cb, cr);
+		}
+
+		if (cb == _cachedCb && cr == _cachedCr && luma == _cachedY)
+		{
+			return;
+		}
+
+		_cachedY = luma;
 		_cachedCb = cb;
 		_cachedCr = cr;
 		ApplyYuvFromCache();
@@ -3637,9 +4656,16 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 		OnPropertyChanged(nameof(Cr));
 		OnPropertyChanged(nameof(Cb01));
 		OnPropertyChanged(nameof(Cr01));
+
+		// 既定 Cb×Cr パッドのつまみ位置は表示枠を介して読むため、輝度・Cb・Cr のいずれが変わっても通知し直す(輝度が変わるとフィット枠の縮尺が変わり、Cb・Cr が同じでもつまみが移る)。
+		OnPropertyChanged(nameof(YuvCbCrPadCbNorm));
+		OnPropertyChanged(nameof(YuvCbCrPadCrNorm));
 		OnPropertyChanged(nameof(LumaTrackBrush));
+		OnPropertyChanged(nameof(LumaTrackBrushVertical));
 		OnPropertyChanged(nameof(CbTrackBrush));
+		OnPropertyChanged(nameof(CbTrackBrushVertical));
 		OnPropertyChanged(nameof(CrTrackBrush));
+		OnPropertyChanged(nameof(CrTrackBrushVertical));
 		OnPropertyChanged(nameof(LumaGamut));
 		OnPropertyChanged(nameof(CbGamut));
 		OnPropertyChanged(nameof(CrGamut));
@@ -3662,6 +4688,20 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 
 
+	// 縦置きの色相スライダーの背景。色変化は HueTrackBrush と同じだが、グラデーションを縦方向(下端=色相0度・上端=色相360度)に流す。彩度×明度の正方形+色相の縦スライダーのレイアウトが使う。
+	public Brush HueTrackBrushVertical
+	{
+		get
+		{
+			double saturation = _showActualColor ? _cachedSaturation : 1.0;
+			double value = _showActualColor ? CurrentValue() : 1.0;
+			return MakeTrackBrush(t => OpaqueColor(ColorConversion.HsvToRgb(t * 360.0, saturation, value)), new Point(0.5, 1.0), new Point(0.5, 0.0), 6);
+		}
+	}
+
+
+
+
 	// HSV の彩度スライダーの背景。現在の色相を保ったまま彩度を 0→1 に振った色変化(無彩色→純色)を示す。ShowActualColor が真なら現在の明度のもとで描き、偽なら明度を最大に固定して現在の明度には依らない基準にする。
 	public Brush SaturationTrackBrush
 	{
@@ -3675,6 +4715,19 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 
 
+	// 縦置きの彩度スライダーの背景。色変化は SaturationTrackBrush と同じだが、グラデーションを縦方向(下端=彩度0・上端=彩度1)に流す。色相×明度の直交パッドの彩度の縦スライダーが使う。
+	public Brush SaturationTrackBrushVertical
+	{
+		get
+		{
+			double value = _showActualColor ? CurrentValue() : 1.0;
+			return MakeTrackBrush(t => OpaqueColor(ColorConversion.HsvToRgb(_cachedHue, t, value)), new Point(0.5, 1.0), new Point(0.5, 0.0));
+		}
+	}
+
+
+
+
 	// HSV の明度スライダーの背景。現在の色相を保ったまま明度を 0→1 に振った色変化(黒→純色)を示す。ShowActualColor が真なら現在の彩度のもとで描き、偽なら彩度を最大に固定して現在の彩度には依らない基準にする。
 	public Brush ValueTrackBrush
 	{
@@ -3682,6 +4735,19 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 		{
 			double saturation = _showActualColor ? _cachedSaturation : 1.0;
 			return MakeTrackBrush(t => OpaqueColor(ColorConversion.HsvToRgb(_cachedHue, saturation, t)), new Point(0.0, 0.5), new Point(1.0, 0.5));
+		}
+	}
+
+
+
+
+	// 縦置きの明度スライダーの背景。色変化は ValueTrackBrush と同じだが、グラデーションを縦方向(下端=明度0・上端=明度1)に流す。円盤レイアウトの明度の縦スライダーが使う。
+	public Brush ValueTrackBrushVertical
+	{
+		get
+		{
+			double saturation = _showActualColor ? _cachedSaturation : 1.0;
+			return MakeTrackBrush(t => OpaqueColor(ColorConversion.HsvToRgb(_cachedHue, saturation, t)), new Point(0.5, 1.0), new Point(0.5, 0.0));
 		}
 	}
 
@@ -3714,6 +4780,32 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 
 
+	// 縦置きの HSL 彩度スライダーの背景。色変化は HslSaturationTrackBrush と同じだが、グラデーションを縦方向(下端=彩度0・上端=彩度1)に流す。色相×輝度の直交パッドや輝度の円盤の彩度の縦スライダーが使う。
+	public Brush HslSaturationTrackBrushVertical
+	{
+		get
+		{
+			double lightness = _showActualColor ? CurrentLightness() : 0.5;
+			return MakeTrackBrush(t => OpaqueColor(ColorConversion.HslToRgb(_cachedHue, t, lightness)), new Point(0.5, 1.0), new Point(0.5, 0.0));
+		}
+	}
+
+
+
+
+	// 縦置きの HSL 輝度スライダーの背景。色変化は LightnessTrackBrush と同じだが、グラデーションを縦方向(下端=輝度0・上端=輝度1)に流す。彩度の円盤や色相×彩度の直交パッドの輝度の縦スライダーが使う。輝度に対する RGB は 0.5 で折れる区分線形のため、中央に標本点を置く。
+	public Brush LightnessTrackBrushVertical
+	{
+		get
+		{
+			double saturation = _showActualColor ? _cachedHslSaturation : 1.0;
+			return MakeTrackBrush(t => OpaqueColor(ColorConversion.HslToRgb(_cachedHue, saturation, t)), new Point(0.5, 1.0), new Point(0.5, 0.0), 2);
+		}
+	}
+
+
+
+
 	// HWB の白みスライダーの背景。現在の色相を保ったまま白みを 0→1 に振った色変化(純色→白)を示す。ShowActualColor が真なら現在の黒みのもとで描き、偽なら黒みを 0 に固定して現在の黒みには依らない基準にする。黒みを最大にすると白み+黒みが常に 1 を超えて無彩色へ退化するため、純色を起点に白みだけを伸ばせる 0 を基準にする。白み+黒みが 1 を超える範囲は無彩色へ退化し、白み÷(白み+黒み)の灰になる。直線部とこの曲線部の折れを拾うため複数の刻みで標本化する。
 	public Brush WhitenessTrackBrush
 	{
@@ -3740,16 +4832,63 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 
 
+	// 縦置きの HWB 白みスライダーの背景。色変化は WhitenessTrackBrush と同じだが、グラデーションを縦方向(下端=白み0・上端=白み1)に流す。色相×黒みの直交パッドや黒みの円盤の白みの縦スライダーが使う。
+	public Brush WhitenessTrackBrushVertical
+	{
+		get
+		{
+			double blackness = _showActualColor ? CurrentBlackness() : 0.0;
+			return MakeTrackBrush(t => OpaqueColor(ColorConversion.HwbToRgb(_cachedHue, t, blackness)), new Point(0.5, 1.0), new Point(0.5, 0.0), 8);
+		}
+	}
+
+
+
+
+	// 縦置きの HWB 黒みスライダーの背景。色変化は BlacknessTrackBrush と同じだが、グラデーションを縦方向(下端=黒み0・上端=黒み1)に流す。色相×白みの直交パッドや白みの円盤の黒みの縦スライダーが使う。
+	public Brush BlacknessTrackBrushVertical
+	{
+		get
+		{
+			double whiteness = _showActualColor ? CurrentWhiteness() : 0.0;
+			return MakeTrackBrush(t => OpaqueColor(ColorConversion.HwbToRgb(_cachedHue, whiteness, t)), new Point(0.5, 1.0), new Point(0.5, 0.0), 8);
+		}
+	}
+
+
+
+
+	// 縦置きの HWB 黒みスライダーの背景(上ほど純色・下ほど黒の向き)。黒みを上下逆(下端=黒み1・上端=黒み0)に流し、白み黒みの正方形や明度・輝度の縦軸と同じ「上ほど明るい」向きにそろえる。色相×白みの直交パッドや黒みを担う縦スライダーが使う。
+	public Brush HwbPadYTrackBrushVertical
+	{
+		get
+		{
+			double whiteness = _showActualColor ? CurrentWhiteness() : 0.0;
+			return MakeTrackBrush(t => OpaqueColor(ColorConversion.HwbToRgb(_cachedHue, whiteness, 1.0 - t)), new Point(0.5, 1.0), new Point(0.5, 0.0), 8);
+		}
+	}
+
+
+
+
 	// HSV・HSL・HWB スライダーの背景は現在の色1から導かれるため、色1が変わるたびにまとめて通知する。色相スライダーは ShowActualColor が真のとき現在の彩度・明度を反映するため、これも併せて通知する。
 	private void NotifySliderTrackBrushes()
 	{
 		OnPropertyChanged(nameof(HueTrackBrush));
+		OnPropertyChanged(nameof(HueTrackBrushVertical));
 		OnPropertyChanged(nameof(SaturationTrackBrush));
+		OnPropertyChanged(nameof(SaturationTrackBrushVertical));
 		OnPropertyChanged(nameof(ValueTrackBrush));
+		OnPropertyChanged(nameof(ValueTrackBrushVertical));
 		OnPropertyChanged(nameof(HslSaturationTrackBrush));
+		OnPropertyChanged(nameof(HslSaturationTrackBrushVertical));
 		OnPropertyChanged(nameof(LightnessTrackBrush));
+		OnPropertyChanged(nameof(LightnessTrackBrushVertical));
 		OnPropertyChanged(nameof(WhitenessTrackBrush));
+		OnPropertyChanged(nameof(WhitenessTrackBrushVertical));
 		OnPropertyChanged(nameof(BlacknessTrackBrush));
+		OnPropertyChanged(nameof(BlacknessTrackBrushVertical));
+		OnPropertyChanged(nameof(HwbPadYTrackBrushVertical));
 	}
 
 
@@ -3817,12 +4956,20 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			_showActualColor = value;
 			OnPropertyChanged(nameof(ShowActualColor));
 			OnPropertyChanged(nameof(HueTrackBrush));
+			OnPropertyChanged(nameof(HueTrackBrushVertical));
 			OnPropertyChanged(nameof(SaturationTrackBrush));
+			OnPropertyChanged(nameof(SaturationTrackBrushVertical));
 			OnPropertyChanged(nameof(ValueTrackBrush));
+			OnPropertyChanged(nameof(ValueTrackBrushVertical));
 			OnPropertyChanged(nameof(HslSaturationTrackBrush));
+			OnPropertyChanged(nameof(HslSaturationTrackBrushVertical));
 			OnPropertyChanged(nameof(LightnessTrackBrush));
+			OnPropertyChanged(nameof(LightnessTrackBrushVertical));
 			OnPropertyChanged(nameof(WhitenessTrackBrush));
+			OnPropertyChanged(nameof(WhitenessTrackBrushVertical));
 			OnPropertyChanged(nameof(BlacknessTrackBrush));
+			OnPropertyChanged(nameof(BlacknessTrackBrushVertical));
+			OnPropertyChanged(nameof(HwbPadYTrackBrushVertical));
 			OnPropertyChanged(nameof(RedTrackBrush));
 			OnPropertyChanged(nameof(GreenTrackBrush));
 			OnPropertyChanged(nameof(BlueTrackBrush));
@@ -3831,8 +4978,11 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			OnPropertyChanged(nameof(YellowTrackBrush));
 			OnPropertyChanged(nameof(KeyTrackBrush));
 			OnPropertyChanged(nameof(LumaTrackBrush));
+			OnPropertyChanged(nameof(LumaTrackBrushVertical));
 			OnPropertyChanged(nameof(CbTrackBrush));
+			OnPropertyChanged(nameof(CbTrackBrushVertical));
 			OnPropertyChanged(nameof(CrTrackBrush));
+			OnPropertyChanged(nameof(CrTrackBrushVertical));
 			OnPropertyChanged(nameof(LumaGamut));
 			OnPropertyChanged(nameof(CbGamut));
 			OnPropertyChanged(nameof(CrGamut));
@@ -3843,8 +4993,11 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			OnPropertyChanged(nameof(LchChromaGamut));
 			OnPropertyChanged(nameof(LchHueGamut));
 			OnPropertyChanged(nameof(LabLightnessTrackBrush));
+			OnPropertyChanged(nameof(LabLightnessTrackBrushVertical));
 			OnPropertyChanged(nameof(LabATrackBrush));
+			OnPropertyChanged(nameof(LabATrackBrushVertical));
 			OnPropertyChanged(nameof(LabBTrackBrush));
+			OnPropertyChanged(nameof(LabBTrackBrushVertical));
 			OnPropertyChanged(nameof(LabLightnessGamut));
 			OnPropertyChanged(nameof(LabAGamut));
 			OnPropertyChanged(nameof(LabBGamut));
@@ -4655,6 +5808,8 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 			_screenPickerMagnify = value;
 			Helpers.ScreenPickerTuning.Magnify = value;
+			// 拡大率の既定を明示的に変えたら、採色中に覚えた最後のライブ拡大率は捨てる。次回の採色はこの新しい既定から始める。
+			Helpers.ScreenPickerTuning.LastBlockPx = 0;
 			OnPropertyChanged(nameof(ScreenPickerMagnify));
 		}
 	}
@@ -5003,8 +6158,11 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 		OnPropertyChanged(nameof(LchChromaTrackBrush));
 		OnPropertyChanged(nameof(LchHueTrackBrush));
 		OnPropertyChanged(nameof(LabLightnessTrackBrush));
+		OnPropertyChanged(nameof(LabLightnessTrackBrushVertical));
 		OnPropertyChanged(nameof(LabATrackBrush));
+		OnPropertyChanged(nameof(LabATrackBrushVertical));
 		OnPropertyChanged(nameof(LabBTrackBrush));
+		OnPropertyChanged(nameof(LabBTrackBrushVertical));
 		OnPropertyChanged(nameof(Color2Brush));
 		OnPropertyChanged(nameof(Color2HexText));
 		OnPropertyChanged(nameof(Color2ForegroundBrush));
@@ -6042,8 +7200,10 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			OnPropertyChanged(nameof(H));
 			OnPropertyChanged(nameof(SvBaseColorBrush));
 			OnPropertyChanged(nameof(SvPadRotation));
+			OnPropertyChanged(nameof(SlSquarePadRotation));
 			OnPropertyChanged(nameof(SlPadRotation));
 			OnPropertyChanged(nameof(HwbPadRotation));
+			OnPropertyChanged(nameof(HwbTrianglePadRotation));
 			NotifySliderTrackBrushes();
 
 			if (alpha.HasValue)
@@ -7037,6 +8197,116 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 
 
+	// 保存済みの設定の文字列から HSV モードの見せ方の位置 (0=色相リング+正方形, 1=色相・彩度の円盤+明度の縦スライダー, 2=色相×明度の直交パッド+彩度の縦スライダー) を決める。未知・未指定は色相リング+正方形とする。
+	private static int ResolveHsvLayout(string? key)
+	{
+		return key switch
+		{
+			"hue_sat_wheel" => 1,
+			"hue_value_plane" => 2,
+			"hue_value_wheel" => 3,
+			"hue_sat_plane" => 4,
+			"sv_hue_bar" => 5,
+			_ => 0,
+		};
+	}
+
+
+
+
+	// HSV モードの見せ方の位置を設定ファイル用の文字列にする。
+	private static string HsvLayoutToString(int index)
+	{
+		return index switch
+		{
+			1 => "hue_sat_wheel",
+			2 => "hue_value_plane",
+			3 => "hue_value_wheel",
+			4 => "hue_sat_plane",
+			5 => "sv_hue_bar",
+			_ => "ring_square",
+		};
+	}
+
+
+
+
+	// 保存済みの設定の文字列から HSL モードの見せ方の位置を決める。未知・未指定は HSL らしい色相リング+三角形(6)とする。
+	private static int ResolveHslLayout(string? key)
+	{
+		return key switch
+		{
+			"ring_square" => 0,
+			"hue_sat_wheel" => 1,
+			"hue_lightness_plane" => 2,
+			"hue_lightness_wheel" => 3,
+			"hue_sat_plane" => 4,
+			"sl_hue_bar" => 5,
+			"triangle_hue_bar" => 7,
+			_ => 6,
+		};
+	}
+
+
+
+
+	// HSL モードの見せ方の位置を設定ファイル用の文字列にする。
+	private static string HslLayoutToString(int index)
+	{
+		return index switch
+		{
+			0 => "ring_square",
+			1 => "hue_sat_wheel",
+			2 => "hue_lightness_plane",
+			3 => "hue_lightness_wheel",
+			4 => "hue_sat_plane",
+			5 => "sl_hue_bar",
+			7 => "triangle_hue_bar",
+			_ => "ring_triangle",
+		};
+	}
+
+
+
+
+	// 保存済みの設定の文字列から HWB モードの見せ方の位置を決める。未知・未指定は現行の色相リング+正方形(0)とする。
+	private static int ResolveHwbLayout(string? key)
+	{
+		return key switch
+		{
+			"hue_whiteness_wheel" => 1,
+			"hue_blackness_plane" => 2,
+			"hue_blackness_wheel" => 3,
+			"hue_whiteness_plane" => 4,
+			"wb_hue_bar" => 5,
+			"ring_triangle" => 6,
+			"triangle_hue_bar" => 7,
+			_ => 0,
+		};
+	}
+
+
+
+
+	// HWB モードの見せ方の位置を設定ファイル用の文字列にする。
+	private static string HwbLayoutToString(int index)
+	{
+		return index switch
+		{
+			1 => "hue_whiteness_wheel",
+			2 => "hue_blackness_plane",
+			3 => "hue_blackness_wheel",
+			4 => "hue_whiteness_plane",
+			5 => "wb_hue_bar",
+			6 => "ring_triangle",
+			7 => "triangle_hue_bar",
+			_ => "ring_square",
+		};
+	}
+
+
+
+
 	// 保存済みの設定の文字列から LCH タブの副モードの位置 (0=OKLCH, 1=CIE LCH) を決める。未知・未指定は OKLCH とする。
 	private static int ResolveLchSpace(string? key)
 	{
@@ -7055,6 +8325,40 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 
 
+	// 保存済みの設定の文字列から LCH モードの見せ方の位置を決める。未知・未指定は色相リング+平面(0)とする。
+	private static int ResolveLchLayout(string? key)
+	{
+		return key switch
+		{
+			"cl_hue_bar" => 1,
+			"hue_lightness_wheel" => 2,
+			"hue_lightness_plane" => 3,
+			"hue_chroma_wheel" => 4,
+			"hue_chroma_plane" => 5,
+			_ => 0,
+		};
+	}
+
+
+
+
+	// LCH モードの見せ方の位置を設定ファイル用の文字列にする。
+	private static string LchLayoutToString(int index)
+	{
+		return index switch
+		{
+			1 => "cl_hue_bar",
+			2 => "hue_lightness_wheel",
+			3 => "hue_lightness_plane",
+			4 => "hue_chroma_wheel",
+			5 => "hue_chroma_plane",
+			_ => "ring_plane",
+		};
+	}
+
+
+
+
 	// 保存済みの設定の文字列から Lab タブの副モードの位置 (0=OKLab, 1=CIE Lab) を決める。未知・未指定は OKLab とする。
 	private static int ResolveLabSpace(string? key)
 	{
@@ -7068,6 +8372,118 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 	private static string LabSpaceToString(int index)
 	{
 		return index == 1 ? "lab" : "oklab";
+	}
+
+
+
+
+	// 保存済みの設定の文字列から Lab タブの見せ方の位置 (0..3) を決める。未知・未指定は a×b 平面+明度の縦バー(0)とする。
+	private static int ResolveLabLayout(string? key)
+	{
+		return key switch
+		{
+			"a_lightness_plane" => 1,
+			"b_lightness_plane" => 2,
+			_ => 0,
+		};
+	}
+
+
+
+
+	// Lab タブの見せ方の位置を設定ファイル用の文字列にする。
+	private static string LabLayoutToString(int index)
+	{
+		return index switch
+		{
+			1 => "a_lightness_plane",
+			2 => "b_lightness_plane",
+			_ => "ab_plane",
+		};
+	}
+
+
+
+
+	// 保存済みの設定の文字列から YUV/YCbCr タブの見せ方の位置 (0..2) を決める。未知・未指定は Cb×Cr 平面+Y の縦バー(0)とする。
+	private static int ResolveYuvLayout(string? key)
+	{
+		return key switch
+		{
+			"cb_luma_plane" => 1,
+			"cr_luma_plane" => 2,
+			_ => 0,
+		};
+	}
+
+
+
+
+	// YUV/YCbCr タブの見せ方の位置を設定ファイル用の文字列にする。
+	private static string YuvLayoutToString(int index)
+	{
+		return index switch
+		{
+			1 => "cb_luma_plane",
+			2 => "cr_luma_plane",
+			_ => "cbcr_plane",
+		};
+	}
+
+
+
+
+	// 保存済みの設定の文字列から YUV/YCbCr タブの色差平面の表示枠(スケール)の決め方の位置 (0..2) を決める。未知・未指定は固定枠(0)とする。
+	private static int ResolveYuvScale(string? key)
+	{
+		return key switch
+		{
+			"isotropic" => 1,
+			"anisotropic" => 2,
+			_ => 0,
+		};
+	}
+
+
+
+
+	// YUV/YCbCr タブの色差平面の表示枠(スケール)の決め方の位置を設定ファイル用の文字列にする。
+	private static string YuvScaleToString(int index)
+	{
+		return index switch
+		{
+			1 => "isotropic",
+			2 => "anisotropic",
+			_ => "none",
+		};
+	}
+
+
+
+
+	// 保存済みの設定の文字列から Lab タブの a×b 平面の表示枠(スケール)の決め方の位置 (0..2) を決める。未知・未指定は固定枠(0)とする。
+	private static int ResolveLabAbScale(string? key)
+	{
+		return key switch
+		{
+			"isotropic" => 1,
+			"anisotropic" => 2,
+			_ => 0,
+		};
+	}
+
+
+
+
+	// Lab タブの a×b 平面の表示枠(スケール)の決め方の位置を設定ファイル用の文字列にする。
+	private static string LabAbScaleToString(int index)
+	{
+		return index switch
+		{
+			1 => "isotropic",
+			2 => "anisotropic",
+			_ => "none",
+		};
 	}
 
 

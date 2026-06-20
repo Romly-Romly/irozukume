@@ -62,7 +62,7 @@ internal sealed class GlassRenderer
 	// localBackground は既にガラスローカル座標へ変換済みの屈折対象。ローカル原点 (0,0) がマップ左上に、本体は (margin,margin) に置かれる前提。
 	// destX,destY はローカル原点を描画先(キャンバス)のどこへ置くか。本体は (destX+margin, destY+margin) に出る。
 	// 背景をどう局所化するか(静止背景の平行移動か、ライブキャプチャの拡大つき写像か)は呼び手が決め、TransformBackground で作って渡す。
-	public void Draw(CanvasDrawingSession ds, CanvasDevice device, GlassParams p, ICanvasImage localBackground, double destX, double destY, int magnify, double highlightRotDeg, double highlightElevOffsetDeg)
+	public void Draw(CanvasDrawingSession ds, CanvasDevice device, GlassParams p, ICanvasImage localBackground, double destX, double destY, string bottomText, string topText, Color swatchColor, double highlightRotDeg, double highlightElevOffsetDeg)
 	{
 		GlassGeometry g = _geo;
 
@@ -100,7 +100,7 @@ internal sealed class GlassRenderer
 		}
 
 		scene = ApplyTint(scene, p, g);
-		scene = ApplyArcText(scene, device, g, magnify);
+		scene = ApplyArcText(scene, device, g, bottomText, topText, swatchColor);
 		scene = ApplyGloss(scene, p, g);
 		CanvasBitmap? highlight = ResolveHighlight(device, p, highlightElevOffsetDeg);
 		scene = ApplyHighlight(scene, p, g, highlight, highlightRotDeg);
@@ -340,15 +340,23 @@ internal sealed class GlassRenderer
 
 
 
-	// 弧テキストを scene へ合成する。文字を command list へ描いてから ICanvasImage として光沢の手前に重ねるので、光沢とハイライトが文字の上を流れる。
+	// 弧テキストを scene へ合成する。文字を command list へ描いてから ICanvasImage として光沢の手前に重ねるので、光沢とハイライトが文字の上を流れる。下端弧・上端弧それぞれに呼び手が組んだ文字列を描く(空なら描かない)。
 	// テキストは本体ローカル座標(原点=本体左上)で組み、効果グラフのマップローカル座標へ合わせるため margin だけずらす。
-	private ICanvasImage ApplyArcText(ICanvasImage scene, CanvasDevice device, GlassGeometry g, int magnify)
+	private ICanvasImage ApplyArcText(ICanvasImage scene, CanvasDevice device, GlassGeometry g, string bottomText, string topText, Color swatchColor)
 	{
 		_arcText?.Dispose();
 		_arcText = new CanvasCommandList(device);
 		using (CanvasDrawingSession ds = _arcText.CreateDrawingSession())
 		{
-			DrawArcText(ds, g, $"×{magnify}");
+			if (!string.IsNullOrEmpty(bottomText))
+			{
+				DrawArcText(ds, g, bottomText, top: false, swatchColor);
+			}
+
+			if (!string.IsNullOrEmpty(topText))
+			{
+				DrawArcText(ds, g, topText, top: true, swatchColor);
+			}
 		}
 
 		var comp = new CompositeEffect { Mode = CanvasComposite.SourceOver };
@@ -360,9 +368,10 @@ internal sealed class GlassRenderer
 
 
 
-	// 文字列を本体下側の円弧に沿って一字ずつ配置する。各文字は接線方向へ回転させるが、グリフ自体の極座標変形はしない(読みやすさを優先)。
-	// 角度は下端中心(6時方向)を 0 とし時計回りを正に取る。各文字の幅を測って弧長で字送りし、文字列全体が下端中心へ揃うようにする。
-	private static void DrawArcText(CanvasDrawingSession ds, GlassGeometry g, string text)
+	// 文字列を本体の円弧に沿って一字ずつ配置する。各文字は接線方向へ回転させるが、グリフ自体の極座標変形はしない(読みやすさを優先)。
+	// top が false なら下端中心(6時方向)、true なら上端中心(12時方向)を基準にする。各文字の幅を測って弧長で字送りし、文字列全体が基準点へ揃うようにする。上端は位置・回転を下端の上下鏡映にして文字を正立させる。
+	// '■' の字だけは採色色の見本として swatchColor で塗る(他は白)。文字列のどこに見本を出すかは呼び手が '■' の位置で決める。
+	private static void DrawArcText(CanvasDrawingSession ds, GlassGeometry g, string text, bool top, Color swatchColor)
 	{
 		float cx = g.CardW / 2f;
 		float cy = g.CardH / 2f;
@@ -397,18 +406,30 @@ internal sealed class GlassRenderer
 			angle += widths[i] / radius;
 
 			float x = cx + radius * MathF.Sin(mid);
-			float y = cy + radius * MathF.Cos(mid);
+			float y = top ? cy - radius * MathF.Cos(mid) : cy + radius * MathF.Cos(mid);
 
-			ds.Transform = Matrix3x2.CreateRotation(-mid) * Matrix3x2.CreateTranslation(x, y);
+			ds.Transform = Matrix3x2.CreateRotation(top ? mid : -mid) * Matrix3x2.CreateTranslation(x, y);
 
 			using CanvasTextLayout layout = new(ds, text[i].ToString(), fmt, 0f, 0f);
 			Rect b = layout.LayoutBounds;
 			float ox = (float)(-b.Width / 2 - b.Left);
 			float oy = (float)(-b.Height / 2 - b.Top);
 
-			// 暗い影を先に置いてから白を重ね、明るい背景でも読めるようにする。
-			ds.DrawTextLayout(layout, ox + 0.6f, oy + 0.6f, shadow);
-			ds.DrawTextLayout(layout, ox, oy, fill);
+			if (text[i] == '■')
+			{
+				// 採色色の見本。暗い色でも背景に沈まないよう、四隅へずらした暗い縁取りを先に敷いてから採色色で塗る。
+				ds.DrawTextLayout(layout, ox - 0.8f, oy - 0.8f, shadow);
+				ds.DrawTextLayout(layout, ox + 0.8f, oy - 0.8f, shadow);
+				ds.DrawTextLayout(layout, ox - 0.8f, oy + 0.8f, shadow);
+				ds.DrawTextLayout(layout, ox + 0.8f, oy + 0.8f, shadow);
+				ds.DrawTextLayout(layout, ox, oy, swatchColor);
+			}
+			else
+			{
+				// 暗い影を先に置いてから白を重ね、明るい背景でも読めるようにする。
+				ds.DrawTextLayout(layout, ox + 0.6f, oy + 0.6f, shadow);
+				ds.DrawTextLayout(layout, ox, oy, fill);
+			}
 		}
 
 		ds.Transform = Matrix3x2.Identity;

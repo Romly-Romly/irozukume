@@ -91,12 +91,30 @@ internal static class ScRgbColorMath
 
 
 
-	// SDR 白レベルを基準に、いずれかのチャンネルが SDR 表現可能範囲を超えていれば真。真の HDR ハイライトの検出に使う。
-	public static bool IsOutsideSdr(ScRgbColor c, double sdrWhiteScale)
+	// SDR 白レベルで正規化していずれかのチャンネルが 1 を超えていれば真。SDR 白より明るい=SDR では表現しきれない HDR ハイライトの検出に使う。
+	public static bool IsBrighterThanSdrWhite(ScRgbColor c, double sdrWhiteScale)
 	{
 		double s = sdrWhiteScale <= 0 ? 1.0 : sdrWhiteScale;
 		const double hi = 1.001;
+		return c.R / s > hi || c.G / s > hi || c.B / s > hi;
+	}
+
+
+
+
+	// いずれかのチャンネルが負であれば真。負値は sRGB(Rec.709)原色より外の色を表すため、sRGB 色域外(広色域)の検出に使う。白レベルの正規化は符号を変えないため掛けない。
+	public static bool IsOutsideSrgbGamut(ScRgbColor c)
+	{
 		const double lo = -0.001;
-		return c.R / s > hi || c.G / s > hi || c.B / s > hi || c.R < lo || c.G < lo || c.B < lo;
+		return c.R < lo || c.G < lo || c.B < lo;
+	}
+
+
+
+
+	// SDR 白より明るいか、sRGB 色域外であれば真。いずれも sRGB 8bit へはクランプされ、得られる色は近似値になる。
+	public static bool IsOutsideSdr(ScRgbColor c, double sdrWhiteScale)
+	{
+		return IsBrighterThanSdrWhite(c, sdrWhiteScale) || IsOutsideSrgbGamut(c);
 	}
 }

@@ -11,10 +11,10 @@ using Irozukume.Models;
 
 namespace Irozukume.Controls;
 
-// HSL の彩度・輝度を表す三角形の画像を生成する。三角形は HSL 双錐の色相断面で、純色・白・黒を頂点に取る。各画素の重心座標から彩度・輝度を求めて色を塗り、三角形の縁は不透明度を滑らかに落として縁取りをなじませる。頂点の取り方と重心の対応は TriangleGeometry と揃えるため、つまみの位置と三角形の色がずれない。三角形は未回転(純色の頂点が真上)で描き、回転は表示側(TrianglePad)で行う。色相が変わるたびに作り直す想定。
-public static class HslTriangle
+// HWB の白み・黒みを表す三角形の画像を生成する。三角形は純色・白・黒を頂点に取り、各画素の重心座標から白み(白の重み)・黒み(黒の重み)を求めて HWB→RGB へ変換して塗る。HWB は色 = 純色·(1−W−B) + 白·W + 黒·B の線形補間のため、三角形の内側(W+B≤1)は退化せず、白み+黒みが1を超える領域(正方形の右下三角)は端から除かれる。頂点の取り方と重心の対応は TriangleGeometry と揃えるため、つまみの位置と三角形の色がずれない。三角形は未回転(純色の頂点が真上)で描き、回転は表示側(TrianglePad)で行う。色相が変わるたびに作り直す想定。HslTriangle と同じ三角形の形を使い、塗りだけ HSL の双錐断面から HWB の線形補間へ替えた対の描画。
+public static class HwbTriangle
 {
-	// 指定した画素サイズで、与えた色相の彩度・輝度三角形を描いた WriteableBitmap を作る。三角形の外は透明にし、中央へ別のコントロールやリングを透かせる。cornerRadius(画素)を与えると三角形の3頂点を丸める。色制限が有効なら各画素の色をその制限へ丸めて段階的にし、None なら滑らかに描く。fillBox が真のときは外接円に内接させず箱を縦横いっぱいに埋める頂点取りにする(独立三角形用)。
+	// 指定した画素サイズで、与えた色相の白み・黒み三角形を描いた WriteableBitmap を作る。三角形の外は透明にし、中央へ別のコントロールやリングを透かせる。cornerRadius(画素)を与えると三角形の3頂点を丸める。色制限が有効なら各画素の色をその制限へ丸めて段階的にし、None なら滑らかに描く。fillBox が真のときは外接円に内接させず箱を縦横いっぱいに埋める頂点取りにする(独立三角形用)。
 	public static WriteableBitmap Create(int pixelWidth, int pixelHeight, double hue, SnapSettings snap, double cornerRadius, bool fillBox = false)
 	{
 		var bitmap = new WriteableBitmap(pixelWidth, pixelHeight);
@@ -52,8 +52,8 @@ public static class HslTriangle
 				// 色は元の三角形の重心座標から。角丸で被覆する範囲は元の三角形の内側に収まるため、重みは負にならないが、縁のなじませ画素のために収めておく。
 				(double wHue, double wBlack, double wWhite) = TriangleGeometry.PointToBarycentric(point, vertices);
 				(double clampedHue, double clampedBlack, double clampedWhite) = TriangleGeometry.ClampBarycentric(wHue, wBlack, wWhite);
-				(double saturation, double lightness) = TriangleGeometry.BarycentricToSl(clampedHue, clampedBlack, clampedWhite);
-				(byte r, byte g, byte b) = ColorConversion.HslToRgb(hue, saturation, lightness);
+				(double whiteness, double blackness) = TriangleGeometry.BarycentricToWb(clampedHue, clampedBlack, clampedWhite);
+				(byte r, byte g, byte b) = ColorConversion.HwbToRgb(hue, whiteness, blackness);
 
 				if (snap.Mode != ColorLimitMode.None)
 				{

@@ -6,8 +6,8 @@
 		<!-- 画面キャプチャ系 API（WDA_EXCLUDEFROMCAPTURE 等）が Windows 10 2004 (build 19041) 以降を要するため、最低対応バージョンを 19041 とする。 -->
 		<TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
 		<RootNamespace>Irozukume</RootNamespace>
-		<!-- アプリのバージョン。publish スクリプトはこの値を読み取って zip 名に反映する。FileVersion はここから 0.1.0.0 が導出され、プレリリース表記(-alpha)は AssemblyInformationalVersion に入る。 -->
-		<Version>0.1.0-alpha</Version>
+		<!-- アプリのバージョン。publish スクリプトはこの値を読み取って zip 名に反映する。FileVersion はここから 0.2.0.0 が導出され、プレリリース表記(-alpha)は AssemblyInformationalVersion に入る。 -->
+		<Version>0.2.0-alpha</Version>
 		<!-- 既定(フォールバック)の表示言語。非パッケージアプリには Package.appxmanifest が無いため、このプロパティで宣言する。OS の表示言語に対応する resw が無いときと、選択言語に欠けた文字列があるときの最終フォールバックに使う。Strings\en\Resources.resw を必ず完備しておく。 -->
 		<DefaultLanguage>en</DefaultLanguage>
 		<ApplicationManifest>app.manifest</ApplicationManifest>

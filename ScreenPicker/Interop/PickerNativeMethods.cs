@@ -44,9 +44,28 @@ internal static class PickerNativeMethods
 	public const int HC_ACTION = 0;
 	public const uint WM_LBUTTONDOWN = 0x0201;
 	public const uint WM_RBUTTONDOWN = 0x0204;
+	public const uint WM_MOUSEWHEEL = 0x020A;
+
+	// WM_MOUSEWHEEL の1ノッチぶんの回転量。mouseData の上位ワード(符号付き)がこの倍数で届く。
+	public const int WHEEL_DELTA = 120;
 	public const uint WM_KEYDOWN = 0x0100;
 	public const uint WM_SYSKEYDOWN = 0x0104;
 	public const uint VK_ESCAPE = 0x1B;
+
+	// Ctrl キー(左右どちらでも立つ仮想キー)。採色中の Ctrl+ホイールで取得範囲を増減するための押下判定に使う。
+	public const int VK_CONTROL = 0x11;
+
+	// 矢印キーの仮想キーコード。採色中にカーソルを1物理ピクセルずつ動かす微調整に使う。
+	public const uint VK_LEFT = 0x25;
+	public const uint VK_UP = 0x26;
+	public const uint VK_RIGHT = 0x27;
+	public const uint VK_DOWN = 0x28;
+
+	// DisplayConfig。アクティブな表示経路だけを問い合わせ、経路からモニタの GDI デバイス名(ソース名)とフレンドリ名(ターゲット名)を引く。
+	public const uint QDC_ONLY_ACTIVE_PATHS = 0x00000002;
+	public const uint DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME = 1;
+	public const uint DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME = 2;
+	public const int ERROR_SUCCESS = 0;
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct POINT
@@ -159,6 +178,96 @@ internal static class PickerNativeMethods
 		public UIntPtr dwExtraInfo;
 	}
 
+	[StructLayout(LayoutKind.Sequential)]
+	public struct LUID
+	{
+		public uint LowPart;
+		public int HighPart;
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct DISPLAYCONFIG_RATIONAL
+	{
+		public uint Numerator;
+		public uint Denominator;
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct DISPLAYCONFIG_PATH_SOURCE_INFO
+	{
+		public LUID adapterId;
+		public uint id;
+		public uint modeInfoIdx;
+		public uint statusFlags;
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct DISPLAYCONFIG_PATH_TARGET_INFO
+	{
+		public LUID adapterId;
+		public uint id;
+		public uint modeInfoIdx;
+		public uint outputTechnology;
+		public uint rotation;
+		public uint scaling;
+		public DISPLAYCONFIG_RATIONAL refreshRate;
+		public uint scanLineOrdering;
+		public int targetAvailable;
+		public uint statusFlags;
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct DISPLAYCONFIG_PATH_INFO
+	{
+		public DISPLAYCONFIG_PATH_SOURCE_INFO sourceInfo;
+		public DISPLAYCONFIG_PATH_TARGET_INFO targetInfo;
+		public uint flags;
+	}
+
+	// ユニオン部の中身は使わないため、構造体の総サイズ(64バイト)だけ確保して配列の刻みを合わせる。先頭の型・id・アダプタIDだけ明示する。
+	[StructLayout(LayoutKind.Sequential, Size = 64)]
+	public struct DISPLAYCONFIG_MODE_INFO
+	{
+		public uint infoType;
+		public uint id;
+		public LUID adapterId;
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct DISPLAYCONFIG_DEVICE_INFO_HEADER
+	{
+		public uint type;
+		public uint size;
+		public LUID adapterId;
+		public uint id;
+	}
+
+	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+	public struct DISPLAYCONFIG_SOURCE_DEVICE_NAME
+	{
+		public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+
+		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+		public string viewGdiDeviceName;
+	}
+
+	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+	public struct DISPLAYCONFIG_TARGET_DEVICE_NAME
+	{
+		public DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+		public uint flags;
+		public uint outputTechnology;
+		public ushort edidManufactureId;
+		public ushort edidProductCodeId;
+		public uint connectorInstance;
+
+		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
+		public string monitorFriendlyDeviceName;
+
+		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+		public string monitorDevicePath;
+	}
+
 	public delegate IntPtr WndProcDelegate(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
 	public delegate IntPtr HookProc(int nCode, IntPtr wParam, IntPtr lParam);
@@ -171,6 +280,13 @@ internal static class PickerNativeMethods
 	public static extern bool GetCursorPos(out POINT lpPoint);
 
 	[DllImport("user32.dll")]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	public static extern bool SetCursorPos(int X, int Y);
+
+	[DllImport("user32.dll")]
+	public static extern short GetAsyncKeyState(int vKey);
+
+	[DllImport("user32.dll")]
 	public static extern IntPtr MonitorFromPoint(POINT pt, uint dwFlags);
 
 	[DllImport("user32.dll")]
@@ -179,6 +295,18 @@ internal static class PickerNativeMethods
 	[DllImport("user32.dll", CharSet = CharSet.Unicode)]
 	[return: MarshalAs(UnmanagedType.Bool)]
 	public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFOEX lpmi);
+
+	[DllImport("user32.dll")]
+	public static extern int GetDisplayConfigBufferSizes(uint flags, out uint numPathArrayElements, out uint numModeInfoArrayElements);
+
+	[DllImport("user32.dll")]
+	public static extern int QueryDisplayConfig(uint flags, ref uint numPathArrayElements, [Out] DISPLAYCONFIG_PATH_INFO[] pathInfoArray, ref uint numModeInfoArrayElements, [Out] DISPLAYCONFIG_MODE_INFO[] modeInfoArray, IntPtr currentTopologyId);
+
+	[DllImport("user32.dll")]
+	public static extern int DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_SOURCE_DEVICE_NAME requestPacket);
+
+	[DllImport("user32.dll")]
+	public static extern int DisplayConfigGetDeviceInfo(ref DISPLAYCONFIG_TARGET_DEVICE_NAME requestPacket);
 
 	[DllImport("Shcore.dll")]
 	public static extern int GetDpiForMonitor(IntPtr hmonitor, int dpiType, out uint dpiX, out uint dpiY);

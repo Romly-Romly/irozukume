@@ -26,6 +26,18 @@ public static class TriangleGeometry
 
 
 
+	// 箱の全体を埋める三角形の3頂点を求める。純色を上辺の中央、黒を左下隅、白を右下隅に置き、頂点を箱の上端、底辺を箱の下端へ広げる。中心に外接円を取る ComputeVertices と違い縦に余白が出ず、箱を縦横いっぱいに使う。箱の縦横比を 幅:高さ = 2:√3 にすると正三角形になる。リングに収める必要がなく余白を嫌う独立した三角形(色相は別スライダー)で使う。回転は想定しない。
+	public static TriangleVertices ComputeFillVertices(double width, double height)
+	{
+		var hue = new Point(width / 2.0, 0.0);
+		var black = new Point(0.0, height);
+		var white = new Point(width, height);
+		return new TriangleVertices(hue, black, white);
+	}
+
+
+
+
 	// 彩度・輝度(各 0–1)を重心座標(純色・黒・白の重み)へ変換する。純色の重みがクロマ(= S かつ輝度での幅割合)に、白の重みが輝度を担う。
 	public static (double Hue, double Black, double White) SlToBarycentric(double saturation, double lightness)
 	{
@@ -45,6 +57,25 @@ public static class TriangleGeometry
 		double maxChroma = 1.0 - Math.Abs((2.0 * lightness) - 1.0);
 		double saturation = maxChroma <= 0.0 ? 0.0 : hue / maxChroma;
 		return (Math.Clamp(saturation, 0.0, 1.0), Math.Clamp(lightness, 0.0, 1.0));
+	}
+
+
+
+
+	// 白み・黒み(各 0–1)を重心座標(純色・黒・白の重み)へ変換する。HWB は色 = 純色·(1−W−B) + 白·W + 黒·B の線形補間のため、白みがそのまま白の重み、黒みが黒の重み、残りが純色の重みになる。三角形の内側(W+B≤1)では重みはすべて非負。
+	public static (double Hue, double Black, double White) WbToBarycentric(double whiteness, double blackness)
+	{
+		double hue = 1.0 - whiteness - blackness;
+		return (hue, blackness, whiteness);
+	}
+
+
+
+
+	// 重心座標(純色・黒・白の重み)を白み・黒み(各 0–1)へ戻す。白の重みが白み、黒の重みが黒みにそのまま対応する。
+	public static (double Whiteness, double Blackness) BarycentricToWb(double hue, double black, double white)
+	{
+		return (Math.Clamp(white, 0.0, 1.0), Math.Clamp(black, 0.0, 1.0));
 	}
 
 

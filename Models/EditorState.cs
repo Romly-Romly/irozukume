@@ -89,6 +89,14 @@ public sealed class EditorState
 	[JsonPropertyName("yuv_gamut_limit")]
 	public bool YuvGamutLimit { get; set; }
 
+	// YUV/YCbCr タブの見せ方 (レイアウト)。"cbcr_plane" (Cb×Cr 平面+Y の縦バー) / "cb_luma_plane" (Cb×Y 平面+Cr の縦バー) / "cr_luma_plane" (Cr×Y 平面+Cb の縦バー)。未指定や未知の値は Cb×Cr 平面+Y の縦バーとして扱う。色1の RGB は不変で、見せ方だけが変わる。
+	[JsonPropertyName("yuv_layout")]
+	public string? YuvLayout { get; set; }
+
+	// YUV/YCbCr タブの色差平面の表示枠 (スケール) の決め方。"none" (0–255 の固定枠) / "isotropic" (等方フィット) / "anisotropic" (縦横独立フィット)。フィットは固定成分 (Cb×Cr では輝度、Cb×Y では Cr、Cr×Y では Cb) ごとの色域の広がりへ枠を寄せて有効領域を広げる。未指定や未知の値は固定枠として扱う。色1の RGB は不変。
+	[JsonPropertyName("yuv_scale")]
+	public string? YuvScale { get; set; }
+
 	// HSV/HSL タブの副モード。中央パッドと数値の表色系を "hsv" / "hsl" / "hwb" のいずれで読むか。未指定や未知の値は HSV として扱う。
 	[JsonPropertyName("hsv_sub_mode")]
 	public string? HsvSubMode { get; set; }
@@ -101,6 +109,18 @@ public sealed class EditorState
 	[JsonPropertyName("hwb_normalize")]
 	public bool HwbNormalize { get; set; } = true;
 
+	// HSV モードの見せ方 (レイアウト)。"ring_square" (色相リング+彩度・明度の正方形パッド) / "hue_sat_wheel" (角度=色相・半径=彩度の円盤+明度の縦スライダー)。未指定や未知の値は色相リング+正方形として扱う。HSL・HWB の副モードには効かず、HSV のときだけ円盤を選べる。色1の RGB は不変で、見せ方だけが変わる。
+	[JsonPropertyName("hsv_layout")]
+	public string? HsvLayout { get; set; }
+
+	// HSL モードの見せ方 (レイアウト)。"ring_square" / "hue_sat_wheel" / "hue_lightness_plane" / "hue_lightness_wheel" / "hue_sat_plane" / "sl_hue_bar" / "ring_triangle" / "triangle_hue_bar"。未指定や未知の値は色相リング+三角形として扱う。HSV・HWB の副モードには効かず、HSL のときだけ効く。色1の RGB は不変で、見せ方だけが変わる。
+	[JsonPropertyName("hsl_layout")]
+	public string? HslLayout { get; set; }
+
+	// HWB モードの見せ方 (レイアウト)。"ring_square" / "hue_whiteness_wheel" / "hue_blackness_plane" / "hue_blackness_wheel" / "hue_whiteness_plane" / "wb_hue_bar" / "ring_triangle" / "triangle_hue_bar"。未指定や未知の値は色相リング+正方形として扱う。HSV・HSL の副モードには効かず、HWB のときだけ効く。色1の RGB は不変で、見せ方だけが変わる。
+	[JsonPropertyName("hwb_layout")]
+	public string? HwbLayout { get; set; }
+
 	// LCH タブの副モード。明度・彩度・色相を "oklch" (OKLab 基準) / "lch" (CIELAB 基準) のどちらの表色系で読むか。未指定や未知の値は OKLCH として扱う。
 	[JsonPropertyName("lch_sub_mode")]
 	public string? LchSubMode { get; set; }
@@ -109,9 +129,25 @@ public sealed class EditorState
 	[JsonPropertyName("lch_gamut_limit")]
 	public bool LchGamutLimit { get; set; }
 
+	// LCH タブの見せ方 (レイアウト)。"ring_plane" (色相リング+彩度・明度の平面) / "cl_hue_bar" (彩度×明度の平面+色相の縦スライダー) / "hue_lightness_wheel" (角度=色相・半径=明度の円盤+彩度の縦スライダー) / "hue_lightness_plane" (色相×明度の平面+彩度の縦スライダー) / "hue_chroma_wheel" (角度=色相・半径=彩度の円盤+明度の縦スライダー) / "hue_chroma_plane" (色相×彩度の平面+明度の縦スライダー)。未指定や未知の値は色相リング+平面として扱う。OKLCH・CIE LCH の副モードで共通の見せ方を使う。色1の RGB は不変で、見せ方だけが変わる。
+	[JsonPropertyName("lch_layout")]
+	public string? LchLayout { get; set; }
+
+	// LCH タブの L-C 平面(色相リング+平面・C×L 平面+色相バー)で、彩度軸を色域へ詰めて表示するか。オン時はその色相で色域が届く最大彩度(cusp)まで彩度軸を縮め、彩度方向にパッドいっぱいへ色域を広げて選びやすくする(明度は常に全域)。既定はオフ。このキーを持たない古い設定ファイルでも VM の既定(詰めない)に揃える。
+	[JsonPropertyName("lch_chroma_fit")]
+	public bool LchChromaFit { get; set; }
+
 	// Lab タブの副モード。明度・a 軸・b 軸を "oklab" (OKLab 基準) / "lab" (CIELAB 基準) のどちらの表色系で読むか。未指定や未知の値は OKLab として扱う。
 	[JsonPropertyName("lab_sub_mode")]
 	public string? LabSubMode { get; set; }
+
+	// Lab タブの見せ方 (レイアウト)。"ab_plane" (a×b 平面+明度の縦バー) / "a_lightness_plane" (a×L 平面+b の縦バー) / "b_lightness_plane" (b×L 平面+a の縦バー)。未指定や未知の値は a×b 平面+明度の縦バーとして扱う。OKLab・CIE Lab の副モードで共通の見せ方を使う。色1の RGB は不変で、見せ方だけが変わる。
+	[JsonPropertyName("lab_layout")]
+	public string? LabLayout { get; set; }
+
+	// Lab タブの a×b 平面の表示枠(スケール)の決め方。"none" (±AbMax の固定枠) / "isotropic" (等方フィット) / "anisotropic" (縦横独立フィット)。フィットは明度ごとの色域の広がりへ枠を寄せて有効領域を広げる。未指定や未知の値は固定枠として扱う。a×b 平面の見せ方のときだけ効く。色1の RGB は不変。
+	[JsonPropertyName("lab_ab_scale")]
+	public string? LabAbScale { get; set; }
 
 	// Lab タブで a・b を sRGB 色域へ制限 (色域境界でクランプ) するか。既定はオフで、色域外の値も保ったまま、表示できない範囲をスライダー・パッド上に可視化する。このキーを持たない古い設定ファイルでも VM の既定 (制限しない) に揃える。
 	[JsonPropertyName("lab_gamut_limit")]
@@ -224,6 +260,14 @@ public sealed class EditorState
 	// 画面カラーピッカーの縁の屈折の強さの倍率(既定値に掛ける)。既定は 1.0。0 で屈折なし。ガラス効果オフでは効かない。
 	[JsonPropertyName("screen_picker_refraction_strength")]
 	public double ScreenPickerRefractionStrength { get; set; } = 1.0;
+
+	// 画面カラーピッカーで最後に使った実拡大率 bp(1ソース画素あたりの物理px)。採色中にホイールで変えた値を次回へ引き継ぐ。0 は未設定で、その場合は拡大率設定から初期 bp を導く。
+	[JsonPropertyName("screen_picker_block_px")]
+	public int ScreenPickerBlockPx { get; set; }
+
+	// 画面カラーピッカーで最後に使った取得範囲の半径(ソース画素)。0 で単一画素。採色中に Ctrl+ホイールで変えた値を次回へ引き継ぐ。
+	[JsonPropertyName("screen_picker_sample_radius")]
+	public int ScreenPickerSampleRadius { get; set; }
 
 	// Mix タブで色を混ぜる色空間。"oklch" / "oklab" / "hsl" / "rgb"。未指定や未知の値は知覚的に最も忠実な OKLCH として扱う。
 	[JsonPropertyName("mix_space")]

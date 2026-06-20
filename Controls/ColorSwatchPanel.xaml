@@ -312,6 +312,12 @@
 					Style="{StaticResource SwatchToolButtonStyle}"
 					IsEnabled="{x:Bind Item.CanDelete, Mode=OneWay}"
 					Click="OnDeleteClick">
+					<!-- 削除は元に戻せない破壊的操作なので、有効なときはごみ箱アイコンをシステムの危険色(赤)で示して警告する。ボタンの前景リソースを通常・ホバー・押下だけ赤へ差し替え、無効(削除不可)時の前景は既定のまま残すことで、押せないときはアイコンが既定の無効色へ沈み使えないと分かる。赤は色リソース SystemFillColorCritical を ThemeResource で参照してテーマ追従させ、アイコン自身には前景を指定せずボタンの状態で決まる前景を継承させる。 -->
+					<Button.Resources>
+						<SolidColorBrush x:Key="ButtonForeground" Color="{ThemeResource SystemFillColorCritical}" />
+						<SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="{ThemeResource SystemFillColorCritical}" />
+						<SolidColorBrush x:Key="ButtonForegroundPressed" Color="{ThemeResource SystemFillColorCritical}" />
+					</Button.Resources>
 					<FontIcon Glyph="&#xE74D;" FontSize="14" />
 				</Button>
 				<Button
