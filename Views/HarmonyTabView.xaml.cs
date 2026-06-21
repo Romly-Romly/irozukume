@@ -14,6 +14,8 @@ using Irozukume.Controls;
 using Irozukume.Helpers;
 using Irozukume.Models;
 using Irozukume.ViewModels;
+using Irozukume.Controls.Generators;
+using Irozukume.Controls.Generators.Wheels;
 
 namespace Irozukume.Views;
 

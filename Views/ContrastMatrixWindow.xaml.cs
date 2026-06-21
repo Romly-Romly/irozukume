@@ -77,7 +77,7 @@ public sealed partial class ContrastMatrixWindow : Window
 		}
 		else
 		{
-			AppWindow.Resize(new SizeInt32(640, 520));
+			WindowPlacementService.ResizeToDip(this, 640, 520);
 		}
 
 		_minSizer = new WindowMinSizer(this, MinWidthDip, MinHeightDip);

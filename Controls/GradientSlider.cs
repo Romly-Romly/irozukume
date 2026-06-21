@@ -22,6 +22,7 @@ using Windows.System;
 using Windows.UI;
 using Irozukume.Helpers;
 using Irozukume.Models;
+using Irozukume.Controls.Geometry;
 
 namespace Irozukume.Controls;
 

@@ -12,6 +12,7 @@ using Microsoft.UI.Xaml.Automation;
 using Windows.Foundation;
 using Windows.UI;
 using Irozukume.Helpers;
+using Irozukume.Controls.Generators;
 
 namespace Irozukume.Controls;
 

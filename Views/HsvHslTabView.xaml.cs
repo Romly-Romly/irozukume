@@ -18,6 +18,11 @@ using Irozukume.Controls;
 using Irozukume.Helpers;
 using Irozukume.Models;
 using Irozukume.ViewModels;
+using Irozukume.Controls.Geometry;
+using Irozukume.Controls.Generators.Planes;
+using Irozukume.Controls.Generators.Disks;
+using Irozukume.Controls.Generators.Wheels;
+using Irozukume.Controls.Generators.Triangles;
 
 namespace Irozukume.Views;
 
@@ -178,6 +183,9 @@ public sealed partial class HsvHslTabView : UserControl
 		// 色相環の一辺はスクロール領域の可視高さからスライダー群の高さを引いて決めるため、スライダー群の高さが変わったら算出し直す。可視高さの変化は読み込み後に見つけるスクロール領域の SizeChanged で、エリアの幅変化は RingArea の SizeChanged で拾う。
 		SliderHost.SizeChanged += OnLayoutMetricChanged;
 
+		// 右の縦並び設定列は上段の行高の下限になるため、その高さが変わったら色相環・パッドの一辺を算出し直す。
+		SideControls.SizeChanged += OnLayoutMetricChanged;
+
 		// 円盤・直交パッドの一辺は、隣の縦スライダーの幅が確定して初めて正しく決まる。スライダーの寸法が定まったら算出し直す。
 		DiskSlider.SizeChanged += OnLayoutMetricChanged;
 		CartSlider.SizeChanged += OnLayoutMetricChanged;
@@ -288,12 +296,15 @@ public sealed partial class HsvHslTabView : UserControl
 
 		double heightBudget = available - SliderHost.ActualHeight - LayoutRoot.RowSpacing;
 
+		// 上段の行高は色相環エリアと、その右の縦並び設定列の高い方で決まる。設定列の方が嵩むと、エリアの中身(色相環・パッド)をそれ未満へ縮めても行は縮まず、中身は上端へ詰まったまま下端との間に空白が生じ、下段スライダー群との間が空く。これを防ぐため、エリアの中身の下限を既定の下限と設定列の高さの大きい方に取る。設定列の実寸が未確定の初回は既定の下限で見積もり、確定後の SizeChanged で正す。
+		double minSide = Math.Max(MinRingSide, SideControls.ActualHeight);
+
 		// 円盤レイアウトのときは正方形。縦スライダーのぶんの幅を引いた残りと残りの高さの小さい方を円盤の一辺にする。スライダーの実寸が未確定の初回は概算の幅で見積もり、確定後の SizeChanged で正す。
 		if (_diskHost)
 		{
 			double sliderColumn = DiskSlider.ActualWidth > 0.0 ? DiskSlider.ActualWidth : 32.0;
 			double widthBudget = RingArea.ActualWidth - sliderColumn - WheelLayoutRoot.ColumnSpacing;
-			double diskSide = Math.Min(widthBudget, Math.Max(MinRingSide, heightBudget));
+			double diskSide = Math.Min(widthBudget, Math.Max(minSide, heightBudget));
 
 			if (diskSide <= 0.0)
 			{
@@ -325,11 +336,11 @@ public sealed partial class HsvHslTabView : UserControl
 			if (_cartX == Channel.Hue)
 			{
 				padWidth = widthBudget;
-				padHeight = Math.Max(MinRingSide, heightBudget);
+				padHeight = Math.Max(minSide, heightBudget);
 			}
 			else
 			{
-				double square = Math.Min(widthBudget, Math.Max(MinRingSide, heightBudget));
+				double square = Math.Min(widthBudget, Math.Max(minSide, heightBudget));
 				padWidth = square;
 				padHeight = square;
 			}
@@ -362,7 +373,7 @@ public sealed partial class HsvHslTabView : UserControl
 		{
 			double sliderColumn = HueBarSlider.ActualWidth > 0.0 ? HueBarSlider.ActualWidth : 32.0;
 			double triWidth = RingArea.ActualWidth - sliderColumn - TriangleLayoutRoot.ColumnSpacing;
-			double triHeight = Math.Max(MinRingSide, heightBudget);
+			double triHeight = Math.Max(minSide, heightBudget);
 
 			if (triWidth <= 0.0)
 			{
@@ -390,7 +401,7 @@ public sealed partial class HsvHslTabView : UserControl
 			return;
 		}
 
-		double side = Math.Min(RingArea.ActualWidth, Math.Max(MinRingSide, heightBudget));
+		double side = Math.Min(RingArea.ActualWidth, Math.Max(minSide, heightBudget));
 
 		if (side <= 0.0)
 		{

@@ -105,6 +105,7 @@
 
 			<!-- 右: 縦並びで YCbCr/YUV 切替・係数規格・量子化レンジ。パッドの上端に揃える。 -->
 			<StackPanel
+				x:Name="SideControls"
 				Grid.Column="1"
 				VerticalAlignment="Top"
 				Spacing="16">

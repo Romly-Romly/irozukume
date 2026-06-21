@@ -7,6 +7,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Irozukume.Helpers;
 using Irozukume.Models;
+using Irozukume.Controls.Generators.Wheels;
 
 namespace Irozukume.Controls;
 

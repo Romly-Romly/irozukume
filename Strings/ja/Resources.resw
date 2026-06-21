@@ -135,6 +135,9 @@
 	<data name="MenuPrevTab.Text" xml:space="preserve">
 		<value>前のタブ</value>
 	</data>
+	<data name="MenuShowAllTabs.Text" xml:space="preserve">
+		<value>全タブを表示</value>
+	</data>
 	<data name="MenuShowActualColor.Text" xml:space="preserve">
 		<value>スライダーを実際の色で表示</value>
 	</data>
@@ -1165,6 +1168,75 @@
 	<data name="RgbTabUnit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
 		<value>RGB の表示単位</value>
 	</data>
+	<data name="PadLayoutPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>見せ方を選ぶ</value>
+	</data>
+	<data name="PadLayoutPicker.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>RGB・CMYK の2次元エディタの見せ方(レイアウト)を選ぶ。パッド無し、RGB の平面3種、CMYK の平面3種から1つ</value>
+	</data>
+	<data name="PadLayoutSliders.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>2次元パッド無し(線形スライダーのみ)</value>
+	</data>
+	<data name="PadLayoutSliders.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>2次元パッドを出さず、R・G・B と C・M・Y・K を線形スライダーで編集する</value>
+	</data>
+	<data name="PadLayoutSlidersCaption.Text" xml:space="preserve">
+		<value>スライダー</value>
+	</data>
+	<data name="RgbLayoutGbPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>G×B 平面と R の縦スライダー</value>
+	</data>
+	<data name="RgbLayoutGbPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>G(横)×B(縦)の平面の右に、R の縦スライダーを添える</value>
+	</data>
+	<data name="RgbLayoutGbPlaneCaption.Text" xml:space="preserve">
+		<value>G×B</value>
+	</data>
+	<data name="RgbLayoutRbPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>R×B 平面と G の縦スライダー</value>
+	</data>
+	<data name="RgbLayoutRbPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>R(横)×B(縦)の平面の右に、G の縦スライダーを添える</value>
+	</data>
+	<data name="RgbLayoutRbPlaneCaption.Text" xml:space="preserve">
+		<value>R×B</value>
+	</data>
+	<data name="RgbLayoutRgPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>R×G 平面と B の縦スライダー</value>
+	</data>
+	<data name="RgbLayoutRgPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>R(横)×G(縦)の平面の右に、B の縦スライダーを添える</value>
+	</data>
+	<data name="RgbLayoutRgPlaneCaption.Text" xml:space="preserve">
+		<value>R×G</value>
+	</data>
+	<data name="CmykLayoutMyPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>M×Y 平面と C の縦スライダー</value>
+	</data>
+	<data name="CmykLayoutMyPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>M(横)×Y(縦)の平面の右に、C の縦スライダーを添える。墨(K)は下のスライダーで動かす</value>
+	</data>
+	<data name="CmykLayoutMyPlaneCaption.Text" xml:space="preserve">
+		<value>M×Y</value>
+	</data>
+	<data name="CmykLayoutCyPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>C×Y 平面と M の縦スライダー</value>
+	</data>
+	<data name="CmykLayoutCyPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>C(横)×Y(縦)の平面の右に、M の縦スライダーを添える。墨(K)は下のスライダーで動かす</value>
+	</data>
+	<data name="CmykLayoutCyPlaneCaption.Text" xml:space="preserve">
+		<value>C×Y</value>
+	</data>
+	<data name="CmykLayoutCmPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>C×M 平面と Y の縦スライダー</value>
+	</data>
+	<data name="CmykLayoutCmPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>C(横)×M(縦)の平面の右に、Y の縦スライダーを添える。墨(K)は下のスライダーで動かす</value>
+	</data>
+	<data name="CmykLayoutCmPlaneCaption.Text" xml:space="preserve">
+		<value>C×M</value>
+	</data>
 
 	<!-- アルファ タブ -->
 	<data name="AlphaTabUnit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
@@ -1402,8 +1474,17 @@
 	<data name="SettingsAboutHeader.Text" xml:space="preserve">
 		<value>このアプリについて</value>
 	</data>
+	<data name="SettingsDiagnosticsCard.Header" xml:space="preserve">
+		<value>診断情報</value>
+	</data>
+	<data name="SettingsDiagnosticsCopyButton.Content" xml:space="preserve">
+		<value>コピー</value>
+	</data>
 
 	<!-- コードから参照する文字列 -->
+	<data name="DiagnosticsCopied" xml:space="preserve">
+		<value>コピーしました</value>
+	</data>
 	<data name="Copy_Term_Foreground" xml:space="preserve">
 		<value>前景</value>
 	</data>
@@ -1565,5 +1646,90 @@
 	</data>
 	<data name="SettingsScreenPickerResetButton.Content" xml:space="preserve">
 		<value>デフォルトに戻す</value>
+	</data>
+
+	<!-- SettingsView: 設定の管理(上級者向け) -->
+	<data name="SettingsMaintenanceHeader.Text" xml:space="preserve">
+		<value>設定の管理</value>
+	</data>
+	<data name="SettingsOpenFolderCard.Header" xml:space="preserve">
+		<value>設定フォルダを開く</value>
+	</data>
+	<data name="SettingsOpenFolderCard.Description" xml:space="preserve">
+		<value>設定ファイル (settings.json) のある実行フォルダをエクスプローラーで開きます。設定をバックアップしたい時は手動でお願いします。</value>
+	</data>
+	<data name="SettingsOpenFolderButton.Content" xml:space="preserve">
+		<value>フォルダを開く</value>
+	</data>
+	<data name="SettingsResetCard.Header" xml:space="preserve">
+		<value>設定をすべて削除して再起動</value>
+	</data>
+	<data name="SettingsResetCard.Description" xml:space="preserve">
+		<value>すべての設定をリセットし、初期状態で起動し直します。元に戻せません。</value>
+	</data>
+	<data name="SettingsResetButton.Content" xml:space="preserve">
+		<value>削除して再起動</value>
+	</data>
+	<data name="SettingsDeleteCard.Header" xml:space="preserve">
+		<value>設定を削除して終了</value>
+	</data>
+	<data name="SettingsDeleteCard.Description" xml:space="preserve">
+		<value>設定ファイルを削除し、イロヅクメを終了します。アンインストールする時はこれを実行し、ディレクトリごと削除して下さい。</value>
+	</data>
+	<data name="SettingsDeleteButton.Content" xml:space="preserve">
+		<value>設定を削除して終了</value>
+	</data>
+	<data name="SettingsResetDialogTitle" xml:space="preserve">
+		<value>設定をすべて削除して再起動しますか？</value>
+	</data>
+	<data name="SettingsResetDialogBody" xml:space="preserve">
+		<value>初期状態で{0}を起動し直します。この操作は元に戻せません。</value>
+	</data>
+	<data name="SettingsResetDialogConfirm" xml:space="preserve">
+		<value>削除して再起動</value>
+	</data>
+	<data name="SettingsDeleteDialogTitle" xml:space="preserve">
+		<value>設定を削除して終了しますか？</value>
+	</data>
+	<data name="SettingsDeleteDialogBody" xml:space="preserve">
+		<value>設定ファイルを削除し、イロヅクメを終了します。この操作は元に戻せません。</value>
+	</data>
+	<data name="SettingsDeleteDialogConfirm" xml:space="preserve">
+		<value>削除して終了</value>
+	</data>
+	<data name="SettingsRepairedTitle" xml:space="preserve">
+		<value>設定の一部を読み込めませんでした</value>
+	</data>
+	<data name="SettingsRepairedBody" xml:space="preserve">
+		<value>設定ファイルの一部が壊れていたため、その部分は初期値で補って起動しました。壊れていた元のファイルは settings.json.bak に退避しています。</value>
+	</data>
+	<data name="CommonOk" xml:space="preserve">
+		<value>OK</value>
+	</data>
+	<data name="CommonCancel" xml:space="preserve">
+		<value>キャンセル</value>
+	</data>
+
+	<!-- SettingsView: NavigationView の大分類ラベル -->
+	<data name="NavGeneral.Content" xml:space="preserve">
+		<value>全般</value>
+	</data>
+	<data name="NavDisplay.Content" xml:space="preserve">
+		<value>表示</value>
+	</data>
+	<data name="NavCopy.Content" xml:space="preserve">
+		<value>コピー</value>
+	</data>
+	<data name="NavScreenPicker.Content" xml:space="preserve">
+		<value>カラーピッカー</value>
+	</data>
+	<data name="NavLens.Content" xml:space="preserve">
+		<value>スライダー</value>
+	</data>
+	<data name="NavMaintenance.Content" xml:space="preserve">
+		<value>メンテナンス</value>
+	</data>
+	<data name="NavAbout.Content" xml:space="preserve">
+		<value>このアプリについて</value>
 	</data>
 </root>

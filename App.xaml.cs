@@ -32,6 +32,9 @@ public partial class App : Application
 	// ウィンドウを一度でも表示したか。未表示のまま終了する場合、AppWindow の位置は OS 既定の生成位置のままでユーザーの選択ではないため、その値で既存の保存を上書きしないよう保存を見送る判断に使う。
 	private bool _hasBeenShown;
 
+	// 設定の削除・全消去リセットの操作中に立てる。立っている間は SaveSettings が何もしないため、削除した settings.json が終了時・トレイ退避時の保存で復活しない。
+	private bool _suppressSave;
+
 
 
 
@@ -322,10 +325,55 @@ public partial class App : Application
 
 
 
+	// 設定ファイルのある実行フォルダをエクスプローラーで開く。設定ファイルがあればそれを選択した状態で、無ければフォルダだけを開く。バックアップ等はそこから手動で行ってもらう。開けなくてもアプリの動作は妨げない。
+	internal void OpenSettingsFolder()
+	{
+		try
+		{
+			var dir = AppContext.BaseDirectory ?? System.IO.Directory.GetCurrentDirectory();
+			var settingsPath = System.IO.Path.Combine(dir, "settings.json");
+
+			var psi = System.IO.File.Exists(settingsPath)
+				? new System.Diagnostics.ProcessStartInfo { FileName = "explorer.exe", Arguments = $"/select,\"{settingsPath}\"", UseShellExecute = true }
+				: new System.Diagnostics.ProcessStartInfo { FileName = dir, UseShellExecute = true };
+
+			System.Diagnostics.Process.Start(psi);
+		}
+		catch
+		{
+			// フォルダを開けなくてもアプリの動作は妨げない。
+		}
+	}
+
+
+
+
+	// 設定をすべて削除し、初期状態で起動し直す。配布前に既定の見え方を確認するための操作。終了時保存で削除が無に帰さないよう保存を抑止してから消し、再起動する。
+	internal void ResetSettingsAndRestart()
+	{
+		_suppressSave = true;
+		SettingsStore.Delete();
+		RestartApplication();
+	}
+
+
+
+
+	// 設定ファイルを削除してアプリを終了する。アンインストール前の後始末用。終了処理 (ExitApplication) の保存が削除を無に帰さないよう、抑止フラグを立ててから消し、そのまま終了する。
+	internal void DeleteSettingsAndExit()
+	{
+		_suppressSave = true;
+		SettingsStore.Delete();
+		ExitApplication();
+	}
+
+
+
+
 	// 現在のウィンドウ配置と色編集状態を設定へ取り込んで保存する。× でのトレイ退避時と終了時に呼び、次回起動へ引き継ぐ。一度も表示していないウィンドウは位置が OS 既定の生成位置のままなので保存しない。これで未表示のまま終了しても、既存の保存値を既定位置で汚さない。保存に失敗してもアプリの動作・終了を妨げないよう、例外は飲み込む。
 	private void SaveSettings()
 	{
-		if (_window is null || !_hasBeenShown)
+		if (_window is null || !_hasBeenShown || _suppressSave)
 		{
 			return;
 		}

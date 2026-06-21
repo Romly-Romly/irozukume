@@ -135,6 +135,9 @@
 	<data name="MenuPrevTab.Text" xml:space="preserve">
 		<value>Previous tab</value>
 	</data>
+	<data name="MenuShowAllTabs.Text" xml:space="preserve">
+		<value>Show all tabs</value>
+	</data>
 	<data name="MenuShowActualColor.Text" xml:space="preserve">
 		<value>Show sliders in actual colors</value>
 	</data>
@@ -1165,6 +1168,75 @@
 	<data name="RgbTabUnit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
 		<value>RGB display unit</value>
 	</data>
+	<data name="PadLayoutPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Choose layout</value>
+	</data>
+	<data name="PadLayoutPicker.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>Choose the layout of the RGB/CMYK 2D editor: no pad, one of three RGB planes, or one of three CMYK planes</value>
+	</data>
+	<data name="PadLayoutSliders.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>No 2D pad (linear sliders only)</value>
+	</data>
+	<data name="PadLayoutSliders.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>Show no 2D pad and edit R, G, B and C, M, Y, K with linear sliders</value>
+	</data>
+	<data name="PadLayoutSlidersCaption.Text" xml:space="preserve">
+		<value>Sliders</value>
+	</data>
+	<data name="RgbLayoutGbPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>G×B plane with R vertical slider</value>
+	</data>
+	<data name="RgbLayoutGbPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A G (horizontal) × B (vertical) plane with an R vertical slider on its right</value>
+	</data>
+	<data name="RgbLayoutGbPlaneCaption.Text" xml:space="preserve">
+		<value>G×B</value>
+	</data>
+	<data name="RgbLayoutRbPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>R×B plane with G vertical slider</value>
+	</data>
+	<data name="RgbLayoutRbPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>An R (horizontal) × B (vertical) plane with a G vertical slider on its right</value>
+	</data>
+	<data name="RgbLayoutRbPlaneCaption.Text" xml:space="preserve">
+		<value>R×B</value>
+	</data>
+	<data name="RgbLayoutRgPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>R×G plane with B vertical slider</value>
+	</data>
+	<data name="RgbLayoutRgPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>An R (horizontal) × G (vertical) plane with a B vertical slider on its right</value>
+	</data>
+	<data name="RgbLayoutRgPlaneCaption.Text" xml:space="preserve">
+		<value>R×G</value>
+	</data>
+	<data name="CmykLayoutMyPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>M×Y plane with C vertical slider</value>
+	</data>
+	<data name="CmykLayoutMyPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>An M (horizontal) × Y (vertical) plane with a C vertical slider on its right. K is set with the slider below</value>
+	</data>
+	<data name="CmykLayoutMyPlaneCaption.Text" xml:space="preserve">
+		<value>M×Y</value>
+	</data>
+	<data name="CmykLayoutCyPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>C×Y plane with M vertical slider</value>
+	</data>
+	<data name="CmykLayoutCyPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A C (horizontal) × Y (vertical) plane with an M vertical slider on its right. K is set with the slider below</value>
+	</data>
+	<data name="CmykLayoutCyPlaneCaption.Text" xml:space="preserve">
+		<value>C×Y</value>
+	</data>
+	<data name="CmykLayoutCmPlane.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>C×M plane with Y vertical slider</value>
+	</data>
+	<data name="CmykLayoutCmPlane.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>A C (horizontal) × M (vertical) plane with a Y vertical slider on its right. K is set with the slider below</value>
+	</data>
+	<data name="CmykLayoutCmPlaneCaption.Text" xml:space="preserve">
+		<value>C×M</value>
+	</data>
 
 	<!-- Alpha tab -->
 	<data name="AlphaTabUnit.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
@@ -1402,8 +1474,17 @@
 	<data name="SettingsAboutHeader.Text" xml:space="preserve">
 		<value>About this app</value>
 	</data>
+	<data name="SettingsDiagnosticsCard.Header" xml:space="preserve">
+		<value>Diagnostics</value>
+	</data>
+	<data name="SettingsDiagnosticsCopyButton.Content" xml:space="preserve">
+		<value>Copy</value>
+	</data>
 
 	<!-- Strings referenced from code -->
+	<data name="DiagnosticsCopied" xml:space="preserve">
+		<value>Copied</value>
+	</data>
 	<data name="Copy_Term_Foreground" xml:space="preserve">
 		<value>Foreground</value>
 	</data>
@@ -1565,5 +1646,90 @@
 	</data>
 	<data name="SettingsScreenPickerResetButton.Content" xml:space="preserve">
 		<value>Reset to defaults</value>
+	</data>
+
+	<!-- SettingsView: settings management (advanced) -->
+	<data name="SettingsMaintenanceHeader.Text" xml:space="preserve">
+		<value>Settings management</value>
+	</data>
+	<data name="SettingsOpenFolderCard.Header" xml:space="preserve">
+		<value>Open settings folder</value>
+	</data>
+	<data name="SettingsOpenFolderCard.Description" xml:space="preserve">
+		<value>Opens the folder containing settings.json in File Explorer. Please back up your settings manually if you want to keep a copy.</value>
+	</data>
+	<data name="SettingsOpenFolderButton.Content" xml:space="preserve">
+		<value>Open folder</value>
+	</data>
+	<data name="SettingsResetCard.Header" xml:space="preserve">
+		<value>Delete all settings and restart</value>
+	</data>
+	<data name="SettingsResetCard.Description" xml:space="preserve">
+		<value>Resets all settings and restarts the app in its initial state. This cannot be undone.</value>
+	</data>
+	<data name="SettingsResetButton.Content" xml:space="preserve">
+		<value>Delete and restart</value>
+	</data>
+	<data name="SettingsDeleteCard.Header" xml:space="preserve">
+		<value>Delete settings and exit</value>
+	</data>
+	<data name="SettingsDeleteCard.Description" xml:space="preserve">
+		<value>Deletes the settings file and exits Irozukume. To uninstall, run this and then delete the whole directory.</value>
+	</data>
+	<data name="SettingsDeleteButton.Content" xml:space="preserve">
+		<value>Delete settings and exit</value>
+	</data>
+	<data name="SettingsResetDialogTitle" xml:space="preserve">
+		<value>Delete all settings and restart?</value>
+	</data>
+	<data name="SettingsResetDialogBody" xml:space="preserve">
+		<value>Restarts {0} in its initial state. This cannot be undone.</value>
+	</data>
+	<data name="SettingsResetDialogConfirm" xml:space="preserve">
+		<value>Delete and restart</value>
+	</data>
+	<data name="SettingsDeleteDialogTitle" xml:space="preserve">
+		<value>Delete settings and exit?</value>
+	</data>
+	<data name="SettingsDeleteDialogBody" xml:space="preserve">
+		<value>The settings file will be deleted and Irozukume will exit. This cannot be undone.</value>
+	</data>
+	<data name="SettingsDeleteDialogConfirm" xml:space="preserve">
+		<value>Delete and exit</value>
+	</data>
+	<data name="SettingsRepairedTitle" xml:space="preserve">
+		<value>Some settings could not be loaded</value>
+	</data>
+	<data name="SettingsRepairedBody" xml:space="preserve">
+		<value>Part of the settings file was corrupt, so those parts were started with default values. The original file has been backed up as settings.json.bak.</value>
+	</data>
+	<data name="CommonOk" xml:space="preserve">
+		<value>OK</value>
+	</data>
+	<data name="CommonCancel" xml:space="preserve">
+		<value>Cancel</value>
+	</data>
+
+	<!-- SettingsView: NavigationView category labels -->
+	<data name="NavGeneral.Content" xml:space="preserve">
+		<value>General</value>
+	</data>
+	<data name="NavDisplay.Content" xml:space="preserve">
+		<value>Display</value>
+	</data>
+	<data name="NavCopy.Content" xml:space="preserve">
+		<value>Copy</value>
+	</data>
+	<data name="NavScreenPicker.Content" xml:space="preserve">
+		<value>Color picker</value>
+	</data>
+	<data name="NavLens.Content" xml:space="preserve">
+		<value>Sliders</value>
+	</data>
+	<data name="NavMaintenance.Content" xml:space="preserve">
+		<value>Maintenance</value>
+	</data>
+	<data name="NavAbout.Content" xml:space="preserve">
+		<value>About</value>
 	</data>
 </root>

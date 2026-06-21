@@ -103,6 +103,7 @@
 
 			<!-- 右: 縦並びで副モード切替と色域制限トグル。パッドの上端に揃える。 -->
 			<StackPanel
+				x:Name="SideControls"
 				Grid.Column="1"
 				VerticalAlignment="Top"
 				Spacing="16">

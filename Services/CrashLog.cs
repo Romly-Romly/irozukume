@@ -7,17 +7,26 @@ using System.Text;
 
 namespace Irozukume.Services;
 
-// 未処理例外を実行ファイル隣の crash.log へ追記する。アルファ版でテスターが踏んだ不具合を、配布フォルダに残るログから後で診断できるようにする。保存先は SettingsStore と同じ実行ファイルのディレクトリで、ZIP 配布・ポータブル運用でも書き込める。ログ書き込み自体の失敗は握り潰し、クラッシュ処理の最中に更なる例外で状況を悪化させない。
+// 未処理例外や、設定の読み込み失敗などの診断情報を実行ファイル隣の crash.log へ追記する。アルファ版でテスターが踏んだ不具合を、配布フォルダに残るログから後で診断できるようにする。保存先は SettingsStore と同じ実行ファイルのディレクトリで、ZIP 配布・ポータブル運用でも書き込める。ログ書き込み自体の失敗は握り潰し、クラッシュ処理の最中に更なる例外で状況を悪化させない。
 internal static class CrashLog
 {
 	public static void Write(Exception? exception)
+	{
+		Write(exception?.ToString() ?? "(例外情報なし)");
+	}
+
+
+
+
+	// 任意のメッセージを crash.log へ追記する。未処理例外だけでなく、設定の読み込み失敗のように「致命ではないが後から原因を追いたい」事象の記録にも使う。
+	public static void Write(string message)
 	{
 		try
 		{
 			var dir = AppContext.BaseDirectory ?? Directory.GetCurrentDirectory();
 			var path = Path.Combine(dir, "crash.log");
 
-			var entry = $"==== {DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss zzz} ===={Environment.NewLine}{exception?.ToString() ?? "(例外情報なし)"}{Environment.NewLine}{Environment.NewLine}";
+			var entry = $"==== {DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss zzz} ===={Environment.NewLine}{message}{Environment.NewLine}{Environment.NewLine}";
 			File.AppendAllText(path, entry, Encoding.UTF8);
 		}
 		catch

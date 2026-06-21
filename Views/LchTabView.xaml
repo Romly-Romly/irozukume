@@ -150,6 +150,7 @@
 
 			<!-- 色相環の右に縦並びで、副モード切替と色域制限トグルを置く。色相環の上端に揃える。 -->
 			<StackPanel
+				x:Name="SideControls"
 				Grid.Column="1"
 				VerticalAlignment="Top"
 				Spacing="16">

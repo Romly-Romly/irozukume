@@ -9,6 +9,7 @@ using Microsoft.UI.Xaml.Media;
 using Windows.Foundation;
 using Windows.System;
 using Windows.UI;
+using Irozukume.Controls.Geometry;
 
 namespace Irozukume.Controls;
 

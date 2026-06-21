@@ -179,7 +179,7 @@ public sealed class FavoritePalettes
 		{
 			if (TryParseHex(entry.Rgb, out byte r, out byte g, out byte b))
 			{
-				byte a = (byte)Math.Clamp(entry.Alpha, 0, 255);
+				byte a = (byte)Math.Clamp(entry.Alpha ?? 255, 0, 255);
 				colors.Add(new FavoriteColor(r, g, b, a));
 			}
 		}

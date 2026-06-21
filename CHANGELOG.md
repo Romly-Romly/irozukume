@@ -2,7 +2,29 @@
 
 > 🌐 **[日本語 →](CHANGELOG.ja.md)**
 
-## 0.2.0-alpha — 2026-06-20
+## 0.3.0-alpha — 2026/06/22
+
+### Added
+
+- Each tab can now be shown or hidden, so you can tuck away tabs you don't need. Available from the tab bar's right-click menu.
+- Added a 2D-plane + vertical-bar presentation to the RGB and CMYK tabs.
+- Added settings actions such as delete and reset.
+
+### Changed
+
+- Reorganized the settings page with a sidebar and revised its categories.
+- Moved the color picker lens size into the regular settings.
+
+### Fixed
+- Fixed the initial window opening smaller than its minimum size on high-DPI displays (125% and above).
+- Contrast-check mode no longer defaults to on for new users.
+- Corrupt settings no longer wipe everything; only the damaged part is discarded while readable settings are kept.
+
+Other minor fixes.
+
+
+
+## 0.2.0-alpha — 2026/06/20
 
 ### Added
 - Layout (slider presentation) selection for each color-space tab (HSV, HSL, HWB, LCH, Lab, YUV).
@@ -18,6 +40,8 @@
 - Delete actions now use the system danger color so destructive operations are recognizable.
 - Replaced the display-language setting icon.
 
-## 0.1.0-alpha — 2026-06-18
+
+
+## 0.1.0-alpha — 2026/06/18
 
 - Initial alpha release.

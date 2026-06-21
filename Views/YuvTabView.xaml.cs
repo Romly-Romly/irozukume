@@ -15,6 +15,8 @@ using Irozukume.Controls;
 using Irozukume.Helpers;
 using Irozukume.Models;
 using Irozukume.ViewModels;
+using Irozukume.Controls.Generators;
+using Irozukume.Controls.Generators.Planes;
 
 namespace Irozukume.Views;
 
@@ -94,6 +96,10 @@ public sealed partial class YuvTabView : UserControl
 		// パッドの一辺はスクロール領域の可視高さからスライダー群の高さを引いて決めるため、その高さが変わったら算出し直す。可視高さの変化は読み込み後に見つけるスクロール領域の SizeChanged で、エリアの幅変化は PadArea の SizeChanged で拾う。
 		// パッドの幅はエリアの幅から縦スライダーの幅と間隔を差し引いて決めるため、スライダーの実寸が定まる(初回計測)タイミングでも算出し直す。
 		SliderHost.SizeChanged += OnLayoutMetricChanged;
+
+		// 右の縦並び設定列は上段の行高の下限になるため、その高さが変わったらパッドの一辺を算出し直す。
+		SideControls.SizeChanged += OnLayoutMetricChanged;
+
 		LumaSlider.SizeChanged += OnLayoutMetricChanged;
 		YuvCartSlider.SizeChanged += OnLayoutMetricChanged;
 
@@ -286,12 +292,15 @@ public sealed partial class YuvTabView : UserControl
 
 		double heightBudget = available - SliderHost.ActualHeight - LayoutRoot.RowSpacing;
 
+		// 上段の行高はパッドエリアと、その右の縦並び設定列の高い方で決まる。設定列の方が嵩むと、パッドをそれ未満へ縮めても行は縮まず、パッドは上端へ詰まったまま下端との間に空白が生じ、下段スライダー群との間が空く。これを防ぐため、パッドの下限を既定の下限と設定列の高さの大きい方に取る。設定列の実寸が未確定の初回は既定の下限で見積もり、確定後の SizeChanged で正す。
+		double minSide = Math.Max(MinPadSide, SideControls.ActualHeight);
+
 		// 直交パッド(Cb×Y・Cr×Y)のとき。横軸の色差を細かく取れるよう横いっぱいに広げ、縦は残りの高さに合わせる。
 		if (_cartHost)
 		{
 			double sliderColumn = YuvCartSlider.ActualWidth > 0.0 ? YuvCartSlider.ActualWidth : 32.0;
 			double widthBudget = PadArea.ActualWidth - sliderColumn - PadRailGap;
-			double padHeight = Math.Max(MinPadSide, heightBudget);
+			double padHeight = Math.Max(minSide, heightBudget);
 
 			if (widthBudget <= 0.0)
 			{
@@ -318,7 +327,7 @@ public sealed partial class YuvTabView : UserControl
 
 		// 既定の Cb×Cr 平面+輝度レール。パッドとレールを一定間隔で並べた組を中央寄せにするため、パッドが取れる幅はエリアの幅からレールの幅と間隔を除いた残り。
 		double cbcrWidthBudget = PadArea.ActualWidth - LumaSlider.ActualWidth - PadRailGap;
-		double side = Math.Min(cbcrWidthBudget, Math.Max(MinPadSide, heightBudget));
+		double side = Math.Min(cbcrWidthBudget, Math.Max(minSide, heightBudget));
 
 		if (side <= 0.0)
 		{

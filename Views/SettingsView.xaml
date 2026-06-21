@@ -6,42 +6,73 @@
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:tkcontrols="using:CommunityToolkit.WinUI.Controls"
-	mc:Ignorable="d"
-	SizeChanged="OnSizeChanged">
+	mc:Ignorable="d">
 
-	<!-- 設定ページ。設定セクション群(左)とアプリ情報(右)を横並びにし、ウィンドウが狭くなったらアプリ情報を設定の下へ回すレスポンシブ配置にする。配置の切り替えはコードビハインドの SizeChanged で行う。設定項目が増えてもセクションを足して育てられる構造にする。 -->
-	<ScrollViewer
-		VerticalScrollBarVisibility="Auto"
-		HorizontalScrollMode="Disabled">
-		<Grid
-			x:Name="LayoutGrid"
-			Padding="24"
-			ColumnSpacing="32"
-			RowSpacing="24">
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="*" />
-				<ColumnDefinition x:Name="AboutColumn" Width="320" />
-			</Grid.ColumnDefinitions>
-			<Grid.RowDefinitions>
-				<RowDefinition Height="Auto" />
-				<RowDefinition Height="Auto" />
-			</Grid.RowDefinitions>
+	<!-- 設定ページ。左の NavigationView で大分類を選び、選んだ分類の中身だけを右へ出す。各分類の中身は名前付きの StackPanel として持ち、選択に応じてコードビハインドが表示を切り替える。上級者向け(デバッグ用)の項目・カードは「上級者向け設定」トグルがオンのときだけ現れる。狭いときのペインの畳み込みは NavigationView 自身に任せる。設定項目が増えても分類を足して育てられる構造にする。 -->
+	<NavigationView
+		x:Name="SettingsNav"
+		PaneDisplayMode="Left"
+		OpenPaneLength="220"
+		IsBackButtonVisible="Collapsed"
+		IsSettingsVisible="False"
+		SelectionChanged="OnNavSelectionChanged">
 
-			<!-- 設定セクション群。列の幅いっぱいに広げ、カードをウィンドウ幅へ追従させる。 -->
-			<StackPanel
-				Grid.Row="0"
-				Grid.Column="0"
-				Spacing="24">
+		<NavigationView.MenuItems>
+			<NavigationViewItem x:Uid="NavGeneral" Tag="general">
+				<NavigationViewItem.Icon>
+					<FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE713;" />
+				</NavigationViewItem.Icon>
+			</NavigationViewItem>
+			<NavigationViewItem x:Uid="NavDisplay" Tag="display">
+				<NavigationViewItem.Icon>
+					<FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE890;" />
+				</NavigationViewItem.Icon>
+			</NavigationViewItem>
 
-				<!-- 全般に関する設定。テーマと言語を束ねる。 -->
-				<StackPanel Spacing="4">
+			<!-- カラーピッカー。レンズの大きさは通常設定として常時表示し、拡大率・ガラス効果などの微調整はページ内で上級者向けトグル連動にする。 -->
+			<NavigationViewItem x:Uid="NavScreenPicker" Tag="screenpicker">
+				<NavigationViewItem.Icon>
+					<FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE7B3;" />
+				</NavigationViewItem.Icon>
+			</NavigationViewItem>
+
+			<!-- 上級者向け(デバッグ用)。トグルがオンのときだけ項目を出す。 -->
+			<NavigationViewItem
+				x:Uid="NavLens"
+				Tag="lens"
+				Visibility="{x:Bind ViewModel.AdvancedSettingsVisibility, Mode=OneWay}">
+				<NavigationViewItem.Icon>
+					<FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE790;" />
+				</NavigationViewItem.Icon>
+			</NavigationViewItem>
+		</NavigationView.MenuItems>
+
+		<NavigationView.FooterMenuItems>
+			<NavigationViewItem x:Uid="NavMaintenance" Tag="maintenance">
+				<NavigationViewItem.Icon>
+					<FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE90F;" />
+				</NavigationViewItem.Icon>
+			</NavigationViewItem>
+			<NavigationViewItem x:Uid="NavAbout" Tag="about">
+				<NavigationViewItem.Icon>
+					<FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE946;" />
+				</NavigationViewItem.Icon>
+			</NavigationViewItem>
+		</NavigationView.FooterMenuItems>
+
+		<ScrollViewer
+			VerticalScrollBarVisibility="Auto"
+			HorizontalScrollMode="Disabled">
+			<Grid Padding="24">
+
+				<!-- 全般。テーマ・言語と、コピーに関する設定をまとめる。 -->
+				<StackPanel x:Name="PageGeneral" Spacing="4">
 					<TextBlock
 						x:Uid="SettingsGeneralHeader"
 						Style="{StaticResource BodyStrongTextBlockStyle}" />
 
 					<!-- アプリのテーマ(配色)。ライト/ダーク/システム設定の使用 から選び、選んだ瞬間にアプリ全体へ反映する。 -->
-					<tkcontrols:SettingsCard
-						x:Uid="SettingsThemeCard">
+					<tkcontrols:SettingsCard x:Uid="SettingsThemeCard">
 						<tkcontrols:SettingsCard.HeaderIcon>
 							<FontIcon
 								FontFamily="{ThemeResource SymbolThemeFontFamily}"
@@ -67,50 +98,12 @@
 							<ComboBoxItem x:Uid="SettingsLanguageSystem" />
 						</ComboBox>
 					</tkcontrols:SettingsCard>
-				</StackPanel>
 
-				<!-- 表示に関する設定。 -->
-				<StackPanel Spacing="4">
-					<TextBlock
-						x:Uid="SettingsDisplayHeader"
-						Style="{StaticResource BodyStrongTextBlockStyle}" />
-
-					<!-- 2次元スライダー(LCH の L-C 平面、Lab の a-b 平面)で sRGB 色域を外れた範囲をどう見せるか。色域内は常に実際の色で塗り、ここでは色域外の描き方だけを切り替える。各色の RGB やスライダーの値には影響しない。 -->
-					<tkcontrols:SettingsCard x:Uid="SettingsOogStyleCard">
-						<tkcontrols:SettingsCard.HeaderIcon>
-							<FontIcon
-								FontFamily="ms-appx:///Assets/Fonts/romoji.ttf#Romoji"
-								Glyph="&#xE00A;" />
-						</tkcontrols:SettingsCard.HeaderIcon>
-						<ComboBox SelectedIndex="{x:Bind ViewModel.OutOfRangeStyleIndex, Mode=TwoWay}">
-							<ComboBoxItem x:Uid="SettingsOogFillBoundary" />
-							<ComboBoxItem x:Uid="SettingsOogFillBoundaryHatch" />
-							<ComboBoxItem x:Uid="SettingsOogWhiteHatch" />
-						</ComboBox>
-					</tkcontrols:SettingsCard>
-
-					<!-- 最も近い色へスナップするときの距離計算。WebSafe・RGB565 等の格子モードと、ターミナルの 256/16/8 のどちらの最近傍探索にも効く。各色の RGB は変えず、見える色と書き出すインデックスの選び方だけを変える。 -->
-					<tkcontrols:SettingsCard x:Uid="SettingsSnapMetricCard">
-						<tkcontrols:SettingsCard.HeaderIcon>
-							<!-- このカードはアイコンを持たない。SettingsCard は HeaderIcon が null だとアイコン列を畳んでヘッダーが左へ寄るため、透明の FontIcon でアイコン列の幅だけを確保し、他のカードとヘッダーの左位置を揃える。グリフは不可視で、幅を持たせるためだけに指定している。 -->
-							<FontIcon
-								FontFamily="{ThemeResource SymbolThemeFontFamily}"
-								Glyph="&#xE790;"
-								Opacity="0" />
-						</tkcontrols:SettingsCard.HeaderIcon>
-						<ComboBox SelectedIndex="{x:Bind ViewModel.SnapMetricIndex, Mode=TwoWay}">
-							<ComboBoxItem x:Uid="SettingsSnapMetricLab" />
-							<ComboBoxItem x:Uid="SettingsSnapMetricRedmean" />
-							<ComboBoxItem x:Uid="SettingsSnapMetricRgb" />
-						</ComboBox>
-					</tkcontrols:SettingsCard>
-				</StackPanel>
-
-				<!-- コピーに関する設定。1つ目(Ctrl+C)・2つ目(Ctrl+Shift+C)のコピー形式をそれぞれエクスパンダーにし、各展開部にその形式の CSS 関数アルファの表記を畳む。アルファ表記を形式ごとに独立して持てる。「形式を選択してコピー」サブメニューは1つ目の表記に従う。 -->
-				<StackPanel Spacing="4">
+					<!-- コピーに関する設定。1つ目(Ctrl+C)・2つ目(Ctrl+Shift+C)のコピー形式をそれぞれエクスパンダーにし、各展開部にその形式の CSS 関数アルファの表記を畳む。アルファ表記を形式ごとに独立して持てる。「形式を選択してコピー」サブメニューは1つ目の表記に従う。 -->
 					<TextBlock
 						x:Uid="SettingsCopyHeader"
-						Style="{StaticResource BodyStrongTextBlockStyle}" />
+						Style="{StaticResource BodyStrongTextBlockStyle}"
+						Margin="0,12,0,0" />
 
 					<!-- 編集メニューの「コピー」(Ctrl+C)で色1を書き出す既定の形式。展開すると、この形式の CSS 関数アルファを 0–1 の数値とパーセントのどちらで書くかを選べる。「形式を選択してコピー」サブメニューもこの表記に従う。 -->
 					<tkcontrols:SettingsExpander
@@ -203,29 +196,8 @@
 							</tkcontrols:SettingsCard>
 						</tkcontrols:SettingsExpander.Items>
 					</tkcontrols:SettingsExpander>
-				</StackPanel>
 
-				<!-- ターミナルの色に関する設定。 -->
-				<StackPanel Spacing="4">
-					<TextBlock
-						x:Uid="SettingsTerminalHeader"
-						Style="{StaticResource BodyStrongTextBlockStyle}" />
-
-					<!-- 基本16色(0-15)を解決する参照テーマ。これらの実RGBは端末の配色テーマで変わるため、貼り付けの逆引きと 16/8 色・256 色の 0-15 のコピー・表示に使う配色を選ぶ。キューブ(16-231)とグレー(232-255)は固定のため影響しない。 -->
-					<tkcontrols:SettingsCard x:Uid="SettingsTerminalThemeCard">
-						<tkcontrols:SettingsCard.HeaderIcon>
-							<FontIcon
-								FontFamily="{ThemeResource SymbolThemeFontFamily}"
-								Glyph="&#xE756;" />
-						</tkcontrols:SettingsCard.HeaderIcon>
-						<ComboBox SelectedIndex="{x:Bind ViewModel.TerminalThemeIndex, Mode=TwoWay}">
-							<ComboBoxItem Content="Campbell" />
-							<ComboBoxItem Content="VGA" />
-							<ComboBoxItem Content="xterm" />
-						</ComboBox>
-					</tkcontrols:SettingsCard>
-
-					<!-- ターミナル形式のコピーで先頭の ESC をどの表記で書き出すか。貼り付け先(端末への直貼り、シェルの printf、ソースの文字列リテラル等)に合わせて選ぶ。色や丸めには影響しない。 -->
+					<!-- ターミナル形式のコピーで先頭の ESC をどの表記で書き出すか。貼り付け先(端末への直貼り、シェルの printf、ソースの文字列リテラル等)に合わせて選ぶ。色や丸めには影響しない。コピーの体裁に関わるためコピーの区分へ置く。 -->
 					<tkcontrols:SettingsCard x:Uid="SettingsTerminalEscCard">
 						<tkcontrols:SettingsCard.HeaderIcon>
 							<FontIcon
@@ -243,10 +215,128 @@
 					</tkcontrols:SettingsCard>
 				</StackPanel>
 
-				<!-- 上級者向け: スライダーつまみのガラスレンズ(ルーペ)の効きの調整。アプリ情報の「上級者向け設定」トグルがオンのときだけ現れる。値は全スライダー・色相環・パッドのルーペに共通で効き、色や丸めには影響しない。 -->
-				<StackPanel
-					Spacing="4"
-					Visibility="{x:Bind ViewModel.AdvancedSettingsVisibility, Mode=OneWay}">
+				<!-- 表示。 -->
+				<StackPanel x:Name="PageDisplay" Spacing="4" Visibility="Collapsed">
+					<TextBlock
+						x:Uid="SettingsDisplayHeader"
+						Style="{StaticResource BodyStrongTextBlockStyle}" />
+
+					<!-- 2次元スライダー(LCH の L-C 平面、Lab の a-b 平面)で sRGB 色域を外れた範囲をどう見せるか。色域内は常に実際の色で塗り、ここでは色域外の描き方だけを切り替える。各色の RGB やスライダーの値には影響しない。 -->
+					<tkcontrols:SettingsCard x:Uid="SettingsOogStyleCard">
+						<tkcontrols:SettingsCard.HeaderIcon>
+							<FontIcon
+								FontFamily="ms-appx:///Assets/Fonts/romoji.ttf#Romoji"
+								Glyph="&#xE00A;" />
+						</tkcontrols:SettingsCard.HeaderIcon>
+						<ComboBox SelectedIndex="{x:Bind ViewModel.OutOfRangeStyleIndex, Mode=TwoWay}">
+							<ComboBoxItem x:Uid="SettingsOogFillBoundary" />
+							<ComboBoxItem x:Uid="SettingsOogFillBoundaryHatch" />
+							<ComboBoxItem x:Uid="SettingsOogWhiteHatch" />
+						</ComboBox>
+					</tkcontrols:SettingsCard>
+
+					<!-- 最も近い色へスナップするときの距離計算。WebSafe・RGB565 等の格子モードと、ターミナルの 256/16/8 のどちらの最近傍探索にも効く。各色の RGB は変えず、見える色と書き出すインデックスの選び方だけを変える。 -->
+					<tkcontrols:SettingsCard x:Uid="SettingsSnapMetricCard">
+						<tkcontrols:SettingsCard.HeaderIcon>
+							<!-- このカードはアイコンを持たない。SettingsCard は HeaderIcon が null だとアイコン列を畳んでヘッダーが左へ寄るため、透明の FontIcon でアイコン列の幅だけを確保し、他のカードとヘッダーの左位置を揃える。グリフは不可視で、幅を持たせるためだけに指定している。 -->
+							<FontIcon
+								FontFamily="{ThemeResource SymbolThemeFontFamily}"
+								Glyph="&#xE790;"
+								Opacity="0" />
+						</tkcontrols:SettingsCard.HeaderIcon>
+						<ComboBox SelectedIndex="{x:Bind ViewModel.SnapMetricIndex, Mode=TwoWay}">
+							<ComboBoxItem x:Uid="SettingsSnapMetricLab" />
+							<ComboBoxItem x:Uid="SettingsSnapMetricRedmean" />
+							<ComboBoxItem x:Uid="SettingsSnapMetricRgb" />
+						</ComboBox>
+					</tkcontrols:SettingsCard>
+
+					<!-- ターミナルの基本16色(0-15)を解決する参照テーマ。これらの実RGBは端末の配色テーマで変わるため、貼り付けの逆引きと 16/8 色・256 色の 0-15 のコピー・表示に使う配色を選ぶ。キューブ(16-231)とグレー(232-255)は固定のため影響しない。配色の見え方に関わるため表示の区分へ置く。 -->
+					<tkcontrols:SettingsCard x:Uid="SettingsTerminalThemeCard">
+						<tkcontrols:SettingsCard.HeaderIcon>
+							<FontIcon
+								FontFamily="{ThemeResource SymbolThemeFontFamily}"
+								Glyph="&#xE756;" />
+						</tkcontrols:SettingsCard.HeaderIcon>
+						<ComboBox SelectedIndex="{x:Bind ViewModel.TerminalThemeIndex, Mode=TwoWay}">
+							<ComboBoxItem Content="Campbell" />
+							<ComboBoxItem Content="VGA" />
+							<ComboBoxItem Content="xterm" />
+						</ComboBox>
+					</tkcontrols:SettingsCard>
+				</StackPanel>
+
+				<!-- カラーピッカー。画面採色のレンズ。大きさ(直径)は通常設定として常時表示し、拡大率・ガラス効果・既定へ戻すはデバッグ用途のため上級者向け設定がオンのときだけ出す。値はピッカーを開いたときの見た目に効き、採色する色には影響しない。 -->
+				<StackPanel x:Name="PageScreenPicker" Spacing="4" Visibility="Collapsed">
+					<TextBlock
+						x:Uid="SettingsScreenPickerHeader"
+						Style="{StaticResource BodyStrongTextBlockStyle}" />
+
+					<!-- レンズの直径(DIP)。円形のガラス本体の大きさ。通常設定として常時表示する。 -->
+					<tkcontrols:SettingsCard x:Uid="SettingsScreenPickerDiameterCard">
+						<tkcontrols:SettingsCard.HeaderIcon>
+							<FontIcon
+								FontFamily="{ThemeResource SymbolThemeFontFamily}"
+								Glyph="&#xE740;" />
+						</tkcontrols:SettingsCard.HeaderIcon>
+						<Slider
+							Width="220"
+							Minimum="220"
+							Maximum="440"
+							StepFrequency="10"
+							Value="{x:Bind ViewModel.ScreenPickerDiameter, Mode=TwoWay}" />
+					</tkcontrols:SettingsCard>
+
+					<!-- 拡大率。上げるほど1画素が大きく映り採色しやすくなる。デバッグ用途のため上級者向け設定がオンのときだけ表示。 -->
+					<tkcontrols:SettingsCard
+						x:Uid="SettingsScreenPickerMagnifyCard"
+						Visibility="{x:Bind ViewModel.AdvancedSettingsVisibility, Mode=OneWay}">
+						<tkcontrols:SettingsCard.HeaderIcon>
+							<FontIcon
+								FontFamily="{ThemeResource SymbolThemeFontFamily}"
+								Glyph="&#xE8A3;" />
+						</tkcontrols:SettingsCard.HeaderIcon>
+						<Slider
+							Width="220"
+							Minimum="2"
+							Maximum="20"
+							StepFrequency="1"
+							Value="{x:Bind ViewModel.ScreenPickerMagnify, Mode=TwoWay}" />
+					</tkcontrols:SettingsCard>
+
+					<!-- ガラス効果。オン/オフのトグルを見出し行に置き、展開して屈折の強さスライダーを出す。オフにすると縁と拡大だけの素のルーペになる。デバッグ用途のため上級者向け設定がオンのときだけ表示。 -->
+					<tkcontrols:SettingsExpander
+						x:Uid="SettingsScreenPickerGlassCard"
+						Visibility="{x:Bind ViewModel.AdvancedSettingsVisibility, Mode=OneWay}">
+						<tkcontrols:SettingsExpander.HeaderIcon>
+							<FontIcon
+								FontFamily="{ThemeResource SymbolThemeFontFamily}"
+								Glyph="&#xE7B3;" />
+						</tkcontrols:SettingsExpander.HeaderIcon>
+						<ToggleSwitch IsOn="{x:Bind ViewModel.ScreenPickerGlassEffect, Mode=TwoWay}" />
+						<tkcontrols:SettingsExpander.Items>
+							<!-- 屈折の強さの倍率(既定値に掛ける)。0 で屈折なし、1.0 で既定どおり、上げるほど縁が強く歪む。 -->
+							<tkcontrols:SettingsCard x:Uid="SettingsScreenPickerRefractionCard">
+								<Slider
+									Width="220"
+									Minimum="0"
+									Maximum="2"
+									StepFrequency="0.05"
+									Value="{x:Bind ViewModel.ScreenPickerRefractionStrength, Mode=TwoWay}" />
+							</tkcontrols:SettingsCard>
+						</tkcontrols:SettingsExpander.Items>
+					</tkcontrols:SettingsExpander>
+
+					<!-- 画面ピッカーの調整を既定値へ戻す。デバッグ用途のため上級者向け設定がオンのときだけ表示。 -->
+					<Button
+						x:Uid="SettingsScreenPickerResetButton"
+						Margin="0,4,0,0"
+						Visibility="{x:Bind ViewModel.AdvancedSettingsVisibility, Mode=OneWay}"
+						Click="OnResetScreenPickerClick" />
+				</StackPanel>
+
+				<!-- 上級者向け: スライダーつまみのガラスレンズ(ルーペ)の効きの調整。値は全スライダー・色相環・パッドのルーペに共通で効き、色や丸めには影響しない。 -->
+				<StackPanel x:Name="PageLens" Spacing="4" Visibility="Collapsed">
 					<TextBlock
 						x:Uid="SettingsLensHeader"
 						Style="{StaticResource BodyStrongTextBlockStyle}" />
@@ -324,99 +414,97 @@
 						Click="OnResetLensClick" />
 				</StackPanel>
 
-				<!-- 上級者向け: 画面カラーピッカーのガラスレンズの効きの調整。「上級者向け設定」トグルがオンのときだけ現れる。値はピッカーを開いたときの見た目に効き、採色する色には影響しない。 -->
-				<StackPanel
-					Spacing="4"
-					Margin="0,12,0,0"
-					Visibility="{x:Bind ViewModel.AdvancedSettingsVisibility, Mode=OneWay}">
+				<!-- メンテナンス。設定を削除して終了(アンインストール前の後始末)は一般操作のため常時表示する。設定フォルダを開く・全削除して再起動はデバッグ用途のため「上級者向け設定」トグルがオンのときだけ現れる。削除系は確認ダイアログを挟む。 -->
+				<StackPanel x:Name="PageMaintenance" Spacing="4" Visibility="Collapsed">
 					<TextBlock
-						x:Uid="SettingsScreenPickerHeader"
+						x:Uid="SettingsMaintenanceHeader"
 						Style="{StaticResource BodyStrongTextBlockStyle}" />
 
-					<!-- 拡大率。上げるほど1画素が大きく映り採色しやすくなる。 -->
-					<tkcontrols:SettingsCard x:Uid="SettingsScreenPickerMagnifyCard">
+					<!-- 設定ファイルを削除してアプリを終了する。アンインストール前の後始末用で、一般利用者が辿り着けるよう上級者向けに依らず常時表示する。確認ダイアログを挟む。 -->
+					<tkcontrols:SettingsCard x:Uid="SettingsDeleteCard">
 						<tkcontrols:SettingsCard.HeaderIcon>
 							<FontIcon
 								FontFamily="{ThemeResource SymbolThemeFontFamily}"
-								Glyph="&#xE8A3;" />
+								Glyph="&#xE74D;" />
 						</tkcontrols:SettingsCard.HeaderIcon>
-						<Slider
-							Width="220"
-							Minimum="2"
-							Maximum="20"
-							StepFrequency="1"
-							Value="{x:Bind ViewModel.ScreenPickerMagnify, Mode=TwoWay}" />
+						<Button
+							x:Uid="SettingsDeleteButton"
+							Click="OnDeleteSettingsClick" />
 					</tkcontrols:SettingsCard>
 
-					<!-- レンズの直径(DIP)。円形のガラス本体の大きさ。 -->
-					<tkcontrols:SettingsCard x:Uid="SettingsScreenPickerDiameterCard">
+					<!-- 設定ファイルのある実行フォルダをエクスプローラーで開く。バックアップ等はここから手動で行う。デバッグ用途のため上級者向け設定がオンのときだけ表示。 -->
+					<tkcontrols:SettingsCard
+						x:Uid="SettingsOpenFolderCard"
+						Visibility="{x:Bind ViewModel.AdvancedSettingsVisibility, Mode=OneWay}">
 						<tkcontrols:SettingsCard.HeaderIcon>
 							<FontIcon
 								FontFamily="{ThemeResource SymbolThemeFontFamily}"
-								Glyph="&#xE740;" />
+								Glyph="&#xE838;" />
 						</tkcontrols:SettingsCard.HeaderIcon>
-						<Slider
-							Width="220"
-							Minimum="220"
-							Maximum="440"
-							StepFrequency="10"
-							Value="{x:Bind ViewModel.ScreenPickerDiameter, Mode=TwoWay}" />
+						<Button
+							x:Uid="SettingsOpenFolderButton"
+							Click="OnOpenSettingsFolderClick" />
 					</tkcontrols:SettingsCard>
 
-					<!-- ガラス効果。オン/オフのトグルを見出し行に置き、展開して屈折の強さスライダーを出す。オフにすると縁と拡大だけの素のルーペになる。 -->
-					<tkcontrols:SettingsExpander x:Uid="SettingsScreenPickerGlassCard">
+					<!-- 全設定を消して既定の状態で再起動する。配布前に既定の見え方を確認するための操作。デバッグ用途のため上級者向け設定がオンのときだけ表示。確認ダイアログを挟む。 -->
+					<tkcontrols:SettingsCard
+						x:Uid="SettingsResetCard"
+						Visibility="{x:Bind ViewModel.AdvancedSettingsVisibility, Mode=OneWay}">
+						<tkcontrols:SettingsCard.HeaderIcon>
+							<FontIcon
+								FontFamily="{ThemeResource SymbolThemeFontFamily}"
+								Glyph="&#xE72C;" />
+						</tkcontrols:SettingsCard.HeaderIcon>
+						<Button
+							x:Uid="SettingsResetButton"
+							Click="OnResetSettingsClick" />
+					</tkcontrols:SettingsCard>
+				</StackPanel>
+
+				<!-- このアプリについて。 -->
+				<StackPanel x:Name="PageAbout" Spacing="4" Visibility="Collapsed">
+					<TextBlock
+						x:Uid="SettingsAboutHeader"
+						Style="{StaticResource BodyStrongTextBlockStyle}" />
+					<TextBlock
+						Margin="0,4,0,0"
+						Text="{x:Bind AppNameVersionText}"
+						TextWrapping="Wrap" />
+					<TextBlock
+						Text="© 2026 Romly All rights reserved."
+						Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+						TextWrapping="Wrap" />
+
+					<!-- 診断情報。不具合の報告に添えるための、バージョン・OS・実行環境などの情報。ヘッダーの「コピー」でクリップボードへ写し、展開すると実際に共有される内容を確認できる。誰でも報告に使えるよう上級者向けに依らず常時表示する。 -->
+					<tkcontrols:SettingsExpander x:Uid="SettingsDiagnosticsCard" Margin="0,16,0,0">
 						<tkcontrols:SettingsExpander.HeaderIcon>
 							<FontIcon
 								FontFamily="{ThemeResource SymbolThemeFontFamily}"
-								Glyph="&#xE7B3;" />
+								Glyph="&#xE946;" />
 						</tkcontrols:SettingsExpander.HeaderIcon>
-						<ToggleSwitch IsOn="{x:Bind ViewModel.ScreenPickerGlassEffect, Mode=TwoWay}" />
+						<Button
+							x:Uid="SettingsDiagnosticsCopyButton"
+							Click="OnCopyDiagnosticsClick" />
 						<tkcontrols:SettingsExpander.Items>
-							<!-- 屈折の強さの倍率(既定値に掛ける)。0 で屈折なし、1.0 で既定どおり、上げるほど縁が強く歪む。 -->
-							<tkcontrols:SettingsCard x:Uid="SettingsScreenPickerRefractionCard">
-								<Slider
-									Width="220"
-									Minimum="0"
-									Maximum="2"
-									StepFrequency="0.05"
-									Value="{x:Bind ViewModel.ScreenPickerRefractionStrength, Mode=TwoWay}" />
+							<!-- 共有される診断情報の実体。等幅で表示し選択コピーもできる。文字列はページを開いた時にコードビハインドが今の実行環境で組み直して流し込む。 -->
+							<tkcontrols:SettingsCard ContentAlignment="Vertical">
+								<TextBlock
+									x:Name="DiagnosticsTextBlock"
+									IsTextSelectionEnabled="True"
+									FontFamily="Consolas"
+									TextWrapping="Wrap"
+									Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 							</tkcontrols:SettingsCard>
 						</tkcontrols:SettingsExpander.Items>
 					</tkcontrols:SettingsExpander>
 
-					<!-- 画面ピッカーの調整を既定値へ戻す。 -->
-					<Button
-						x:Uid="SettingsScreenPickerResetButton"
-						Margin="0,4,0,0"
-						Click="OnResetScreenPickerClick" />
+					<!-- 上級者向け設定の表示トグル。オンにすると左の分類に「スライダー(詳細)」が現れ、カラーピッカーとメンテナンスのデバッグ向けカードも出る。普段は隠しておく実験的・デバッグ用の入口。 -->
+					<ToggleSwitch
+						x:Uid="SettingsAdvancedToggle"
+						Margin="0,16,0,0"
+						IsOn="{x:Bind ViewModel.AdvancedSettings, Mode=TwoWay}" />
 				</StackPanel>
-			</StackPanel>
-
-			<!-- このアプリについて。広いときは右の側帯(既定の配置)、狭いときはコードビハインドで設定の下へ回す。 -->
-			<StackPanel
-				x:Name="AboutPanel"
-				Grid.Row="0"
-				Grid.Column="1"
-				Spacing="4"
-				VerticalAlignment="Top">
-				<TextBlock
-					x:Uid="SettingsAboutHeader"
-					Style="{StaticResource BodyStrongTextBlockStyle}" />
-				<TextBlock
-					Margin="0,4,0,0"
-					Text="{x:Bind AppNameVersionText}"
-					TextWrapping="Wrap" />
-				<TextBlock
-					Text="© 2026 Romly All rights reserved."
-					Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-					TextWrapping="Wrap" />
-
-				<!-- 上級者向け設定の表示トグル。オンにすると左の設定群にスライダーつまみレンズの調整セクションが現れる。普段は隠しておく実験的な設定の入口。 -->
-				<ToggleSwitch
-					x:Uid="SettingsAdvancedToggle"
-					Margin="0,16,0,0"
-					IsOn="{x:Bind ViewModel.AdvancedSettings, Mode=TwoWay}" />
-			</StackPanel>
-		</Grid>
-	</ScrollViewer>
+			</Grid>
+		</ScrollViewer>
+	</NavigationView>
 </UserControl>

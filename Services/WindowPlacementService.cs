@@ -63,6 +63,23 @@ public static class WindowPlacementService
 
 
 
+	// 既定サイズ (DIP) でウィンドウを開く。AppWindow.Resize は物理ピクセルを取るため、現在の生成位置のモニタ DPI で DIP を物理化してから渡す。これをしないと、DIP 基準で物理化される最低サイズ (WindowMinSizer) を高 DPI 環境で既定サイズが下回り、最低サイズへ切り詰められた窮屈な窓で開いてしまう。物理化した寸法は、そのモニタの可視ワークエリアを超えない範囲へ収める。
+	public static void ResizeToDip(Window window, int widthDip, int heightDip)
+	{
+		var appWindow = window.AppWindow;
+		var pos = appWindow.Position;
+		double scale = MonitorScaleAt(pos.X, pos.Y);
+		var work = DisplayArea.GetFromPoint(new PointInt32(pos.X, pos.Y), DisplayAreaFallback.Nearest).WorkArea;
+
+		int width = Math.Min((int)Math.Round(widthDip * scale), work.Width);
+		int height = Math.Min((int)Math.Round(heightDip * scale), work.Height);
+
+		appWindow.Resize(new SizeInt32(width, height));
+	}
+
+
+
+
 	// 指定スクリーン座標を含むモニタの実効 DPI 倍率を返す。復元先モニタの倍率で DIP を物理化するために使う。取得できなければ等倍とする。
 	private static double MonitorScaleAt(int x, int y)
 	{

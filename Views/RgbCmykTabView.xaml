@@ -20,6 +20,77 @@
 
 		<!-- RGB 群 (0–255) -->
 		<StackPanel Spacing="{StaticResource SliderSpacing}">
+
+			<!-- タブ共通の2次元エディタ領域。RGB・CMYK で1枚だけ出す平面パッド(下記の RGB 用・CMYK 用のどちらか一方)をタブ先頭に置く。どちらも見せ方ピッカー(単位コンボの隣)で選ぶ。パッド無し(レイアウト0)のときは両方畳むため、先頭の R スライダーの上に余白は生じない。 -->
+
+			<!-- RGB 平面の編集エリア。2成分を取った平面パッドと、残る1成分の縦スライダーを一定間隔で横に並べた組を中央寄せにする。RGB の平面を選んだときだけ出す。パッドの一辺はエリアの幅(縦スライダーの幅と間隔を除く)へ正方形でコード側から合わせ、縦スライダーの高さもそれに揃える。下地画像は固定成分(縦バーが司る成分)と色制限に合わせてコードで作り直す。 -->
+			<Grid
+				x:Name="RgbPadArea"
+				Visibility="Collapsed"
+				SizeChanged="OnRgbPadAreaSizeChanged">
+				<Grid
+					HorizontalAlignment="Center"
+					VerticalAlignment="Top"
+					ColumnSpacing="12">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+
+					<controls:PlanarPad
+						x:Name="RgbPad"
+						Grid.Column="0"
+						VerticalAlignment="Top">
+						<Image x:Name="RgbPlaneImage" Stretch="Fill" />
+					</controls:PlanarPad>
+
+					<!-- 切り出した成分(平面の2軸に取らない残り1成分)の縦スライダー。値・背景・名前はレイアウトに応じてコードビハインドで束ね直す。高さはパッドの一辺に揃える。 -->
+					<controls:GradientSlider
+						x:Name="RgbCutSlider"
+						Grid.Column="1"
+						Orientation="Vertical"
+						VerticalAlignment="Top"
+						Minimum="0"
+						Maximum="255"
+						StepFrequency="1"
+						LargeChange="{x:Bind ViewModel.RgbLargeStep, Mode=OneWay}" />
+				</Grid>
+			</Grid>
+
+			<!-- CMYK 平面の編集エリア。CMY のうち2成分を取った平面パッドと、残る1成分の縦スライダーを横に並べた組を中央寄せにする。CMYK の平面を選んだときだけ出す。墨(K)は平面に載らず、下の K スライダーで動かす。下地画像は固定成分・墨・色制限に合わせてコードで作り直す。 -->
+			<Grid
+				x:Name="CmykPadArea"
+				Visibility="Collapsed"
+				SizeChanged="OnCmykPadAreaSizeChanged">
+				<Grid
+					HorizontalAlignment="Center"
+					VerticalAlignment="Top"
+					ColumnSpacing="12">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+
+					<controls:PlanarPad
+						x:Name="CmykPad"
+						Grid.Column="0"
+						VerticalAlignment="Top">
+						<Image x:Name="CmykPlaneImage" Stretch="Fill" />
+					</controls:PlanarPad>
+
+					<!-- 切り出した成分(平面の2軸に取らない残りの CMY 成分)の縦スライダー。値・背景・名前はレイアウトに応じてコードビハインドで束ね直す。高さはパッドの一辺に揃える。 -->
+					<controls:GradientSlider
+						x:Name="CmykCutSlider"
+						Grid.Column="1"
+						Orientation="Vertical"
+						VerticalAlignment="Top"
+						Minimum="0"
+						Maximum="100"
+						StepFrequency="1"
+						LargeChange="10" />
+				</Grid>
+			</Grid>
+
 			<Grid>
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="Auto" />
@@ -143,30 +214,126 @@
 				</StackPanel>
 			</Grid>
 
-			<!-- RGB の数値表示の単位。スライダーの値は常に 0–255 で、ここでは数値入力欄の見せ方(255 / FF / 1.0)だけを選ぶ。無彩色スライダーも同じ単位(RgbUnitIndex)に従う。スライダー列に揃えるため先頭にラベル幅の空き列を置き、RGB 群の直下に少し間を空けて添える。 -->
+			<!-- RGB の数値表示の単位と、RGB 群の見せ方ピッカー。単位コンボはスライダーの値(常に 0–255)ではなく数値入力欄の見せ方(255 / FF / 1.0)だけを選び、無彩色スライダーも同じ単位(RgbUnitIndex)に従う。見せ方ピッカーは単位コンボの右隣へ左寄せで並べ、ボタン専用の行を作らず、右端のスクロールバーとも干渉させない。スライダー列に揃えるため先頭にラベル幅の空き列を置く。 -->
 			<Grid Margin="0,0,0,0">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="Auto" />
 					<ColumnDefinition Width="*" />
-					<ColumnDefinition Width="Auto" />
 				</Grid.ColumnDefinitions>
 				<TextBlock
 					Grid.Column="0"
 					Width="{StaticResource SliderLabelWidth}" />
-				<ComboBox
+				<StackPanel
 					Grid.Column="1"
+					Orientation="Horizontal"
 					HorizontalAlignment="Left"
-					x:Uid="RgbTabUnit"
-					AutomationProperties.AutomationId="RgbUnitComboBox"
-					SelectedIndex="{x:Bind ViewModel.RgbUnitIndex, Mode=TwoWay}">
-					<x:String>255</x:String>
-					<x:String>FF</x:String>
-					<x:String>1.0</x:String>
-				</ComboBox>
+					Spacing="8">
+					<ComboBox
+						VerticalAlignment="Center"
+						x:Uid="RgbTabUnit"
+						AutomationProperties.AutomationId="RgbUnitComboBox"
+						SelectedIndex="{x:Bind ViewModel.RgbUnitIndex, Mode=TwoWay}">
+						<x:String>255</x:String>
+						<x:String>FF</x:String>
+						<x:String>1.0</x:String>
+					</ComboBox>
+
+					<!-- RGB/CMYK 共通の2次元エディタの見せ方を選ぶアイコンボタン。押すとサムネイル付きのフライアウトを開く。アイコン自体が現在の見せ方の縮小見本を兼ねる。パッド無し(線形スライダーのみ)、RGB の平面3種(G×B+R・R×B+G・R×G+B)、CMYK の平面3種(M×Y+C・C×Y+M・C×M+Y)から1つ選び、選んだ1枚をタブ先頭のパッド領域へ出す。単位コンボの隣へ左寄せで並べ、ボタン専用の行を作らず右端のスクロールバーとも干渉させない。 -->
+					<Button
+						x:Name="PadLayoutPickerButton"
+						VerticalAlignment="Center"
+						Padding="4"
+						Width="36"
+						Height="36"
+						x:Uid="PadLayoutPicker">
+						<Image
+							x:Name="PadLayoutPickerIcon"
+							Width="24"
+							Height="24"
+							Stretch="Fill" />
+						<Button.Flyout>
+							<Flyout x:Name="PadLayoutPickerFlyout" Opening="OnPadLayoutFlyoutOpening">
+								<StackPanel Spacing="8">
+									<!-- パッド無し(線形スライダーのみ)。 -->
+									<Button Click="OnPickSlidersLayout" Padding="6" HorizontalAlignment="Left" x:Uid="PadLayoutSliders">
+										<StackPanel Spacing="4" Width="84">
+											<Border x:Name="LayoutSlidersThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+												<Image x:Name="LayoutSlidersThumbImage" Width="56" Height="56" Stretch="Fill" />
+											</Border>
+											<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="PadLayoutSlidersCaption" />
+										</StackPanel>
+									</Button>
+
+									<!-- RGB の平面3種。見出しの RGB は言語非依存のため直接書く。 -->
+									<TextBlock Text="RGB" Style="{StaticResource CaptionTextBlockStyle}" />
+									<StackPanel Orientation="Horizontal" Spacing="8">
+										<Button Click="OnPickRgbGbLayout" Padding="6" x:Uid="RgbLayoutGbPlane">
+											<StackPanel Spacing="4" Width="84">
+												<Border x:Name="LayoutRgbGbThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+													<Image x:Name="LayoutRgbGbThumbImage" Width="56" Height="56" Stretch="Fill" />
+												</Border>
+												<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="RgbLayoutGbPlaneCaption" />
+											</StackPanel>
+										</Button>
+
+										<Button Click="OnPickRgbRbLayout" Padding="6" x:Uid="RgbLayoutRbPlane">
+											<StackPanel Spacing="4" Width="84">
+												<Border x:Name="LayoutRgbRbThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+													<Image x:Name="LayoutRgbRbThumbImage" Width="56" Height="56" Stretch="Fill" />
+												</Border>
+												<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="RgbLayoutRbPlaneCaption" />
+											</StackPanel>
+										</Button>
+
+										<Button Click="OnPickRgbRgLayout" Padding="6" x:Uid="RgbLayoutRgPlane">
+											<StackPanel Spacing="4" Width="84">
+												<Border x:Name="LayoutRgbRgThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+													<Image x:Name="LayoutRgbRgThumbImage" Width="56" Height="56" Stretch="Fill" />
+												</Border>
+												<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="RgbLayoutRgPlaneCaption" />
+											</StackPanel>
+										</Button>
+									</StackPanel>
+
+									<!-- CMYK の平面3種。見出しの CMYK は言語非依存のため直接書く。墨(K)は平面に載らず下の K スライダーで動かす。 -->
+									<TextBlock Text="CMYK" Style="{StaticResource CaptionTextBlockStyle}" />
+									<StackPanel Orientation="Horizontal" Spacing="8">
+										<Button Click="OnPickCmykMyLayout" Padding="6" x:Uid="CmykLayoutMyPlane">
+											<StackPanel Spacing="4" Width="84">
+												<Border x:Name="LayoutCmykMyThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+													<Image x:Name="LayoutCmykMyThumbImage" Width="56" Height="56" Stretch="Fill" />
+												</Border>
+												<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="CmykLayoutMyPlaneCaption" />
+											</StackPanel>
+										</Button>
+
+										<Button Click="OnPickCmykCyLayout" Padding="6" x:Uid="CmykLayoutCyPlane">
+											<StackPanel Spacing="4" Width="84">
+												<Border x:Name="LayoutCmykCyThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+													<Image x:Name="LayoutCmykCyThumbImage" Width="56" Height="56" Stretch="Fill" />
+												</Border>
+												<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="CmykLayoutCyPlaneCaption" />
+											</StackPanel>
+										</Button>
+
+										<Button Click="OnPickCmykCmLayout" Padding="6" x:Uid="CmykLayoutCmPlane">
+											<StackPanel Spacing="4" Width="84">
+												<Border x:Name="LayoutCmykCmThumbBorder" BorderThickness="2" CornerRadius="4" Padding="4" HorizontalAlignment="Center">
+													<Image x:Name="LayoutCmykCmThumbImage" Width="56" Height="56" Stretch="Fill" />
+												</Border>
+												<TextBlock HorizontalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" x:Uid="CmykLayoutCmPlaneCaption" />
+											</StackPanel>
+										</Button>
+									</StackPanel>
+								</StackPanel>
+							</Flyout>
+						</Button.Flyout>
+					</Button>
+				</StackPanel>
 			</Grid>
 		</StackPanel>
 
-		<!-- CMYK 群 (0–100%) -->
+		<!-- CMYK 群 (0–100%)。2次元エディタはタブ先頭の共通領域へ集約したため、この群はスライダーだけを並べる。 -->
 		<StackPanel Spacing="{StaticResource SliderSpacing}">
 			<Grid>
 				<Grid.ColumnDefinitions>

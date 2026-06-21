@@ -68,6 +68,12 @@ Windows 10 version 2004 or later is required due to the screen-capture APIs used
 
 
 
+## Changelog
+
+See the **[CHANGELOG](CHANGELOG.md)**.
+
+
+
 ## License
 
 [GNU General Public License version 3](LICENSE) (GPL-3.0)

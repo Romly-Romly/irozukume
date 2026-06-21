@@ -17,6 +17,7 @@ using Windows.UI;
 using Irozukume.Glass;
 using Irozukume.Helpers;
 using Irozukume.Models;
+using Irozukume.Controls.Geometry;
 
 namespace Irozukume.Controls;
 

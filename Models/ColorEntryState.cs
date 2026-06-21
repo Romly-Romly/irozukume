@@ -11,9 +11,9 @@ public sealed class ColorEntryState
 	[JsonPropertyName("rgb")]
 	public string? Rgb { get; set; }
 
-	// 不透明度 (0–255)。既定は不透明 (255)。このキーを持たない設定でも不透明として扱う。
+	// 不透明度 (0–255)。このキーを持たない設定や、値が壊れて読めない設定では不透明 (255) として扱う。
 	[JsonPropertyName("alpha")]
-	public int Alpha { get; set; } = 255;
+	public int? Alpha { get; set; }
 
 	// Mix タブでのポッチの位置(正規化 0–1・左上原点)。利用者が動かしていない色ではキー自体を持たず、Mix タブ側が初回に正多角形へ配る。
 	[JsonPropertyName("mix_x")]

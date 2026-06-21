@@ -911,13 +911,29 @@
 					</Grid>
 				</Border>
 
-				<!-- タブ代わりのボタンリスト。ウィンドウが狭くタブが収まりきらないとき横スクロールできるよう ScrollViewer で包む。 -->
+				<!-- タブ代わりのボタンリスト。ウィンドウが狭くタブが収まりきらないとき横スクロールできるよう ScrollViewer で包む。右クリックメニュー(各タブの表示/非表示)はこの ScrollViewer に持たせ、タブの上でもタブ右の余白でも行全体で出るようにする。SelectorBar はタブのぶんしか幅を持たず、余白は ScrollViewer の領域になるため。既定の null 背景では余白が当たり判定を持たないので、Background を Transparent にして反応させる。 -->
 				<ScrollViewer
 					Grid.Row="1"
+					Background="Transparent"
 					HorizontalScrollMode="Enabled"
 					HorizontalScrollBarVisibility="Auto"
 					VerticalScrollMode="Disabled"
 					VerticalScrollBarVisibility="Disabled">
+					<!-- 右クリックで各タブの表示/非表示をチェックで切り替えるメニュー。チェックを外したタブを隠す。表示中が1枚だけのときは最後の1枚を隠せないよう、その項目を無効にする。色空間タブのキャプションは略号を1行へまとめた言語非依存の名前(ツールチップと同じ)を直接書き、パレット・ミックス・配色はタブ見出しと同じ x:Uid を共有する。末尾の「全タブを表示」は全項目に一括でチェックを入れるショートカットで、すべて表示済みのときは無効にする。 -->
+					<ScrollViewer.ContextFlyout>
+						<MenuFlyout Opening="OnTabVisibilityMenuOpening">
+							<ToggleMenuFlyoutItem Tag="rgbcmyk" Text="RGB/CMYK" Click="OnTabVisibilityToggle" />
+							<ToggleMenuFlyoutItem Tag="hsvhsl" Text="HSV/HSL/HWB" Click="OnTabVisibilityToggle" />
+							<ToggleMenuFlyoutItem Tag="lch" Text="LCH/OKLCH" Click="OnTabVisibilityToggle" />
+							<ToggleMenuFlyoutItem Tag="lab" Text="Lab/OKLab" Click="OnTabVisibilityToggle" />
+							<ToggleMenuFlyoutItem Tag="yuvycbcr" Text="YUV/YCbCr" Click="OnTabVisibilityToggle" />
+							<ToggleMenuFlyoutItem Tag="palette" x:Uid="TabPalette" Click="OnTabVisibilityToggle" />
+							<ToggleMenuFlyoutItem Tag="mix" x:Uid="TabMix" Click="OnTabVisibilityToggle" />
+							<ToggleMenuFlyoutItem Tag="harmony" x:Uid="TabHarmony" Click="OnTabVisibilityToggle" />
+							<MenuFlyoutSeparator />
+							<MenuFlyoutItem x:Name="ShowAllTabsItem" x:Uid="MenuShowAllTabs" Click="OnShowAllTabsClick" />
+						</MenuFlyout>
+					</ScrollViewer.ContextFlyout>
 					<SelectorBar
 						x:Name="TabSelectorBar"
 						Margin="0,-4,0,4"

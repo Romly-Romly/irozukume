@@ -13,6 +13,7 @@ using Windows.UI;
 using Irozukume.Controls;
 using Irozukume.Helpers;
 using Irozukume.Models;
+using Irozukume.Controls.Geometry;
 
 namespace Irozukume.ViewModels;
 
@@ -39,7 +40,7 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 	private int _activeIndex;
 
 	private bool _showActualColor = true;
-	private bool _showContrastText = true;
+	private bool _showContrastText;
 
 	// アルファ値のスライダー類を、タブの中身の下に常駐させて表示するか。既定はオフ。ツールバーと表示メニューのトグルが切り替え、設定に永続化する。表示だけの設定で、色や丸めには影響しない。
 	private bool _showAlpha;
@@ -273,6 +274,18 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 	// YUV/YCbCr タブの見せ方(レイアウト)の位置 (0=Cb×Cr 平面+Y の縦バー, 1=Cb×Y 平面+Cr の縦バー, 2=Cr×Y 平面+Cb の縦バー)。色1の RGB は不変で、見せ方だけが変わる。
 	private int _yuvLayoutIndex;
 
+	// RGB/CMYK タブの2次元エディタの見せ方(レイアウト)の位置。RGB・CMYK 共通の1つのピッカーが選ぶ。0=パッド無し(線形スライダーのみ)、1〜3=RGB の平面、4〜6=CMYK の平面。タブに出すパッドは1枚で、RGB 系か CMYK 系のどちらか一方。色1の RGB は不変で、見せ方だけが変わる。線形スライダーは常に残る。
+	private int _rgbCmykLayoutIndex;
+
+	// CMYK の作業用の値(各 0–1)。CMYK は4成分で3次元の色に対して1つ冗長なため、RGB から正準形(K=1−max)で導出するだけでは、ある成分を編集した際に他成分(特に K)が再計算で動いてしまう。これを避けて2次元パッドや各スライダーで成分を保てるよう、YCbCr と同じく作業値をここへ保持し、編集中はこの値を真とみなして RGB へ反映する。外部(他タブ・貼り付け等)で色が変わったときは正準形へ取り直す。
+	private double _cmykC;
+	private double _cmykM;
+	private double _cmykY;
+	private double _cmykK;
+
+	// CMYK の編集を反映している最中か。真の間は NotifyCmykDerived がキャッシュの RGB からの取り直しをせず、編集で入れた成分(冗長な K を含む)を保つ。
+	private bool _cmykEditing;
+
 	// YUV/YCbCr タブの色差平面の表示枠(スケール)の決め方の位置 (0=固定枠, 1=等方フィット, 2=縦横独立フィット)。AbFitMode と同じ並びで、フィットは固定成分(Cb×Cr では輝度、Cb×Y では Cr、Cr×Y では Cb)ごとの色域の広がりへ枠を寄せて有効領域を広げる(枠は固定成分で縮尺が変わる)。色1の RGB は不変。
 	private int _yuvScaleIndex;
 
@@ -347,6 +360,7 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			_yuvGamutLimit = state.YuvGamutLimit;
 			_yuvLayoutIndex = ResolveYuvLayout(state.YuvLayout);
 			_yuvScaleIndex = ResolveYuvScale(state.YuvScale);
+			_rgbCmykLayoutIndex = ResolveRgbCmykLayout(state.RgbCmykLayout);
 			_hsvSubModeIndex = ResolveHsvSubMode(state.HsvSubMode);
 			_hsvLayoutIndex = ResolveHsvLayout(state.HsvLayout);
 			_hslLayoutIndex = ResolveHslLayout(state.HslLayout);
@@ -456,6 +470,7 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			YuvGamutLimit = _yuvGamutLimit,
 			YuvLayout = YuvLayoutToString(_yuvLayoutIndex),
 			YuvScale = YuvScaleToString(_yuvScaleIndex),
+			RgbCmykLayout = RgbCmykLayoutToString(_rgbCmykLayoutIndex),
 			HsvSubMode = HsvSubModeToString(_hsvSubModeIndex),
 			HsvLayout = HsvLayoutToString(_hsvLayoutIndex),
 			HslLayout = HslLayoutToString(_hslLayoutIndex),
@@ -528,7 +543,7 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 					_colors.Add(new SidebarColorViewModel
 					{
 						Rgb = Color.FromArgb(0xFF, r, g, b),
-						Alpha = Math.Clamp(entry.Alpha, 0, 255),
+						Alpha = Math.Clamp(entry.Alpha ?? 255, 0, 255),
 						MixX = entry.MixX ?? double.NaN,
 						MixY = entry.MixY ?? double.NaN,
 					});
@@ -538,6 +553,12 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 		if (_colors.Count == 0)
 		{
+			if (state?.Colors is { Count: > 0 })
+			{
+				// 保存済みの色があったのに1件も解釈できなかった。既定パレットで起動するが、原因を追えるよう crash.log へ残す。
+				Services.CrashLog.Write($"保存済みの色 {state.Colors.Count} 件をいずれも解釈できなかったため、既定パレットで起動します。");
+			}
+
 			_colors.Add(new SidebarColorViewModel { Rgb = Color.FromArgb(0xFF, 0xFF, 0x6E, 0x40) });
 			_colors.Add(new SidebarColorViewModel { Rgb = Color.FromArgb(0xFF, 0x3D, 0x5A, 0xFE) });
 		}
@@ -1642,10 +1663,10 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 
 
-	// CMYK は色1(R・G・B)から導出する。各成分はパーセント(0–100)で扱い、設定時は他成分を保ったまま RGB へ変換し直して色1へ反映する。
+	// CMYK は作業用キャッシュ(_cmykC など)を真として持つ。各成分はパーセント(0–100)で扱い、設定時は他成分を保ったまま RGB へ変換し直して色1へ反映する。外部で色が変わると正準形へ取り直す(NotifyCmykDerived)。
 	public double C
 	{
-		get => CurrentCmyk().C * 100.0;
+		get => _cmykC * 100.0;
 		set => SetCmykChannel(0, value);
 	}
 
@@ -1654,7 +1675,7 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 	public double M
 	{
-		get => CurrentCmyk().M * 100.0;
+		get => _cmykM * 100.0;
 		set => SetCmykChannel(1, value);
 	}
 
@@ -1663,7 +1684,7 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 	public double Y
 	{
-		get => CurrentCmyk().Y * 100.0;
+		get => _cmykY * 100.0;
 		set => SetCmykChannel(2, value);
 	}
 
@@ -1672,7 +1693,7 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 	public double K
 	{
-		get => CurrentCmyk().K * 100.0;
+		get => _cmykK * 100.0;
 		set => SetCmykChannel(3, value);
 	}
 
@@ -1886,6 +1907,27 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 			_yuvLayoutIndex = clamped;
 			OnPropertyChanged(nameof(YuvLayoutIndex));
+		}
+	}
+
+
+
+
+	// RGB/CMYK タブの2次元エディタの見せ方(レイアウト)の位置。RGB・CMYK 共通の1つのピッカーが選ぶ。0=2次元パッド無し(線形スライダーのみ)、1〜3=RGB の平面(1=G×B+R, 2=R×B+G, 3=R×G+B)、4〜6=CMYK の平面(4=M×Y+C, 5=C×Y+M, 6=C×M+Y)。タブに出すパッドは1枚で、RGB 系か CMYK 系のどちらか一方。見せ方を変えても色1の RGB は変わらない。保存して次回起動へ引き継ぐ。
+	public int RgbCmykLayoutIndex
+	{
+		get => _rgbCmykLayoutIndex;
+		set
+		{
+			int clamped = Math.Clamp(value, 0, 6);
+
+			if (_rgbCmykLayoutIndex == clamped)
+			{
+				return;
+			}
+
+			_rgbCmykLayoutIndex = clamped;
+			OnPropertyChanged(nameof(RgbCmykLayoutIndex));
 		}
 	}
 
@@ -2391,6 +2433,8 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 		_cachedY = yuvY;
 		_cachedCb = yuvCb;
 		_cachedCr = yuvCr;
+
+		SyncCmykCacheFromRgb();
 	}
 
 
@@ -4912,6 +4956,24 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 
 
+	// R を 0→255 に動かしたときの色変化を、下端=0・上端=255 の縦のグラデーションで示す。見せ方が G×B 平面+R の縦バーのとき、切り出した R の縦スライダーが使う。
+	public Brush RedTrackBrushVertical => MakeChannelBrush(0, true);
+
+
+
+
+	// G を 0→255 に動かしたときの色変化を、下端=0・上端=255 の縦のグラデーションで示す。見せ方が R×B 平面+G の縦バーのとき、切り出した G の縦スライダーが使う。
+	public Brush GreenTrackBrushVertical => MakeChannelBrush(1, true);
+
+
+
+
+	// B を 0→255 に動かしたときの色変化を、下端=0・上端=255 の縦のグラデーションで示す。見せ方が R×G 平面+B の縦バーのとき、切り出した B の縦スライダーが使う。
+	public Brush BlueTrackBrushVertical => MakeChannelBrush(2, true);
+
+
+
+
 	// 無彩色スライダーの背景。黒(左)→白(右)のグレーランプ(R=G=B を 0→255)。色制限が有効なら各位置が丸められ段差になる。現在の色1や ShowActualColor には依らず、グレーの並びそのものを示す。
 	public Brush GrayTrackBrush => MakeGrayBrush();
 
@@ -4938,6 +5000,24 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 	// K を 0→100% に動かしたときの色変化を示す。C・M・Y は現在値で固定する。
 	public Brush KeyTrackBrush => MakeCmykChannelBrush(3);
+
+
+
+
+	// C を 0→100% に動かしたときの色変化を、下端=0・上端=100% の縦のグラデーションで示す。見せ方が M×Y 平面+C の縦バーのとき、切り出した C の縦スライダーが使う。
+	public Brush CyanTrackBrushVertical => MakeCmykChannelBrush(0, true);
+
+
+
+
+	// M を 0→100% に動かしたときの色変化を、下端=0・上端=100% の縦のグラデーションで示す。見せ方が C×Y 平面+M の縦バーのとき、切り出した M の縦スライダーが使う。
+	public Brush MagentaTrackBrushVertical => MakeCmykChannelBrush(1, true);
+
+
+
+
+	// Y を 0→100% に動かしたときの色変化を、下端=0・上端=100% の縦のグラデーションで示す。見せ方が C×M 平面+Y の縦バーのとき、切り出した Y の縦スライダーが使う。
+	public Brush YellowTrackBrushVertical => MakeCmykChannelBrush(2, true);
 
 
 
@@ -4973,10 +5053,16 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			OnPropertyChanged(nameof(RedTrackBrush));
 			OnPropertyChanged(nameof(GreenTrackBrush));
 			OnPropertyChanged(nameof(BlueTrackBrush));
+			OnPropertyChanged(nameof(RedTrackBrushVertical));
+			OnPropertyChanged(nameof(GreenTrackBrushVertical));
+			OnPropertyChanged(nameof(BlueTrackBrushVertical));
 			OnPropertyChanged(nameof(CyanTrackBrush));
 			OnPropertyChanged(nameof(MagentaTrackBrush));
 			OnPropertyChanged(nameof(YellowTrackBrush));
 			OnPropertyChanged(nameof(KeyTrackBrush));
+			OnPropertyChanged(nameof(CyanTrackBrushVertical));
+			OnPropertyChanged(nameof(MagentaTrackBrushVertical));
+			OnPropertyChanged(nameof(YellowTrackBrushVertical));
 			OnPropertyChanged(nameof(LumaTrackBrush));
 			OnPropertyChanged(nameof(LumaTrackBrushVertical));
 			OnPropertyChanged(nameof(CbTrackBrush));
@@ -7681,6 +7767,60 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 
 
+	// RGB 平面パッドの操作で、横軸・縦軸に取った2成分を同時に設定する。残る1成分(縦バーが司る固定成分)は保つ。xChannel・yChannel は 0=R, 1=G, 2=B で、値はともに正規化(0–1)で受け取り 0–255 のバイトへ直す。R・G・B を個別に2回設定すると履歴も2段に割れ派生通知も2度走るため、SetGray と同じくまとめて1段・1回の派生通知で反映する。RGB が変わらなければ通知しない。
+	public void SetRgbPlane(int xChannel, double x01, int yChannel, double y01)
+	{
+		double xv = Math.Round(Math.Clamp(x01, 0.0, 1.0) * 255.0);
+		double yv = Math.Round(Math.Clamp(y01, 0.0, 1.0) * 255.0);
+
+		double nr = _r;
+		double ng = _g;
+		double nb = _b;
+
+		AssignChannel(ref nr, ref ng, ref nb, xChannel, xv);
+		AssignChannel(ref nr, ref ng, ref nb, yChannel, yv);
+
+		if (nr == _r && ng == _g && nb == _b)
+		{
+			return;
+		}
+
+		RecordContinuousChange();
+		_r = nr;
+		_g = ng;
+		_b = nb;
+		OnPropertyChanged(nameof(R));
+		OnPropertyChanged(nameof(G));
+		OnPropertyChanged(nameof(B));
+		NotifyColor1Derived();
+		NotifyCmykDerived();
+		SyncHsvCacheFromRgb();
+		NotifyHsvDerived();
+		SyncHslCacheFromRgb();
+		NotifyHslDerived();
+		NotifyHwbDerived();
+		NotifyYuvDerived();
+		NotifyLchDerived();
+		NotifyLabDerived();
+	}
+
+
+
+
+	// R・G・B のいずれか(channel: 0=R, 1=G, 2=B)へ値を書き込む。SetRgbPlane が2軸の成分を順に当てるのに使う。
+	private static void AssignChannel(ref double r, ref double g, ref double b, int channel, double value)
+	{
+		switch (channel)
+		{
+			case 0: r = value; break;
+			case 1: g = value; break;
+			default: b = value; break;
+		}
+	}
+
+
+
+
 	// 色1(R・G・B)から導かれる表示物をまとめて通知する。どの要素を変えても、他要素を固定した3本のグラデーション・色1プレビュー・16進表記が変わる。不透明度プレビューとアルファスライダーの背景、コントラスト確認欄の文字色も色1の色に依るため、ここで併せて通知する。サイドバーのアクティブ色パネルも作業値を写して追従させる。
 	private void NotifyColor1Derived()
 	{
@@ -7689,6 +7829,9 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 		OnPropertyChanged(nameof(RedTrackBrush));
 		OnPropertyChanged(nameof(GreenTrackBrush));
 		OnPropertyChanged(nameof(BlueTrackBrush));
+		OnPropertyChanged(nameof(RedTrackBrushVertical));
+		OnPropertyChanged(nameof(GreenTrackBrushVertical));
+		OnPropertyChanged(nameof(BlueTrackBrushVertical));
 		OnPropertyChanged(nameof(Color1Brush));
 		OnPropertyChanged(nameof(Color1HexText));
 		OnPropertyChanged(nameof(Color1ForegroundBrush));
@@ -7725,8 +7868,14 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 
 	// CMYK は色1から導出するため、色1が変われば4成分とその4本のグラデーションも変わる。まとめて通知する。
+	// 色1から導く CMYK 系の表示物をまとめて通知する。CMYK 自身の編集中(_cmykEditing)でなければ、外部(他タブ・貼り付け等)で色が変わった通知とみなして作業用キャッシュを RGB 由来の正準形へ取り直す。編集中は入れた成分(冗長な K を含む)を保つため取り直さない。
 	private void NotifyCmykDerived()
 	{
+		if (!_cmykEditing)
+		{
+			SyncCmykCacheFromRgb();
+		}
+
 		OnPropertyChanged(nameof(C));
 		OnPropertyChanged(nameof(M));
 		OnPropertyChanged(nameof(Y));
@@ -7735,16 +7884,27 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 		OnPropertyChanged(nameof(MagentaTrackBrush));
 		OnPropertyChanged(nameof(YellowTrackBrush));
 		OnPropertyChanged(nameof(KeyTrackBrush));
+		OnPropertyChanged(nameof(CyanTrackBrushVertical));
+		OnPropertyChanged(nameof(MagentaTrackBrushVertical));
+		OnPropertyChanged(nameof(YellowTrackBrushVertical));
 	}
 
 
 
 
-	// CMYK の1成分(パーセント)を設定する。現在の色1から得た CMYK の当該成分だけ差し替えて RGB へ変換し直し、色1へ反映する。RGB が変わらなければ通知しない。
+	// CMYK の1成分(パーセント)を設定する。作業用キャッシュの当該成分だけ差し替え、他成分は保ったまま RGB へ反映する。冗長な4成分を正準形へ畳まず保つため、RGB から取り直さずキャッシュを真として扱う。適用中(ApplyCmykFromCache)の通知がスライダーの双方向束縛を介して再入したときは無視する。
 	private void SetCmykChannel(int channel, double percent)
 	{
+		if (_cmykEditing)
+		{
+			return;
+		}
+
 		double value = Math.Clamp(percent, 0.0, 100.0) / 100.0;
-		(double c, double m, double y, double k) = CurrentCmyk();
+		double c = _cmykC;
+		double m = _cmykM;
+		double y = _cmykY;
+		double k = _cmykK;
 
 		switch (channel)
 		{
@@ -7754,31 +7914,114 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			default: k = value; break;
 		}
 
-		(byte r, byte g, byte b) = CmykToRgb(c, m, y, k);
-
-		if (r == (byte)_r && g == (byte)_g && b == (byte)_b)
+		if (c == _cmykC && m == _cmykM && y == _cmykY && k == _cmykK)
 		{
 			return;
 		}
 
-		RecordContinuousChange();
-		_r = r;
-		_g = g;
-		_b = b;
+		_cmykC = c;
+		_cmykM = m;
+		_cmykY = y;
+		_cmykK = k;
+		ApplyCmykFromCache();
+	}
 
-		OnPropertyChanged(nameof(R));
-		OnPropertyChanged(nameof(G));
-		OnPropertyChanged(nameof(B));
-		NotifyColor1Derived();
-		NotifyCmykDerived();
-		SyncHsvCacheFromRgb();
-		NotifyHsvDerived();
-		SyncHslCacheFromRgb();
-		NotifyHslDerived();
-		NotifyHwbDerived();
-		NotifyYuvDerived();
-		NotifyLchDerived();
-		NotifyLabDerived();
+
+
+
+	// CMYK 平面パッドの操作で、横軸・縦軸に取った2つの CMY 成分を同時に設定する。残る CMY 成分(縦バーが司る固定成分)と墨(K)は保つ。xChannel・yChannel は 0=C, 1=M, 2=Y で、値はともに比率(0–1)で受け取る。
+	public void SetCmykPlane(int xChannel, double x01, int yChannel, double y01)
+	{
+		if (_cmykEditing)
+		{
+			return;
+		}
+
+		double c = _cmykC;
+		double m = _cmykM;
+		double y = _cmykY;
+
+		AssignCmy(ref c, ref m, ref y, xChannel, Math.Clamp(x01, 0.0, 1.0));
+		AssignCmy(ref c, ref m, ref y, yChannel, Math.Clamp(y01, 0.0, 1.0));
+
+		if (c == _cmykC && m == _cmykM && y == _cmykY)
+		{
+			return;
+		}
+
+		_cmykC = c;
+		_cmykM = m;
+		_cmykY = y;
+		ApplyCmykFromCache();
+	}
+
+
+
+
+	// C・M・Y のいずれか(channel: 0=C, 1=M, 2=Y)へ値を書き込む。SetCmykPlane が2軸の成分を順に当てるのに使う。K は平面の対象外のため扱わない。
+	private static void AssignCmy(ref double c, ref double m, ref double y, int channel, double value)
+	{
+		switch (channel)
+		{
+			case 0: c = value; break;
+			case 1: m = value; break;
+			default: y = value; break;
+		}
+	}
+
+
+
+
+	// 作業用キャッシュの CMYK を RGB へ変換して色1へ反映する。冗長な4成分を保つため RGB からの取り直しはせず、編集中フラグを立てて派生通知での取り直しを抑える。RGB が変わらなければ色由来の通知はせず、CMYK 自身の表示だけ整える。
+	private void ApplyCmykFromCache()
+	{
+		_cmykEditing = true;
+
+		try
+		{
+			(byte r, byte g, byte b) = CmykToRgb(_cmykC, _cmykM, _cmykY, _cmykK);
+			bool changed = !(r == (byte)_r && g == (byte)_g && b == (byte)_b);
+
+			if (changed)
+			{
+				RecordContinuousChange();
+				_r = r;
+				_g = g;
+				_b = b;
+
+				OnPropertyChanged(nameof(R));
+				OnPropertyChanged(nameof(G));
+				OnPropertyChanged(nameof(B));
+				NotifyColor1Derived();
+				SyncHsvCacheFromRgb();
+				NotifyHsvDerived();
+				SyncHslCacheFromRgb();
+				NotifyHslDerived();
+				NotifyHwbDerived();
+				NotifyYuvDerived();
+				NotifyLchDerived();
+				NotifyLabDerived();
+			}
+
+			NotifyCmykDerived();
+		}
+		finally
+		{
+			_cmykEditing = false;
+		}
+	}
+
+
+
+
+	// 色1の RGB から作業用キャッシュの CMYK を正準形(K=1−max)で取り直す。外部での色変更(NotifyCmykDerived)・キャッシュ初期化(InitColorCaches)で呼ぶ。
+	private void SyncCmykCacheFromRgb()
+	{
+		(double c, double m, double y, double k) = CurrentCmyk();
+		_cmykC = c;
+		_cmykM = m;
+		_cmykY = y;
+		_cmykK = k;
 	}
 
 
@@ -7818,13 +8061,15 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 
 
-	// 指定要素だけを 0→255 に変化させる水平グラデーションを作る。ShowActualColor が真なら残り2要素を現在の色1の値で固定し、偽なら 0 に固定して当該要素単独の基準ランプ(黒→純色)にする。channel は 0=R, 1=G, 2=B。
-	private LinearGradientBrush MakeChannelBrush(int channel)
+	// 指定要素だけを 0→255 に変化させるグラデーションを作る。ShowActualColor が真なら残り2要素を現在の色1の値で固定し、偽なら 0 に固定して当該要素単独の基準ランプ(黒→純色)にする。channel は 0=R, 1=G, 2=B。vertical が真なら下端=0・上端=255 の縦向き、偽なら左端=0・右端=255 の横向き。
+	private LinearGradientBrush MakeChannelBrush(int channel, bool vertical = false)
 	{
 		byte r = _showActualColor ? (byte)_r : (byte)0;
 		byte g = _showActualColor ? (byte)_g : (byte)0;
 		byte b = _showActualColor ? (byte)_b : (byte)0;
-		return MakeTrackBrush(t => ChannelColor(channel, t, r, g, b), new Point(0.0, 0.5), new Point(1.0, 0.5));
+		Point start = vertical ? new Point(0.5, 1.0) : new Point(0.0, 0.5);
+		Point end = vertical ? new Point(0.5, 0.0) : new Point(1.0, 0.5);
+		return MakeTrackBrush(t => ChannelColor(channel, t, r, g, b), start, end);
 	}
 
 
@@ -7864,11 +8109,13 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 
 
 
-	// 指定要素だけを 0→100% に変化させる水平グラデーションを作る。ShowActualColor が真なら残り3要素を現在の色1から得た CMYK の値で固定し、偽なら 0 に固定して当該要素単独の基準ランプ(C・M・Y は白→純色、K は白→黒)にする。channel は 0=C, 1=M, 2=Y, 3=K。
-	private LinearGradientBrush MakeCmykChannelBrush(int channel)
+	// 指定要素だけを 0→100% に変化させるグラデーションを作る。ShowActualColor が真なら残り3要素を作業用キャッシュの CMYK の値で固定し、偽なら 0 に固定して当該要素単独の基準ランプ(C・M・Y は白→純色、K は白→黒)にする。channel は 0=C, 1=M, 2=Y, 3=K。vertical が真なら下端=0・上端=100% の縦向き、偽なら左端=0・右端=100% の横向き。
+	private LinearGradientBrush MakeCmykChannelBrush(int channel, bool vertical = false)
 	{
-		(double c, double m, double y, double k) = _showActualColor ? CurrentCmyk() : (0.0, 0.0, 0.0, 0.0);
-		return MakeTrackBrush(t => CmykColor(channel, t, c, m, y, k), new Point(0.0, 0.5), new Point(1.0, 0.5));
+		(double c, double m, double y, double k) = _showActualColor ? (_cmykC, _cmykM, _cmykY, _cmykK) : (0.0, 0.0, 0.0, 0.0);
+		Point start = vertical ? new Point(0.5, 1.0) : new Point(0.0, 0.5);
+		Point end = vertical ? new Point(0.5, 0.0) : new Point(1.0, 0.5);
+		return MakeTrackBrush(t => CmykColor(channel, t, c, m, y, k), start, end);
 	}
 
 
@@ -8427,6 +8674,42 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			1 => "cb_luma_plane",
 			2 => "cr_luma_plane",
 			_ => "cbcr_plane",
+		};
+	}
+
+
+
+
+	// 保存済みの設定の文字列から RGB/CMYK タブの2次元エディタの見せ方の位置 (0..6) を決める。未知・未指定はパッド無し(0)とする。
+	private static int ResolveRgbCmykLayout(string? key)
+	{
+		return key switch
+		{
+			"rgb_gb" => 1,
+			"rgb_rb" => 2,
+			"rgb_rg" => 3,
+			"cmyk_my" => 4,
+			"cmyk_cy" => 5,
+			"cmyk_cm" => 6,
+			_ => 0,
+		};
+	}
+
+
+
+
+	// RGB/CMYK タブの2次元エディタの見せ方の位置を設定ファイル用の文字列にする。
+	private static string RgbCmykLayoutToString(int index)
+	{
+		return index switch
+		{
+			1 => "rgb_gb",
+			2 => "rgb_rb",
+			3 => "rgb_rg",
+			4 => "cmyk_my",
+			5 => "cmyk_cy",
+			6 => "cmyk_cm",
+			_ => "sliders",
 		};
 	}
 

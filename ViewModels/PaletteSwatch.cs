@@ -9,6 +9,7 @@ using Windows.UI;
 using Irozukume.Controls;
 using Irozukume.Helpers;
 using Irozukume.Models;
+using Irozukume.Controls.Geometry;
 
 namespace Irozukume.ViewModels;
 

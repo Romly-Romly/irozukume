@@ -1,24 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (C) 2026 Romly
 
+using System;
 using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
+using Windows.ApplicationModel.DataTransfer;
 using Irozukume.Helpers;
+using Irozukume.Services;
 using Irozukume.ViewModels;
 
 namespace Irozukume.Views;
 
-// 設定ページの中身。ウィンドウ内で本体と切り替えて表示する。設定セクション群とアプリ情報を、ウィンドウ幅に応じて横並び/縦積みに切り替えるレスポンシブ配置にする。
-// 編集対象の状態は色リストを束ねる共有モデルを外部から受け取り、メニューのショートカットと同じ値を双方向で参照する。
+// 設定ページの中身。ウィンドウ内で本体と切り替えて表示する。左の NavigationView で大分類を選び、選んだ分類の中身だけを見せる。各分類の中身は名前付きの StackPanel として持ち、選択(Tag)に応じて表示を切り替える。編集対象の状態は色リストを束ねる共有モデルを外部から受け取り、メニューのショートカットと同じ値を双方向で参照する。
 public sealed partial class SettingsView : UserControl
 {
-	// アプリ情報を右の側帯に置くか、設定の下へ回すかの境目(DIP)。これより狭いと縦積みにする。
-	private const double NarrowThreshold = 960.0;
-
-	// 直近で適用したレイアウトが狭い側か。未適用は null。同じ判定が続く間の無駄な再配置を避ける。
-	private bool? _isNarrow;
-
 	public ColorEditorViewModel ViewModel { get; }
 
 	// アプリの外観設定(テーマ)。外観セクションのテーマ選択が束縛する。
@@ -32,6 +30,9 @@ public sealed partial class SettingsView : UserControl
 		ViewModel = viewModel;
 		Appearance = appearance;
 		this.InitializeComponent();
+
+		// 初期表示は先頭の分類(全般)。選択を入れると SelectionChanged 経由で対応ページが出る。
+		SettingsNav.SelectedItem = SettingsNav.MenuItems[0];
 	}
 
 
@@ -61,6 +62,38 @@ public sealed partial class SettingsView : UserControl
 
 
 
+	// NavigationView の選択が変わったら、選ばれた分類(Tag)に対応するページだけを見せる。
+	private void OnNavSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+	{
+		if (args.SelectedItem is NavigationViewItem item && item.Tag is string tag)
+		{
+			ShowPage(tag);
+		}
+	}
+
+
+
+
+	// 指定した分類のページだけを表示し、他を畳む。
+	private void ShowPage(string tag)
+	{
+		PageGeneral.Visibility = tag == "general" ? Visibility.Visible : Visibility.Collapsed;
+		PageDisplay.Visibility = tag == "display" ? Visibility.Visible : Visibility.Collapsed;
+		PageScreenPicker.Visibility = tag == "screenpicker" ? Visibility.Visible : Visibility.Collapsed;
+		PageLens.Visibility = tag == "lens" ? Visibility.Visible : Visibility.Collapsed;
+		PageMaintenance.Visibility = tag == "maintenance" ? Visibility.Visible : Visibility.Collapsed;
+		PageAbout.Visibility = tag == "about" ? Visibility.Visible : Visibility.Collapsed;
+
+		// このアプリについてを開いたとき、診断情報を今の実行環境で組み直して流し込む。画面の拡大率は表示中のルート(XamlRoot)から取り、取得元が無ければその行は省かれる。
+		if (tag == "about")
+		{
+			DiagnosticsTextBlock.Text = DiagnosticInfo.Build(this.XamlRoot?.RasterizationScale);
+		}
+	}
+
+
+
+
 	// 上級者向け設定の「デフォルトに戻す」。スライダーつまみレンズの調整を既定値へ戻す。束縛中のトグル・スライダーも更新される。
 	private void OnResetLensClick(object sender, RoutedEventArgs e)
 	{
@@ -79,33 +112,103 @@ public sealed partial class SettingsView : UserControl
 
 
 
-	// 横幅に応じてアプリ情報の位置を切り替える。VisualState と AdaptiveTrigger による宣言的なリフローは閾値跨ぎで XAML 層の例外を招きやすいため、コードビハインドで明示的に再配置する。
-	private void OnSizeChanged(object sender, SizeChangedEventArgs e)
+	// 設定の管理: 設定ファイルのある実行フォルダをエクスプローラーで開く。バックアップ等はそこから手動で行ってもらう。
+	private void OnOpenSettingsFolderClick(object sender, RoutedEventArgs e)
 	{
-		bool narrow = e.NewSize.Width < NarrowThreshold;
+		((App)Application.Current).OpenSettingsFolder();
+	}
 
-		if (_isNarrow == narrow)
+
+
+
+	// 設定の管理: 全設定を消して既定の状態で再起動する。取り返しがつかないため確認を挟み、承諾されたときだけ実行する。既定では取り消し側を選んでおき、誤って確定しないようにする。
+	private async void OnResetSettingsClick(object sender, RoutedEventArgs e)
+	{
+		var dialog = new ContentDialog
 		{
+			XamlRoot = this.XamlRoot,
+			Title = Loc.Get("SettingsResetDialogTitle"),
+			Content = Loc.Get("SettingsResetDialogBody", Loc.Get("AppName")),
+			PrimaryButtonText = Loc.Get("SettingsResetDialogConfirm"),
+			CloseButtonText = Loc.Get("CommonCancel"),
+			DefaultButton = ContentDialogButton.Close,
+		};
+		MarkDestructivePrimaryButton(dialog);
+
+		if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+		{
+			((App)Application.Current).ResetSettingsAndRestart();
+		}
+	}
+
+
+
+
+	// 設定の管理: 設定ファイルを削除してアプリを終了する。アンインストール前の後始末用。取り返しがつかないため確認を挟み、承諾されたときだけ削除して終了する。既定では取り消し側を選んでおき、誤って確定しないようにする。
+	private async void OnDeleteSettingsClick(object sender, RoutedEventArgs e)
+	{
+		var dialog = new ContentDialog
+		{
+			XamlRoot = this.XamlRoot,
+			Title = Loc.Get("SettingsDeleteDialogTitle"),
+			Content = Loc.Get("SettingsDeleteDialogBody"),
+			PrimaryButtonText = Loc.Get("SettingsDeleteDialogConfirm"),
+			CloseButtonText = Loc.Get("CommonCancel"),
+			DefaultButton = ContentDialogButton.Close,
+		};
+		MarkDestructivePrimaryButton(dialog);
+
+		if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+		{
+			((App)Application.Current).DeleteSettingsAndExit();
+		}
+	}
+
+
+
+
+	// 破壊的操作の確認ダイアログで、確定ボタンの文字色をシステムの危険色(赤)にして「元に戻せない操作」だと警告する。既定ボタンに割り当てたキャンセルはアクセント色のまま残し、安全側を強調する。赤はテーマ追従の SystemFillColorCriticalBrush を引き、ライト/ダーク/ハイコントラストで適切な赤になる。差し替えるのはボタンの前景リソース(通常・ホバー・押下)で、ダイアログのリソース辞書へ置くことで既定スタイルの確定ボタンだけに効く。キャンセルは AccentButtonStyle がテンプレート内の別リソースから前景を取るため影響を受けない。
+	private static void MarkDestructivePrimaryButton(ContentDialog dialog)
+	{
+		var criticalBrush = (Brush)Application.Current.Resources["SystemFillColorCriticalBrush"];
+		dialog.Resources["ButtonForeground"] = criticalBrush;
+		dialog.Resources["ButtonForegroundPointerOver"] = criticalBrush;
+		dialog.Resources["ButtonForegroundPressed"] = criticalBrush;
+	}
+
+
+
+
+	// このアプリについての「診断情報」コピー。展開部に表示中の内容をそのままクリップボードへ写す。押下が伝わるよう、コピー後しばらくボタンの表示を「コピーしました」に変えて無効化し、その後元へ戻す。クリップボードへ書けない環境では何もしない。
+	private async void OnCopyDiagnosticsClick(object sender, RoutedEventArgs e)
+	{
+		try
+		{
+			var package = new DataPackage();
+			package.SetText(DiagnosticsTextBlock.Text);
+			Clipboard.SetContent(package);
+		}
+		catch
+		{
+			// クリップボードへ書き込めないときは何もしない。
 			return;
 		}
 
-		_isNarrow = narrow;
+		if (sender is Button button)
+		{
+			object? original = button.Content;
+			button.Content = Loc.Get("DiagnosticsCopied");
+			button.IsEnabled = false;
 
-		if (narrow)
-		{
-			// 狭いとき: 右列を畳んで横幅を設定へ明け渡し、アプリ情報を設定の下(2行目の左列)へ回す。列間の余白も消す。
-			AboutColumn.Width = new GridLength(0);
-			LayoutGrid.ColumnSpacing = 0;
-			Grid.SetRow(AboutPanel, 1);
-			Grid.SetColumn(AboutPanel, 0);
-		}
-		else
-		{
-			// 広いとき: アプリ情報を右の側帯(1行目の右列)に置く。
-			AboutColumn.Width = new GridLength(320);
-			LayoutGrid.ColumnSpacing = 32;
-			Grid.SetRow(AboutPanel, 0);
-			Grid.SetColumn(AboutPanel, 1);
+			try
+			{
+				await Task.Delay(TimeSpan.FromSeconds(1.5));
+			}
+			finally
+			{
+				button.Content = original;
+				button.IsEnabled = true;
+			}
 		}
 	}
 }

@@ -212,7 +212,7 @@ public sealed partial class MainWindow : Window
 		}
 		else
 		{
-			AppWindow.Resize(new SizeInt32(960, 640));
+			WindowPlacementService.ResizeToDip(this, 960, 640);
 		}
 
 		// 最低サイズを課す。復元・既定のどちらで開いても常に効かせる。
@@ -245,12 +245,12 @@ public sealed partial class MainWindow : Window
 		_alphaTab = new AlphaTabView(ViewModel);
 		AlphaPanelBorder.Child = _alphaTab;
 
-		// 保存済みの選択タブは、SelectorBar の読み込み後に復元する。構築段階で SelectedItem を変えても、読み込み時に XAML 既定 (RGB/CMYK) の選択へ戻されてしまうため、Loaded を待って一度だけ適用する。
-		if (!string.IsNullOrEmpty(editorState?.ActiveTab))
-		{
-			_pendingActiveTab = editorState.ActiveTab;
-			TabSelectorBar.Loaded += TabSelectorBar_Loaded;
-		}
+		// 保存済みの隠しタブを反映する。表示/非表示は Visibility (Collapsed) で切り替え、読み込みで戻される選択とは違ってここで当てた値はそのまま残る。
+		ApplyHiddenTabs(editorState?.HiddenTabs);
+
+		// 保存済みの選択タブの復元と、隠れたタブが選ばれた状態の是正は、SelectorBar の読み込み後に Loaded でまとめて行う。構築段階で SelectedItem を変えても、読み込み時に XAML 既定 (RGB/CMYK) の選択へ戻されてしまうため、適用を Loaded まで待つ。XAML 既定で選ばれる RGB/CMYK 自体が隠れている場合もあるため、選択タブの保存有無に依らず購読する。
+		_pendingActiveTab = editorState?.ActiveTab;
+		TabSelectorBar.Loaded += TabSelectorBar_Loaded;
 
 		// 「設定を開く」の Ctrl+, は、コンマ(VK_OEM_COMMA = 0xBC)に名前付きの VirtualKey が無く XAML のキー指定では書けないため、コードで登録する。他のショートカットと同じく最上位レイアウト(RootGrid)に置き、メニュー側は表記だけを担う。
 		var openSettingsAccelerator = new KeyboardAccelerator
@@ -279,6 +279,36 @@ public sealed partial class MainWindow : Window
 		// 設定オーバーレイ用 Frame の待機状態。透明な土台ページへ無遷移で移し、戻る操作(GoBack)の到達先を用意する。土台の間は本体への操作を通すため当たり判定を切る。
 		SettingsFrame.Navigate(typeof(BackdropPage));
 		SettingsFrame.IsHitTestVisible = false;
+
+		// 設定の読み込みで壊れた箇所を初期値で補っていたら、その旨を一度だけ知らせる。元のファイルは settings.json.bak に退避済みである旨も伝える。
+		if (SettingsStore.LastLoadWasRepaired)
+		{
+			_ = ShowSettingsRepairedNoticeAsync();
+		}
+	}
+
+
+
+
+	// 設定ファイルの一部が読み込めず初期値で補って起動したことを知らせる。起動直後に一度だけ出す。別のダイアログ表示中などで出せなくても起動は妨げない。
+	private async Task ShowSettingsRepairedNoticeAsync()
+	{
+		var dialog = new ContentDialog
+		{
+			XamlRoot = Content.XamlRoot,
+			Title = Loc.Get("SettingsRepairedTitle"),
+			Content = Loc.Get("SettingsRepairedBody"),
+			CloseButtonText = Loc.Get("CommonOk"),
+			DefaultButton = ContentDialogButton.Close,
+		};
+
+		try
+		{
+			await dialog.ShowAsync();
+		}
+		catch
+		{
+		}
 	}
 
 
@@ -618,7 +648,7 @@ public sealed partial class MainWindow : Window
 		flyout.Items.Add(new MenuFlyoutSeparator());
 
 		// ランダム。編集対象を切り替えず、この色を無作為な色へ差し替える。
-		var random = new MenuFlyoutItem { Text = Loc.Get("Ctx_Random"), Icon = new FontIcon { Glyph = "\uE8B1" } };
+		var random = new MenuFlyoutItem { Text = Loc.Get("Ctx_Random"), Icon = new FontIcon { FontFamily = new FontFamily("ms-appx:///Assets/Fonts/romoji.ttf#Romoji"), Glyph = "\uE005" } };
 		random.Click += (_, _) => ViewModel.RandomizeColorAt(index);
 		flyout.Items.Add(random);
 
@@ -1018,6 +1048,12 @@ public sealed partial class MainWindow : Window
 		TabSelectorBar.Loaded -= TabSelectorBar_Loaded;
 		RestoreActiveTab(_pendingActiveTab);
 		_pendingActiveTab = null;
+
+		// 復元先が無い・隠れているなどで選択が定まらないときは、表示中の先頭タブへ寄せる。XAML 既定で選ばれる RGB/CMYK が隠されている場合に、隠れたタブが選ばれたまま残るのを防ぐ。
+		if (TabSelectorBar.SelectedItem is not SelectorBarItem current || current.Visibility != Visibility.Visible)
+		{
+			SelectFirstVisibleTab();
+		}
 	}
 
 
@@ -1037,14 +1073,18 @@ public sealed partial class MainWindow : Window
 
 
 
-	// 識別子(Tag)が一致するタブを選ぶ。一致が無ければ何もしない。SelectedItem を変えると SelectionChanged を介して内容も差し替わるが、既に選択中の項目を指定したときは変化が生じず差し替えも起きない。
+	// 識別子(Tag)が一致するタブを選ぶ。一致が無ければ何もしない。隠れているタブへは切り替えない(貼り付けによる自動切り替えで、利用者が隠したタブへ移らないようにする)。SelectedItem を変えると SelectionChanged を介して内容も差し替わるが、既に選択中の項目を指定したときは変化が生じず差し替えも起きない。
 	private void SelectTabByTag(string tag)
 	{
 		foreach (SelectorBarItem item in TabSelectorBar.Items)
 		{
 			if (item.Tag as string == tag)
 			{
-				TabSelectorBar.SelectedItem = item;
+				if (item.Visibility == Visibility.Visible)
+				{
+					TabSelectorBar.SelectedItem = item;
+				}
+
 				return;
 			}
 		}
@@ -1053,7 +1093,7 @@ public sealed partial class MainWindow : Window
 
 
 
-	// SelectorBar の指定位置のタブを選ぶ。範囲外なら何もしない。Ctrl+数字のタブ切り替えが使う。
+	// SelectorBar の指定位置のタブを選ぶ。範囲外なら何もしない。位置はタブの並び順そのままで、隠れたタブも数に含める(Ctrl+数字とツールチップの対応を保つ)。指定先が隠れているときは何もしない。Ctrl+数字のタブ切り替えが使う。
 	private void SelectTabByIndex(int index)
 	{
 		if (index < 0 || index >= TabSelectorBar.Items.Count)
@@ -1061,13 +1101,16 @@ public sealed partial class MainWindow : Window
 			return;
 		}
 
-		TabSelectorBar.SelectedItem = TabSelectorBar.Items[index];
+		if (TabSelectorBar.Items[index] is SelectorBarItem item && item.Visibility == Visibility.Visible)
+		{
+			TabSelectorBar.SelectedItem = item;
+		}
 	}
 
 
 
 
-	// 現在の選択から delta だけ離れたタブへ、端で巻き戻る循環で移る。Ctrl+Tab / Ctrl+Shift+Tab が使う。
+	// 現在の選択から delta だけ離れたタブへ、端で巻き戻る循環で移る。隠れたタブは飛ばし、表示中のタブだけを巡る。Ctrl+Tab / Ctrl+Shift+Tab が使う。
 	private void StepTab(int delta)
 	{
 		int count = TabSelectorBar.Items.Count;
@@ -1078,8 +1121,195 @@ public sealed partial class MainWindow : Window
 		}
 
 		int current = TabSelectorBar.SelectedItem is SelectorBarItem selected ? TabSelectorBar.Items.IndexOf(selected) : 0;
-		int next = ((current + delta) % count + count) % count;
-		TabSelectorBar.SelectedItem = TabSelectorBar.Items[next];
+
+		// 最大 count 回だけ進め、最初に出会った表示中のタブへ移る。最低1枚は表示するため、必ず見つかる。
+		for (int i = 0; i < count; i++)
+		{
+			current = ((current + delta) % count + count) % count;
+
+			if (TabSelectorBar.Items[current] is SelectorBarItem item && item.Visibility == Visibility.Visible)
+			{
+				TabSelectorBar.SelectedItem = item;
+				return;
+			}
+		}
+	}
+
+
+
+
+	// 保存済みの隠しタブを反映する。一覧に挙がった識別子(Tag)のタブを Collapsed にして隠す。万一すべてのタブが対象でも、最低1枚は表示するため先頭のタブだけは隠さず残す。
+	private void ApplyHiddenTabs(IReadOnlyList<string>? hiddenTags)
+	{
+		if (hiddenTags is null || hiddenTags.Count == 0)
+		{
+			return;
+		}
+
+		var hidden = new HashSet<string>(hiddenTags);
+
+		foreach (SelectorBarItem item in TabSelectorBar.Items)
+		{
+			if (item.Tag is string tag && hidden.Contains(tag))
+			{
+				item.Visibility = Visibility.Collapsed;
+			}
+		}
+
+		// すべて隠してしまった設定からの復帰。先頭タブを表示へ戻し、必ず1枚は見えるようにする。
+		if (CountVisibleTabs() == 0 && TabSelectorBar.Items.Count > 0 && TabSelectorBar.Items[0] is SelectorBarItem first)
+		{
+			first.Visibility = Visibility.Visible;
+		}
+	}
+
+
+
+
+	// 現在隠しているタブの識別子(Tag)の一覧を、保存用に取り出す。表示状態の真実は各タブの Visibility が持つため、別に状態を抱えずここから組み立てる。1枚も隠していなければ null を返し、設定にキー自体を残さない。
+	private List<string>? CaptureHiddenTabs()
+	{
+		var hidden = new List<string>();
+
+		foreach (SelectorBarItem item in TabSelectorBar.Items)
+		{
+			if (item.Visibility != Visibility.Visible && item.Tag is string tag && tag.Length > 0)
+			{
+				hidden.Add(tag);
+			}
+		}
+
+		return hidden.Count > 0 ? hidden : null;
+	}
+
+
+
+
+	// 識別子(Tag)が一致するタブを返す。一致が無ければ null。表示メニューの項目とタブを Tag で結ぶために使う。
+	private SelectorBarItem? FindTabByTag(string tag)
+	{
+		foreach (SelectorBarItem item in TabSelectorBar.Items)
+		{
+			if (item.Tag as string == tag)
+			{
+				return item;
+			}
+		}
+
+		return null;
+	}
+
+
+
+
+	// 表示中のタブの枚数を数える。最後の1枚を隠せないようにする判定に使う。
+	private int CountVisibleTabs()
+	{
+		int count = 0;
+
+		foreach (SelectorBarItem item in TabSelectorBar.Items)
+		{
+			if (item.Visibility == Visibility.Visible)
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+
+
+
+	// 表示中の先頭のタブを選ぶ。隠したタブが選ばれたままになったときの寄せ先に使う。
+	private void SelectFirstVisibleTab()
+	{
+		foreach (SelectorBarItem item in TabSelectorBar.Items)
+		{
+			if (item.Visibility == Visibility.Visible)
+			{
+				TabSelectorBar.SelectedItem = item;
+				return;
+			}
+		}
+	}
+
+
+
+
+	// タブバーの右クリックメニューを開く直前に、各項目のチェック状態を現在の表示/非表示へ合わせる。表示中が1枚だけのときは、その最後の1枚を隠せないよう当該項目を無効にする。「全タブを表示」はすべて表示済みのとき押す意味がないので無効にする。
+	private void OnTabVisibilityMenuOpening(object sender, object e)
+	{
+		if (sender is not MenuFlyout flyout)
+		{
+			return;
+		}
+
+		int visibleCount = CountVisibleTabs();
+
+		foreach (MenuFlyoutItemBase element in flyout.Items)
+		{
+			if (element is ToggleMenuFlyoutItem item && item.Tag is string tag)
+			{
+				bool visible = FindTabByTag(tag)?.Visibility == Visibility.Visible;
+				item.IsChecked = visible;
+				item.IsEnabled = !(visible && visibleCount <= 1);
+			}
+		}
+
+		ShowAllTabsItem.IsEnabled = visibleCount < TabSelectorBar.Items.Count;
+	}
+
+
+
+
+	// タブバーの右クリックメニューの項目クリック。チェックの状態に合わせて対応するタブを表示/非表示する。最後の1枚は隠さず、隠したのが選択中のタブなら表示中の別タブへ選択を移す。
+	private void OnTabVisibilityToggle(object sender, RoutedEventArgs e)
+	{
+		if (sender is not ToggleMenuFlyoutItem item || item.Tag is not string tag)
+		{
+			return;
+		}
+
+		SelectorBarItem? tab = FindTabByTag(tag);
+
+		if (tab is null)
+		{
+			return;
+		}
+
+		if (item.IsChecked)
+		{
+			tab.Visibility = Visibility.Visible;
+			return;
+		}
+
+		// 最後の1枚は隠さない。チェックを元へ戻して何もしない(メニューを開く際の無効化と二重の歯止め)。
+		if (CountVisibleTabs() <= 1)
+		{
+			item.IsChecked = true;
+			return;
+		}
+
+		tab.Visibility = Visibility.Collapsed;
+
+		// 隠したのが今選んでいるタブなら、表示中の別タブへ選択を移して中身を差し替える。
+		if (ReferenceEquals(TabSelectorBar.SelectedItem, tab))
+		{
+			SelectFirstVisibleTab();
+		}
+	}
+
+
+
+
+	// タブバーの右クリックメニューの「全タブを表示」。隠していたタブをすべて表示へ戻す。選択中のタブは表示のまま残るため、選択の移し替えは要らない。すべて表示済みのときはメニューを開く際に無効化してあり、ここへは来ない。
+	private void OnShowAllTabsClick(object sender, RoutedEventArgs e)
+	{
+		foreach (SelectorBarItem item in TabSelectorBar.Items)
+		{
+			item.Visibility = Visibility.Visible;
+		}
 	}
 
 
@@ -1156,6 +1386,7 @@ public sealed partial class MainWindow : Window
 	{
 		var state = ViewModel.CaptureState();
 		state.ActiveTab = TabSelectorBar.SelectedItem?.Tag as string;
+		state.HiddenTabs = CaptureHiddenTabs();
 		state.History = _history.Capture();
 		state.SavedPalettes = _favorites.Capture();
 

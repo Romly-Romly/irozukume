@@ -278,6 +278,7 @@
 
 			<!-- 色相環の右に縦並びで、HSV/HSL 切替と回転トグルを置く。色相環の上端に揃える。既定の RadioButton・CheckBox は MinWidth(120) を持ち、短いラベルでも列の右に空きが出て色相環の幅を奪うため、この列では最小幅を外して内容の幅に詰める。 -->
 			<StackPanel
+				x:Name="SideControls"
 				Grid.Column="1"
 				VerticalAlignment="Top"
 				Spacing="16">

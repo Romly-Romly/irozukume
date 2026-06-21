@@ -69,6 +69,12 @@ TODO: 使い方を書く
 
 
 
+## 更新履歴
+
+**[CHANGELOG](CHANGELOG.ja.md)** を見てね。
+
+
+
 ## ライセンス
 
 [GNU General Public License version 3](LICENSE) (GPL-3.0)

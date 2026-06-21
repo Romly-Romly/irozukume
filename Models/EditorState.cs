@@ -29,9 +29,9 @@ public sealed class EditorState
 	[JsonPropertyName("show_actual_color")]
 	public bool ShowActualColor { get; set; } = true;
 
-	// サイドバーをテキストモード(コントラスト確認)にするか。既定はオン。このキーを持たない古い設定ファイルでも表示する既定に揃える。
+	// サイドバーをテキストモード(コントラスト確認)にするか。既定はオフ。このキーを持たない設定ファイルでは表示しない既定に揃える。
 	[JsonPropertyName("show_contrast_text")]
-	public bool ShowContrastText { get; set; } = true;
+	public bool ShowContrastText { get; set; }
 
 	// アルファ値のスライダー類を、タブの中身の下に常駐させて表示するか。既定はオフ。オンのとき、選択中のタブに依らず不透明度スライダーと単位の組を見せる。このキーを持たない設定ファイルでは表示しない既定に揃える。表示だけの設定で、色や丸めには影響しない。
 	[JsonPropertyName("show_alpha")]
@@ -96,6 +96,10 @@ public sealed class EditorState
 	// YUV/YCbCr タブの色差平面の表示枠 (スケール) の決め方。"none" (0–255 の固定枠) / "isotropic" (等方フィット) / "anisotropic" (縦横独立フィット)。フィットは固定成分 (Cb×Cr では輝度、Cb×Y では Cr、Cr×Y では Cb) ごとの色域の広がりへ枠を寄せて有効領域を広げる。未指定や未知の値は固定枠として扱う。色1の RGB は不変。
 	[JsonPropertyName("yuv_scale")]
 	public string? YuvScale { get; set; }
+
+	// RGB/CMYK タブの2次元エディタの見せ方 (レイアウト)。RGB・CMYK 共通の1つのピッカーが選ぶ。"sliders" (パッド無し・線形スライダーのみ) / "rgb_gb" (G×B 平面+R) / "rgb_rb" (R×B 平面+G) / "rgb_rg" (R×G 平面+B) / "cmyk_my" (M×Y 平面+C) / "cmyk_cy" (C×Y 平面+M) / "cmyk_cm" (C×M 平面+Y)。タブに出すパッドは1枚で、RGB 系か CMYK 系のどちらか一方。未指定や未知の値はパッド無しとして扱う。色1の RGB は不変で、見せ方だけが変わる。
+	[JsonPropertyName("rgbcmyk_layout")]
+	public string? RgbCmykLayout { get; set; }
 
 	// HSV/HSL タブの副モード。中央パッドと数値の表色系を "hsv" / "hsl" / "hwb" のいずれで読むか。未指定や未知の値は HSV として扱う。
 	[JsonPropertyName("hsv_sub_mode")]
@@ -188,6 +192,10 @@ public sealed class EditorState
 	// 起動時に開くタブの表示名。"RGB/CMYK" などのタブ見出しをそのまま持つ。このキーを持たない設定や、一致する見出しが無いときは XAML 既定の RGB/CMYK タブで開く。
 	[JsonPropertyName("active_tab")]
 	public string? ActiveTab { get; set; }
+
+	// タブバーの右クリックメニューで隠したタブの識別子(Tag)の一覧。ここに挙がらないタブは表示する。最低1枚は表示するため、すべてのタブを隠すことはできない。このキーを持たない設定ではすべてのタブを表示する。
+	[JsonPropertyName("hidden_tabs")]
+	public List<string>? HiddenTabs { get; set; }
 
 	// 貼り付けた色の書式に合わせて、対応するタブ(と HSV/HSL の副モード)へ自動で切り替えるか。既定はオン。このキーを持たない古い設定ファイルでも、VM の既定(切り替える)に揃える。
 	[JsonPropertyName("switch_tab_on_paste")]
