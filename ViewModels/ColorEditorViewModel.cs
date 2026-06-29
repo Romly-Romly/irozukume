@@ -167,6 +167,16 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 	// 設定ページで上級者向け設定を表示するか。既定はオフ。表示の出し分けだけで、色や丸めには影響しない。
 	private bool _advancedSettings;
 
+	// 画像タブの焼きなまし法の調整値。上級者向け設定として画像タブの詳細設定で変え、CaptureState で settings.json へ保存する。既定値は SaSettings.Default に揃える。
+	private static readonly SaSettings ImageSaDefaults = SaSettings.Default;
+	private int _imageSaIterations = ImageSaDefaults.Iterations;
+	private double _imageSaMove = ImageSaDefaults.Move;
+	private double _imageSaAlpha = ImageSaDefaults.Alpha;
+	private double _imageSaInitialTempFactor = ImageSaDefaults.InitialTempFactor;
+	private bool _imageSaSeedFromMedianCut = ImageSaDefaults.SeedFromMedianCut;
+	private int _imageSaSaturationWeight = ImageSaDefaults.SaturationWeight;
+	private int _imageSaRarityWeight = ImageSaDefaults.RarityWeight;
+
 	// スライダーつまみのレンズの効きの全体設定。設定ページの上級者向け設定で調整する。値は静的な LensTuning へ反映し、各描画コントロールがドラッグ開始時に読む。拡大率・強さ・ズレ・ベベルは基準値への係数(拡大率は等倍からの増分への係数)。
 	private bool _lensEffect = Helpers.LensTuning.DefaultLensEffect;
 	private double _lensMagnify = Helpers.LensTuning.DefaultMagnify;
@@ -404,6 +414,13 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			_lightnessDiscPattern = ResolveLightnessDiscPattern(state.LightnessDiscPattern);
 			_oogStyle = ResolveOogStyle(state.GamutOutOfRangeStyle);
 			_advancedSettings = state.AdvancedSettings;
+			_imageSaIterations = state.SaIterations;
+			_imageSaMove = state.SaMove;
+			_imageSaAlpha = state.SaAlpha;
+			_imageSaInitialTempFactor = state.SaInitialTempFactor;
+			_imageSaSeedFromMedianCut = state.SaSeedFromMedianCut;
+			_imageSaSaturationWeight = state.SaSaturationWeight;
+			_imageSaRarityWeight = state.SaRarityWeight;
 			_lensEffect = state.LensEffect;
 			_lensMagnify = state.LensMagnify;
 			_lensRefraction = state.LensRefraction;
@@ -508,6 +525,13 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			LightnessDiscPattern = LightnessDiscPatternToString(_lightnessDiscPattern),
 			GamutOutOfRangeStyle = OogStyleToString(_oogStyle),
 			AdvancedSettings = _advancedSettings,
+			SaIterations = _imageSaIterations,
+			SaMove = _imageSaMove,
+			SaAlpha = _imageSaAlpha,
+			SaInitialTempFactor = _imageSaInitialTempFactor,
+			SaSeedFromMedianCut = _imageSaSeedFromMedianCut,
+			SaSaturationWeight = _imageSaSaturationWeight,
+			SaRarityWeight = _imageSaRarityWeight,
 			LensEffect = _lensEffect,
 			LensMagnify = _lensMagnify,
 			LensRefraction = _lensRefraction,
@@ -5762,6 +5786,194 @@ public sealed class ColorEditorViewModel : INotifyPropertyChanged
 			_lensMagnify = value;
 			Helpers.LensTuning.Magnify = value;
 			OnPropertyChanged(nameof(LensMagnify));
+		}
+	}
+
+
+
+
+	// 画像タブの焼きなまし法の調整値を1つの値型にまとめて返す。画像タブが抽出時に ImagePaletteExtractor.Extract へ渡す。
+	public SaSettings ImageSaSettings => new SaSettings(_imageSaIterations, _imageSaMove, _imageSaAlpha, _imageSaInitialTempFactor, _imageSaSeedFromMedianCut, _imageSaSaturationWeight, _imageSaRarityWeight);
+
+
+
+
+	// 画像タブの焼きなまし法の反復回数。詳細設定の NumberBox が束縛する。下限 500。NumberBox の値は実数のため整数へ丸める。
+	public double ImageSaIterations
+	{
+		get => _imageSaIterations;
+
+		set
+		{
+			if (double.IsNaN(value))
+			{
+				return;
+			}
+
+			int v = (int)Math.Round(Math.Max(500.0, value));
+
+			if (_imageSaIterations == v)
+			{
+				return;
+			}
+
+			_imageSaIterations = v;
+			OnPropertyChanged(nameof(ImageSaIterations));
+		}
+	}
+
+
+
+
+	// 画像タブの焼きなまし法の移動幅(Lab)。詳細設定の NumberBox が束縛する。下限 1。
+	public double ImageSaMove
+	{
+		get => _imageSaMove;
+
+		set
+		{
+			if (double.IsNaN(value))
+			{
+				return;
+			}
+
+			double v = Math.Max(1.0, value);
+
+			if (_imageSaMove == v)
+			{
+				return;
+			}
+
+			_imageSaMove = v;
+			OnPropertyChanged(nameof(ImageSaMove));
+		}
+	}
+
+
+
+
+	// 画像タブの焼きなまし法の冷却率 α。詳細設定の NumberBox が束縛する。0.9–0.99999 へ収める。
+	public double ImageSaAlpha
+	{
+		get => _imageSaAlpha;
+
+		set
+		{
+			if (double.IsNaN(value))
+			{
+				return;
+			}
+
+			double v = Math.Clamp(value, 0.9, 0.99999);
+
+			if (_imageSaAlpha == v)
+			{
+				return;
+			}
+
+			_imageSaAlpha = v;
+			OnPropertyChanged(nameof(ImageSaAlpha));
+		}
+	}
+
+
+
+
+	// 画像タブの焼きなまし法の初期温度係数。詳細設定の NumberBox が束縛する。下限 0.01。
+	public double ImageSaInitialTempFactor
+	{
+		get => _imageSaInitialTempFactor;
+
+		set
+		{
+			if (double.IsNaN(value))
+			{
+				return;
+			}
+
+			double v = Math.Max(0.01, value);
+
+			if (_imageSaInitialTempFactor == v)
+			{
+				return;
+			}
+
+			_imageSaInitialTempFactor = v;
+			OnPropertyChanged(nameof(ImageSaInitialTempFactor));
+		}
+	}
+
+
+
+
+	// 画像タブの焼きなまし法で、種を中央値分割法の結果から起こすか。詳細設定の CheckBox が束縛する。
+	public bool ImageSaSeedFromMedianCut
+	{
+		get => _imageSaSeedFromMedianCut;
+
+		set
+		{
+			if (_imageSaSeedFromMedianCut == value)
+			{
+				return;
+			}
+
+			_imageSaSeedFromMedianCut = value;
+			OnPropertyChanged(nameof(ImageSaSeedFromMedianCut));
+		}
+	}
+
+
+
+
+	// 画像タブの焼きなまし法の彩度重み(0–8)。詳細設定の NumberBox が束縛する。整数へ丸めて範囲へ収める。
+	public double ImageSaSaturationWeight
+	{
+		get => _imageSaSaturationWeight;
+
+		set
+		{
+			if (double.IsNaN(value))
+			{
+				return;
+			}
+
+			int v = (int)Math.Round(Math.Clamp(value, 0.0, 8.0));
+
+			if (_imageSaSaturationWeight == v)
+			{
+				return;
+			}
+
+			_imageSaSaturationWeight = v;
+			OnPropertyChanged(nameof(ImageSaSaturationWeight));
+		}
+	}
+
+
+
+
+	// 画像タブの焼きなまし法の希少度重み(0–8)。詳細設定の NumberBox が束縛する。整数へ丸めて範囲へ収める。
+	public double ImageSaRarityWeight
+	{
+		get => _imageSaRarityWeight;
+
+		set
+		{
+			if (double.IsNaN(value))
+			{
+				return;
+			}
+
+			int v = (int)Math.Round(Math.Clamp(value, 0.0, 8.0));
+
+			if (_imageSaRarityWeight == v)
+			{
+				return;
+			}
+
+			_imageSaRarityWeight = v;
+			OnPropertyChanged(nameof(ImageSaRarityWeight));
 		}
 	}
 

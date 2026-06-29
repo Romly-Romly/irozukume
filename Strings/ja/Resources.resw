@@ -162,6 +162,12 @@
 	<data name="MatrixWindowTitle" xml:space="preserve">
 		<value>コントラストマトリックス - イロヅクメ</value>
 	</data>
+	<data name="PreviewWindowTitle" xml:space="preserve">
+		<value>色のプレビュー - イロヅクメ</value>
+	</data>
+	<data name="PreviewFullScreenHint" xml:space="preserve">
+		<value>ダブルクリック、ESCまたはFで解除</value>
+	</data>
 	<data name="MatrixCornerLabel" xml:space="preserve">
 		<value>文字色＼背景色</value>
 	</data>
@@ -327,6 +333,9 @@
 	<data name="Ctx_AddFavorite" xml:space="preserve">
 		<value>お気に入りに追加</value>
 	</data>
+	<data name="Ctx_ShowPreview" xml:space="preserve">
+		<value>プレビューウィンドウを表示</value>
+	</data>
 	<data name="SwatchColor2.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
 		<value>背景色</value>
 	</data>
@@ -435,6 +444,89 @@
 	</data>
 	<data name="TabHarmony.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
 		<value>配色 (Ctrl+8)</value>
+	</data>
+	<data name="TabImage.Text" xml:space="preserve">
+		<value>画像</value>
+	</data>
+	<data name="TabImage.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>画像から抽出 (Ctrl+9)</value>
+	</data>
+
+	<!-- ImageTab: 画像から抽出タブ -->
+	<data name="ImageTab_DropHint.Text" xml:space="preserve">
+		<value>ここに画像をドロップ</value>
+	</data>
+	<data name="ImageTab_PickFile.Content" xml:space="preserve">
+		<value>画像を選択...</value>
+	</data>
+	<data name="ImageTab_ColorCountLabel.Text" xml:space="preserve">
+		<value>色数</value>
+	</data>
+	<data name="ImageTab_AlgorithmLabel.Text" xml:space="preserve">
+		<value>アルゴリズム</value>
+	</data>
+	<data name="ImageTab_AlgoMedianCut.Content" xml:space="preserve">
+		<value>中央値分割</value>
+	</data>
+	<data name="ImageTab_AlgoKMeans.Content" xml:space="preserve">
+		<value>k-means</value>
+	</data>
+	<data name="ImageTab_AlgoOctree.Content" xml:space="preserve">
+		<value>八分木 (Octree)</value>
+	</data>
+	<data name="ImageTab_AlgoSA.Content" xml:space="preserve">
+		<value>焼きなまし法</value>
+	</data>
+	<data name="ImageTab_SaSettingsHeader.Text" xml:space="preserve">
+		<value>焼きなまし法の詳細設定</value>
+	</data>
+	<data name="ImageTab_SaSeed.Content" xml:space="preserve">
+		<value>中央値分割法を種にする</value>
+	</data>
+	<data name="ImageTab_SaIterations.Header" xml:space="preserve">
+		<value>反復回数</value>
+	</data>
+	<data name="ImageTab_SaMove.Header" xml:space="preserve">
+		<value>移動幅</value>
+	</data>
+	<data name="ImageTab_SaAlpha.Header" xml:space="preserve">
+		<value>冷却率 α</value>
+	</data>
+	<data name="ImageTab_SaInitialTemp.Header" xml:space="preserve">
+		<value>初期温度係数</value>
+	</data>
+	<data name="ImageTab_SaSatWeight.Header" xml:space="preserve">
+		<value>彩度重み</value>
+	</data>
+	<data name="ImageTab_SaRareWeight.Header" xml:space="preserve">
+		<value>希少度重み</value>
+	</data>
+	<data name="ImageTab_Extract.Content" xml:space="preserve">
+		<value>抽出</value>
+	</data>
+	<data name="ImageTab_SaveFavorite.Content" xml:space="preserve">
+		<value>お気に入りに保存</value>
+	</data>
+	<data name="ImageTab_Extracting.Text" xml:space="preserve">
+		<value>抽出中...</value>
+	</data>
+	<data name="ImageTab_EmptyHint.Text" xml:space="preserve">
+		<value>画像を読み込むと色が並びます</value>
+	</data>
+	<data name="ImageTab_LoadErrorTitle" xml:space="preserve">
+		<value>画像を読み込めませんでした</value>
+	</data>
+	<data name="ImageTab_LoadErrorContent" xml:space="preserve">
+		<value>この画像は読み込めませんでした。別の画像をお試しください。</value>
+	</data>
+	<data name="ImageTab_TooManyWarningFormat" xml:space="preserve">
+		<value>このパレットは {0} 色です。お気に入りに登録できるのはリストの先頭から {1} 色までです。残りの {2} 色は保存されません。</value>
+	</data>
+	<data name="ImageTab_CloseImage.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>画像を閉じる</value>
+	</data>
+	<data name="ImageTab_CloseImage.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>画像を閉じる</value>
 	</data>
 	<data name="HarmonySchemeLabel.Text" xml:space="preserve">
 		<value>配色の種類</value>
@@ -1570,7 +1662,7 @@
 		<value>レンズ効果</value>
 	</data>
 	<data name="SettingsLensEffectCard.Description" xml:space="preserve">
-		<value>つまみのルーペに屈折・色収差のガラス効果を掛けます。オフにするとただの拡大になります。</value>
+		<value>つまみのルーペに屈折・色収差のレンズ効果を掛けます。オフにするとただの拡大になります。</value>
 	</data>
 	<data name="SettingsLensMagnifyCard.Header" xml:space="preserve">
 		<value>拡大率</value>
@@ -1633,10 +1725,10 @@
 		<value>円形のガラスレンズの直径です。</value>
 	</data>
 	<data name="SettingsScreenPickerGlassCard.Header" xml:space="preserve">
-		<value>ガラス効果</value>
+		<value>レンズ効果</value>
 	</data>
 	<data name="SettingsScreenPickerGlassCard.Description" xml:space="preserve">
-		<value>屈折・ぼかし・ハイライトのガラス効果を掛けます。オフにすると縁と拡大だけの素のルーペになります。</value>
+		<value>屈折・ぼかし・ハイライトのレンズ効果を掛けます。オフにすると縁と拡大だけの素のルーペになります。</value>
 	</data>
 	<data name="SettingsScreenPickerRefractionCard.Header" xml:space="preserve">
 		<value>屈折の強さ</value>

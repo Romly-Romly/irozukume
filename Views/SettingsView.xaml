@@ -32,7 +32,7 @@
 			<!-- カラーピッカー。レンズの大きさは通常設定として常時表示し、拡大率・ガラス効果などの微調整はページ内で上級者向けトグル連動にする。 -->
 			<NavigationViewItem x:Uid="NavScreenPicker" Tag="screenpicker">
 				<NavigationViewItem.Icon>
-					<FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE7B3;" />
+					<FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xEF3C;" />
 				</NavigationViewItem.Icon>
 			</NavigationViewItem>
 
@@ -310,8 +310,8 @@
 						Visibility="{x:Bind ViewModel.AdvancedSettingsVisibility, Mode=OneWay}">
 						<tkcontrols:SettingsExpander.HeaderIcon>
 							<FontIcon
-								FontFamily="{ThemeResource SymbolThemeFontFamily}"
-								Glyph="&#xE7B3;" />
+								FontFamily="ms-appx:///Assets/Fonts/romoji.ttf#Romoji"
+								Glyph="&#xE016;" />
 						</tkcontrols:SettingsExpander.HeaderIcon>
 						<ToggleSwitch IsOn="{x:Bind ViewModel.ScreenPickerGlassEffect, Mode=TwoWay}" />
 						<tkcontrols:SettingsExpander.Items>
@@ -345,8 +345,8 @@
 					<tkcontrols:SettingsCard x:Uid="SettingsLensEffectCard">
 						<tkcontrols:SettingsCard.HeaderIcon>
 							<FontIcon
-								FontFamily="{ThemeResource SymbolThemeFontFamily}"
-								Glyph="&#xE7B3;" />
+								FontFamily="ms-appx:///Assets/Fonts/romoji.ttf#Romoji"
+								Glyph="&#xE016;" />
 						</tkcontrols:SettingsCard.HeaderIcon>
 						<ToggleSwitch IsOn="{x:Bind ViewModel.LensEffectEnabled, Mode=TwoWay}" />
 					</tkcontrols:SettingsCard>
@@ -424,8 +424,8 @@
 					<tkcontrols:SettingsCard x:Uid="SettingsDeleteCard">
 						<tkcontrols:SettingsCard.HeaderIcon>
 							<FontIcon
-								FontFamily="{ThemeResource SymbolThemeFontFamily}"
-								Glyph="&#xE74D;" />
+								FontFamily="ms-appx:///Assets/Fonts/romoji.ttf#Romoji"
+								Glyph="&#xE014;" />
 						</tkcontrols:SettingsCard.HeaderIcon>
 						<Button
 							x:Uid="SettingsDeleteButton"

@@ -27,6 +27,14 @@ internal static class PickerNativeMethods
 	public const uint WS_POPUP = 0x80000000;
 	public const int SW_SHOWNOACTIVATE = 4;
 
+	// 自前プレビュー窓の出し入れとドラッグ用ヒットテスト。SW_HIDE/SW_SHOW でレイヤード窓を隠す・見せる、WM_NCHITTEST へ HTCAPTION を返した帯はシステムがドラッグ移動させ、HTCLIENT はクライアント扱い。WS_EX_APPWINDOW でタスクバーへ出す。
+	public const int SW_HIDE = 0;
+	public const int SW_SHOW = 5;
+	public const long WS_EX_APPWINDOW = 0x00040000;
+	public const uint WM_NCHITTEST = 0x0084;
+	public const int HTCLIENT = 1;
+	public const int HTCAPTION = 2;
+
 	public const uint ULW_ALPHA = 0x00000002;
 	public const byte AC_SRC_OVER = 0x00;
 	public const byte AC_SRC_ALPHA = 0x01;
@@ -297,6 +305,13 @@ internal static class PickerNativeMethods
 	public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFOEX lpmi);
 
 	[DllImport("user32.dll")]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+	[DllImport("user32.dll")]
+	public static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+
+	[DllImport("user32.dll")]
 	public static extern int GetDisplayConfigBufferSizes(uint flags, out uint numPathArrayElements, out uint numModeInfoArrayElements);
 
 	[DllImport("user32.dll")]
@@ -318,6 +333,9 @@ internal static class PickerNativeMethods
 	[DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
 	public static extern IntPtr GetModuleHandle(string? lpModuleName);
 
+	[DllImport("user32.dll", CharSet = CharSet.Unicode)]
+	public static extern IntPtr LoadCursor(IntPtr hInstance, IntPtr lpCursorName);
+
 	[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
 	public static extern ushort RegisterClassEx(ref WNDCLASSEX lpwcx);
 
@@ -334,6 +352,10 @@ internal static class PickerNativeMethods
 	[DllImport("user32.dll")]
 	[return: MarshalAs(UnmanagedType.Bool)]
 	public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+	[DllImport("user32.dll")]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	public static extern bool IsWindowVisible(IntPtr hWnd);
 
 	[DllImport("user32.dll")]
 	[return: MarshalAs(UnmanagedType.Bool)]

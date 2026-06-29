@@ -13,27 +13,47 @@ using Irozukume.Controls.Geometry;
 
 namespace Irozukume.Controls;
 
-// 三角形の中で2次元の値を選ぶ汎用パッド。HSL の彩度・輝度を、純色・白・黒を頂点とする三角形(双錐の色相断面)で選ぶことを想定する。XValue は彩度(その輝度での三角形の幅に対する割合)、YValue は輝度を表し、ともに 0–1。見せる三角形のグラデーション等は Content に置く。PadRotation を与えると Content とつまみと当たり判定面を一体で回し、入力位置も逆回転して値へ写すため、色相環へ追従して回しても操作と表示が一致する。幾何は TriangleGeometry に委ね、つまみの位置・当たり判定が三角形画像とずれないようにする。
+/// <summary>
+/// 三角形の中で2次元の値を選ぶ汎用パッド。
+/// HSL の彩度・輝度を、純色・白・黒を頂点とする三角形(双錐の色相断面)で選ぶことを想定する。
+/// XValue は彩度(その輝度での三角形の幅に対する割合)、YValue は輝度を表し、ともに 0–1。見せる三角形のグラデーション等は Content に置く。
+/// PadRotation を与えると Content とつまみと当たり判定面を一体で回し、入力位置も逆回転して値へ写すため、色相環へ追従して回しても操作と表示が一致する。
+/// 幾何は TriangleGeometry に委ね、つまみの位置・当たり判定が三角形画像とずれないようにする。
+/// </summary>
 public sealed class TrianglePad : ContentControl
 {
-	// テンプレート内の回転トランスフォームとつまみの平行移動。回転は Content とつまみをまとめて回し、平行移動はつまみを三角形内の値の位置へ置く。
+	/// <summary>
+	/// テンプレート内の回転トランスフォームとつまみの平行移動。回転は Content とつまみをまとめて回し、平行移動はつまみを三角形内の値の位置へ置く。
+	/// </summary>
 	private RotateTransform? _rotation;
 	private TranslateTransform? _thumbOffset;
 
-	// つまみをドラッグ中かどうか。ポインタを捕捉している間だけ真にする。
+	/// <summary>
+	/// つまみをドラッグ中かどうか。ポインタを捕捉している間だけ真にする。
+	/// </summary>
 	private bool _isDragging;
 
-	// つまみ要素。ドラッグ中はレンズへ置き換えるため隠す。
+	/// <summary>
+	/// つまみ要素。ドラッグ中はレンズへ置き換えるため隠す。
+	/// </summary>
 	private FrameworkElement? _thumb;
 
-	// ドラッグ中につまみをガラスレンズへ膨らませる管理役と、その置き場。テンプレートに置き場があるときだけ用意する。レンズは三角形と同じ回転枠に入るため、色面の向きと一致する。
+	/// <summary>
+	/// ドラッグ中につまみをガラスレンズへ膨らませる管理役と、その置き場。
+	/// テンプレートに置き場があるときだけ用意する。レンズは三角形と同じ回転枠に入るため、色面の向きと一致する。
+	/// </summary>
 	private Canvas? _lensHost;
 	private LensController? _lens;
 
-	// レンズに映す色面の色を返すサンプラー。コントロール局所座標(画素、未回転)を受け、その点の色(三角形の外は透明)を返す。利用側が設定する。null のときはレンズを出さず、従来どおりのつまみで操作する。
+	/// <summary>
+	/// レンズに映す色面の色を返すサンプラー。
+	/// コントロール局所座標(画素、未回転)を受け、その点の色(三角形の外は透明)を返す。利用側が設定する。null のときはレンズを出さず、通常のつまみで操作する。
+	/// </summary>
 	public Func<double, double, Color>? LensColorSampler { get; set; }
 
-	// 三角形パッドのつまみのガラスレンズの効き。他コントロールと別に調整できるよう、ここで持つ。各項目の意味と単位は GlassLensParams を参照。
+	/// <summary>
+	/// 三角形パッドのつまみのガラスレンズの効き。他コントロールと別に調整できるよう、ここで持つ。各項目の意味と単位は <see cref="GlassLensParams"/> を参照。
+	/// </summary>
 	private static readonly GlassLensParams LensParams = new()
 	{
 		Diameter = 50.0,
@@ -53,7 +73,9 @@ public sealed class TrianglePad : ContentControl
 
 
 
-	// 彩度。その輝度での三角形の幅に対する割合で、0(灰色軸側)から 1(純色側の辺)まで。
+	/// <summary>
+	/// 彩度。その輝度での三角形の幅に対する割合で、0(灰色軸側)から 1(純色側の辺)まで。
+	/// </summary>
 	public double XValue
 	{
 		get => (double)GetValue(XValueProperty);
@@ -66,7 +88,9 @@ public sealed class TrianglePad : ContentControl
 
 
 
-	// 輝度。0(黒の頂点)から 1(白の頂点)まで。
+	/// <summary>
+	/// 輝度。0(黒の頂点)から 1(白の頂点)まで。
+	/// </summary>
 	public double YValue
 	{
 		get => (double)GetValue(YValueProperty);
@@ -79,7 +103,9 @@ public sealed class TrianglePad : ContentControl
 
 
 
-	// パッド全体の回転角(度, 時計回り)。Content とつまみを中心まわりに回し、入力も同じだけ逆回転して値へ写す。
+	/// <summary>
+	/// パッド全体の回転角(度, 時計回り)。Content とつまみを中心まわりに回し、入力も同じだけ逆回転して値へ写す。
+	/// </summary>
 	public double PadRotation
 	{
 		get => (double)GetValue(PadRotationProperty);
@@ -92,7 +118,9 @@ public sealed class TrianglePad : ContentControl
 
 
 
-	// つまみの直径。
+	/// <summary>
+	/// つまみの直径。
+	/// </summary>
 	public double ThumbDiameter
 	{
 		get => (double)GetValue(ThumbDiameterProperty);
@@ -105,7 +133,11 @@ public sealed class TrianglePad : ContentControl
 
 
 
-	// 三角形の頂点を丸める半径(画素)。0 で角丸なし。継承元 Control.CornerRadius(矩形の角丸、ここでは無意味)との衝突を避けるため別名にする。三角形は形そのものを画像へ焼くため、この値は描画側(HslTriangle.Create)とレンズのサンプラーへ渡して使う。利用側はこのプロパティを見て、変わったら三角形画像を作り直す。
+	/// <summary>
+	/// 三角形の頂点を丸める半径(画素)。0 で角丸なし。
+	/// 継承元 Control.CornerRadius(矩形の角丸、ここでは無意味)との衝突を避けるため別名にする。
+	/// 三角形は形そのものを画像へ焼くため、この値は描画側(<see cref="Generators.Triangles.HslTriangle.Create"/>)とレンズのサンプラーへ渡して使う。利用側はこのプロパティを見て、変わったら三角形画像を作り直す。
+	/// </summary>
 	public double VertexCornerRadius
 	{
 		get => (double)GetValue(VertexCornerRadiusProperty);
@@ -118,7 +150,10 @@ public sealed class TrianglePad : ContentControl
 
 
 
-	// 三角形を箱いっぱいに広げるか。既定は偽で、外接円(半径=短辺の半分)に内接する正三角形を中央へ置く(色相リングの中に収め、回転にも耐える置き方)。真にすると純色を上辺中央・黒白を下の両隅へ取り、箱を縦横いっぱいに使う(リングを使わない独立三角形で余白を嫌う場合)。色面の頂点取り(描画側)とこの値をそろえること。
+	/// <summary>
+	/// 三角形を箱いっぱいに広げるか。既定は偽で、外接円(半径=短辺の半分)に内接する正三角形を中央へ置く(色相リングの中に収め、回転にも耐える置き方)。
+	/// 真にすると純色を上辺中央・黒白を下の両隅へ取り、箱を縦横いっぱいに使う(リングを使わない独立三角形で余白を嫌う場合)。色面の頂点取り(描画側)とこの値をそろえること。
+	/// </summary>
 	public bool FillBox
 	{
 		get => (bool)GetValue(FillBoxProperty);
@@ -131,7 +166,11 @@ public sealed class TrianglePad : ContentControl
 
 
 
-	// XValue・YValue が表す成分と、三角形の重心座標(純色・黒・白の重み)との対応をどの表色系で取るか。Hsl は XValue=彩度・YValue=輝度(双錐の断面)、Hwb は XValue=白み・YValue=黒み(純色・白・黒の線形補間)。同じ三角形(純色を上・黒を左下・白を右下)の上で、値とつまみ位置の写し方だけが変わる。色面の描画(HslTriangle / HwbTriangle)とこの値をそろえること。
+	/// <summary>
+	/// XValue・YValue が表す成分と、三角形の重心座標(純色・黒・白の重み)との対応をどの表色系で取るか。
+	/// Hsl は XValue=彩度・YValue=輝度(双錐の断面)、Hwb は XValue=白み・YValue=黒み(純色・白・黒の線形補間)。
+	/// 同じ三角形(純色を上・黒を左下・白を右下)の上で、値とつまみ位置の写し方だけが変わる。色面の描画(<see cref="Generators.Triangles.HslTriangle"/> / <see cref="Generators.Triangles.HwbTriangle"/>)とこの値をそろえること。
+	/// </summary>
 	public TriangleValueModel ValueModel
 	{
 		get => (TriangleValueModel)GetValue(ValueModelProperty);
@@ -225,7 +264,10 @@ public sealed class TrianglePad : ContentControl
 
 
 
-	// 現在の寸法と FillBox 設定に応じた三角形の3頂点。FillBox が偽なら外接円に内接する正三角形(中央)、真なら箱いっぱいに広げた三角形。色面の描画(HslTriangle.Create)と頂点取りをそろえるため、つまみ・当たり判定・レンズはすべてこれを通す。
+	/// <summary>
+	/// 現在の寸法と FillBox 設定に応じた三角形の3頂点。FillBox が偽なら外接円に内接する正三角形(中央)、真なら箱いっぱいに広げた三角形。
+	/// 色面の描画(<see cref="Generators.Triangles.HslTriangle.Create"/>)と頂点取りをそろえるため、つまみ・当たり判定・レンズはすべてこれを通す。
+	/// </summary>
 	private TriangleVertices ComputeVertices()
 	{
 		return FillBox
@@ -236,7 +278,9 @@ public sealed class TrianglePad : ContentControl
 
 
 
-	// XValue・YValue を、現在の ValueModel に従って三角形の重心座標(純色・黒・白の重み)へ写す。つまみ位置・レンズ・つまみ描き込みで使う。
+	/// <summary>
+	/// XValue・YValue を、現在の ValueModel に従って三角形の重心座標(純色・黒・白の重み)へ写す。つまみ位置・レンズ・つまみ描き込みで使う。
+	/// </summary>
 	private (double Hue, double Black, double White) ToBarycentric(double xValue, double yValue)
 	{
 		return ValueModel == TriangleValueModel.Hwb
@@ -247,7 +291,9 @@ public sealed class TrianglePad : ContentControl
 
 
 
-	// 三角形の重心座標(純色・黒・白の重み)を、現在の ValueModel に従って XValue・YValue へ戻す。ポインタ位置を値へ写すときに使う。
+	/// <summary>
+	/// 三角形の重心座標(純色・黒・白の重み)を、現在の ValueModel に従って XValue・YValue へ戻す。ポインタ位置を値へ写すときに使う。
+	/// </summary>
 	private (double XValue, double YValue) FromBarycentric(double hue, double black, double white)
 	{
 		return ValueModel == TriangleValueModel.Hwb
@@ -266,7 +312,10 @@ public sealed class TrianglePad : ContentControl
 
 
 
-	// 現在の値と寸法に合わせて、つまみを三角形内の位置へ移動する。中心を原点とした未回転座標で置くため、回転トランスフォームによって Content と同じだけ回って表示位置が一致する。
+	/// <summary>
+	/// 現在の値と寸法に合わせて、つまみを三角形内の位置へ移動する。
+	/// 中心を原点とした未回転座標で置くため、回転トランスフォームによって Content と同じだけ回って表示位置が一致する。
+	/// </summary>
 	private void UpdateThumb()
 	{
 		if (_thumbOffset is null)
@@ -370,7 +419,9 @@ public sealed class TrianglePad : ContentControl
 
 
 
-	// ドラッグ開始時にレンズを出す。サンプラーが設定されていなければ何もしない。つまみは隠してレンズへ置き換える。
+	/// <summary>
+	/// ドラッグ開始時にレンズを出す。サンプラーが設定されていなければ何もしない。つまみは隠してレンズへ置き換える。
+	/// </summary>
 	private void BeginLens()
 	{
 		if (_lens is null || LensColorSampler is null)
@@ -391,7 +442,10 @@ public sealed class TrianglePad : ContentControl
 
 
 
-	// レンズを現在のつまみ位置(未回転の局所座標)へ追従させ、その点まわりの色面を映し直す。つまみの位置は三角形の重心座標から求める。レンズは三角形と同じ回転枠に入るため、ここでは回転を考えず局所座標で扱う。
+	/// <summary>
+	/// レンズを現在のつまみ位置(未回転の局所座標)へ追従させ、その点まわりの色面を映し直す。
+	/// つまみの位置は三角形の重心座標から求める。レンズは三角形と同じ回転枠に入るため、ここでは回転を考えず局所座標で扱う。
+	/// </summary>
 	private void UpdateLens()
 	{
 		if (_lens is null || !_lens.IsActive || LensColorSampler is null)
@@ -413,7 +467,9 @@ public sealed class TrianglePad : ContentControl
 
 
 
-	// ドラッグ終了時にレンズを退場させ、つまみを戻す。
+	/// <summary>
+	/// ドラッグ終了時にレンズを退場させ、つまみを戻す。
+	/// </summary>
 	private void EndLens()
 	{
 		if (_lens is null)
@@ -432,7 +488,12 @@ public sealed class TrianglePad : ContentControl
 
 
 
-	// 色相環のレンズが内側のこのパッドを覗くとき、静止しているつまみ(中空の二重リング)をその場へ描き込むためのサンプラー。パッド局所座標 (x, y) が現在のつまみ(彩度 XValue・輝度 YValue を三角形の重心座標へ写した位置)の輪の上にあれば、その色を baseColor へ重ねて返す。色面の外(baseColor が透明)や輪の外はそのまま返す。色相環のレンズはこれを色面の色の上から掛けるため、つまみも色面と一緒に拡大・屈折されて映る。三角形そのものをドラッグ中はつまみがレンズへ置き換わって消えるのが正しいため、本サンプラーは色相環側からの覗き見にだけ使う。
+	/// <summary>
+	/// 色相環のレンズが内側のこのパッドを覗くとき、静止しているつまみ(中空の二重リング)をその場へ描き込むためのサンプラー。
+	/// パッド局所座標 (x, y) が現在のつまみ(彩度 XValue・輝度 YValue を三角形の重心座標へ写した位置)の輪の上にあれば、その色を baseColor へ重ねて返す。
+	/// 色面の外(baseColor が透明)や輪の外はそのまま返す。色相環のレンズはこれを色面の色の上から掛けるため、つまみも色面と一緒に拡大・屈折されて映る。
+	/// 三角形そのものをドラッグ中はつまみがレンズへ置き換わって消えるのが正しいため、本サンプラーは色相環側からの覗き見にだけ使う。
+	/// </summary>
 	public Color SampleThumbOverlay(Color baseColor, double x, double y)
 	{
 		if (ActualWidth <= 0.0 || ActualHeight <= 0.0)
@@ -473,7 +534,11 @@ public sealed class TrianglePad : ContentControl
 
 
 
-	// 画面上の位置を XValue・YValue(現在の ValueModel の成分。HSL なら彩度・輝度、HWB なら白み・黒み)へ写す。中心を原点に取り、PadRotation の逆回転で未回転座標へ戻してから三角形の重心座標を求める。inside には回転前の重みがすべて非負か(=三角形の内側か)を返し、外側の点はクランプして辺・頂点へ寄せた値を返す。寸法が無いときは false を返す。
+	/// <summary>
+	/// 画面上の位置を XValue・YValue(現在の ValueModel の成分。HSL なら彩度・輝度、HWB なら白み・黒み)へ写す。
+	/// 中心を原点に取り、PadRotation の逆回転で未回転座標へ戻してから三角形の重心座標を求める。
+	/// inside には回転前の重みがすべて非負か(=三角形の内側か)を返し、外側の点はクランプして辺・頂点へ寄せた値を返す。寸法が無いときは false を返す。
+	/// </summary>
 	private bool TryMapToValues(Point position, out double xValue, out double yValue, out bool inside)
 	{
 		xValue = 0.0;
@@ -508,7 +573,10 @@ public sealed class TrianglePad : ContentControl
 
 
 
-	// 矢印キーの方向を画面上の移動として扱い、現在のつまみの画面位置をその分ずらしてから値へ写し直す。回転時もポインタ操作と移動方向が一致する。引数は幅・高さに対する比率で与える。
+	/// <summary>
+	/// 矢印キーの方向を画面上の移動として扱い、現在のつまみの画面位置をその分ずらしてから値へ写し直す。
+	/// 回転時もポインタ操作と移動方向が一致する。引数は幅・高さに対する比率で与える。
+	/// </summary>
 	private void NudgeByScreenDelta(double fractionX, double fractionY)
 	{
 		if (ActualWidth <= 0.0 || ActualHeight <= 0.0)
@@ -542,7 +610,9 @@ public sealed class TrianglePad : ContentControl
 
 
 
-// TrianglePad の XValue・YValue が表す成分と三角形の重心座標との対応を表す表色系。Hsl は彩度・輝度(双錐の色相断面)、Hwb は白み・黒み(純色・白・黒の線形補間)。
+/// <summary>
+/// TrianglePad の XValue・YValue が表す成分と三角形の重心座標との対応を表す表色系。Hsl は彩度・輝度(双錐の色相断面)、Hwb は白み・黒み(純色・白・黒の線形補間)。
+/// </summary>
 public enum TriangleValueModel
 {
 	Hsl,

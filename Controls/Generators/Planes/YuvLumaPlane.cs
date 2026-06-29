@@ -17,7 +17,7 @@ namespace Irozukume.Controls.Generators.Planes;
 /// 固定する側の色差は引数の一定値とする。
 /// Cb×Y は横軸が Cb(左 0→右 255)・縦軸が Y(上 255→下 0)で Cr を固定、Cr×Y は横軸が Cr・縦軸が Y で Cb を固定する。
 /// 各画素を指定形式の YCbCr→RGB へ変換し、RGB が 0–255 に収まる有効ガモットの内側はその色をそのまま塗る。
-/// 収まらない外側の見せ方は GamutOutOfRangeStyle で切り替え、CbCrPlane と寸法・色をそろえる。
+/// 収まらない外側の見せ方は <see cref="GamutOutOfRangeStyle"/> で切り替え、<see cref="CbCrPlane"/> と寸法・色をそろえる。
 /// 色制限が有効なら有効ガモット内の色をその制限へ丸めてから並べる。
 /// </summary>
 /// <remarks>固定の色差・符号化形式・色域外の見せ方が変わるたびに作り直す想定。</remarks>

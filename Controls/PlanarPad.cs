@@ -12,30 +12,51 @@ using Windows.UI;
 
 namespace Irozukume.Controls;
 
-// 矩形の中で 2 次元の値を選ぶ汎用パッド。XValue は左 0・右 1、YValue は下 0・上 1 を表す。色を前提とせず、見せるグラデーション等は Content に置く。PadRotation を与えると Content とつまみを中心まわりに回し、入力位置も同じ角度で逆回転して値へ写すため、回転しても操作と表示が一致する。中央の環状スライダーに彩度・明度パッドとして収め、色相に追従して回す用途を想定する。
+/// <summary>
+/// 矩形の中で 2 次元の値を選ぶ汎用パッド。
+/// XValue は左 0・右 1、YValue は下 0・上 1 を表す。色を前提とせず、見せるグラデーション等は Content に置く。
+/// PadRotation を与えると Content とつまみを中心まわりに回し、入力位置も同じ角度で逆回転して値へ写すため、回転しても操作と表示が一致する。
+/// 中央の環状スライダーに彩度・明度パッドとして収め、色相に追従して回す用途を想定する。
+/// </summary>
 public sealed class PlanarPad : ContentControl
 {
-	// テンプレート内の回転トランスフォームとつまみの平行移動。回転は Content とつまみをまとめて回し、平行移動はつまみを矩形内の値の位置へ置く。
+	/// <summary>
+	/// テンプレート内の回転トランスフォームとつまみの平行移動。回転は Content とつまみをまとめて回し、平行移動はつまみを矩形内の値の位置へ置く。
+	/// </summary>
 	private RotateTransform? _rotation;
 	private TranslateTransform? _thumbOffset;
 
-	// 色面を包む角丸クリップ。FieldCornerRadius を CornerRadius として書き込む。
+	/// <summary>
+	/// 色面を包む角丸クリップ。FieldCornerRadius を CornerRadius として書き込む。
+	/// </summary>
 	private Border? _fieldClip;
 
-	// つまみをドラッグ中かどうか。ポインタを捕捉している間だけ真にする。
+	/// <summary>
+	/// つまみをドラッグ中かどうか。ポインタを捕捉している間だけ真にする。
+	/// </summary>
 	private bool _isDragging;
 
-	// つまみ要素。ドラッグ中はレンズへ置き換えるため隠す。
+	/// <summary>
+	/// つまみ要素。ドラッグ中はレンズへ置き換えるため隠す。
+	/// </summary>
 	private FrameworkElement? _thumb;
 
-	// ドラッグ中につまみをガラスレンズへ膨らませる管理役と、その置き場。テンプレートに置き場があるときだけ用意する。レンズはパッドと同じ回転枠に入るため、色面の向きと一致する。
+	/// <summary>
+	/// ドラッグ中につまみをガラスレンズへ膨らませる管理役と、その置き場。
+	/// テンプレートに置き場があるときだけ用意する。レンズはパッドと同じ回転枠に入るため、色面の向きと一致する。
+	/// </summary>
 	private Canvas? _lensHost;
 	private LensController? _lens;
 
-	// レンズに映す色面の色を返すサンプラー。コントロール局所座標(画素、未回転)を受け、その点の色を返す。利用側(彩度明度なら HSV→RGB、等)が設定する。null のときはレンズを出さず、従来どおりのつまみで操作する。
+	/// <summary>
+	/// レンズに映す色面の色を返すサンプラー。
+	/// コントロール局所座標(画素、未回転)を受け、その点の色を返す。利用側(彩度明度なら HSV→RGB、等)が設定する。null のときはレンズを出さず、通常のつまみで操作する。
+	/// </summary>
 	public Func<double, double, Color>? LensColorSampler { get; set; }
 
-	// 2次元パッドのつまみのガラスレンズの効き。色相環とは別に調整できるよう、ここで持つ。各項目の意味と単位は GlassLensParams を参照。
+	/// <summary>
+	/// 2次元パッドのつまみのガラスレンズの効き。色相環とは別に調整できるよう、ここで持つ。各項目の意味と単位は <see cref="GlassLensParams"/> を参照。
+	/// </summary>
 	private static readonly GlassLensParams LensParams = new()
 	{
 		Diameter = 50.0,
@@ -55,7 +76,9 @@ public sealed class PlanarPad : ContentControl
 
 
 
-	// 横方向の値。左端を 0、右端を 1 とする。
+	/// <summary>
+	/// 横方向の値。左端を 0、右端を 1 とする。
+	/// </summary>
 	public double XValue
 	{
 		get => (double)GetValue(XValueProperty);
@@ -68,7 +91,9 @@ public sealed class PlanarPad : ContentControl
 
 
 
-	// 縦方向の値。下端を 0、上端を 1 とする。
+	/// <summary>
+	/// 縦方向の値。下端を 0、上端を 1 とする。
+	/// </summary>
 	public double YValue
 	{
 		get => (double)GetValue(YValueProperty);
@@ -81,7 +106,9 @@ public sealed class PlanarPad : ContentControl
 
 
 
-	// パッド全体の回転角(度, 時計回り)。Content とつまみを中心まわりに回し、入力も同じだけ逆回転して値へ写す。
+	/// <summary>
+	/// パッド全体の回転角(度, 時計回り)。Content とつまみを中心まわりに回し、入力も同じだけ逆回転して値へ写す。
+	/// </summary>
 	public double PadRotation
 	{
 		get => (double)GetValue(PadRotationProperty);
@@ -94,7 +121,9 @@ public sealed class PlanarPad : ContentControl
 
 
 
-	// つまみの直径。
+	/// <summary>
+	/// つまみの直径。
+	/// </summary>
 	public double ThumbDiameter
 	{
 		get => (double)GetValue(ThumbDiameterProperty);
@@ -107,7 +136,9 @@ public sealed class PlanarPad : ContentControl
 
 
 
-	// 色面の角丸量(画素)。色面を包む Border の角丸でまとめて切り抜く。0 で角丸なし。
+	/// <summary>
+	/// 色面の角丸量(画素)。色面を包む Border の角丸でまとめて切り抜く。0 で角丸なし。
+	/// </summary>
 	public double FieldCornerRadius
 	{
 		get => (double)GetValue(FieldCornerRadiusProperty);
@@ -120,7 +151,10 @@ public sealed class PlanarPad : ContentControl
 
 
 
-	// 利用者の操作(ポインタ・キーボード)で XValue・YValue が更新されたときに発火する。横と縦を独立に束縛するのではなく、2軸をまとめて受け取って2次元で処理したい利用側(色域内への最近傍寄せなど)が使う。束縛や外部からの設定による変更では発火しない。
+	/// <summary>
+	/// 利用者の操作(ポインタ・キーボード)で XValue・YValue が更新されたときに発火する。
+	/// 横と縦を独立に束縛するのではなく、2軸をまとめて受け取って2次元で処理したい利用側(色域内への最近傍寄せなど)が使う。束縛や外部からの設定による変更では発火しない。
+	/// </summary>
 	public event EventHandler? ValuesChanged;
 
 
@@ -162,7 +196,9 @@ public sealed class PlanarPad : ContentControl
 
 
 
-	// 色面の角丸量を、それを包む Border の CornerRadius へ反映する。
+	/// <summary>
+	/// 色面の角丸量を、それを包む Border の CornerRadius へ反映する。
+	/// </summary>
 	private void ApplyFieldCornerRadius()
 	{
 		if (_fieldClip is not null)
@@ -222,7 +258,10 @@ public sealed class PlanarPad : ContentControl
 
 
 
-	// 現在の値と寸法に合わせて、つまみを矩形内の位置へ移動する。中心を原点とした未回転座標で置くため、回転トランスフォームによって Content と同じだけ回って表示位置が一致する。
+	/// <summary>
+	/// 現在の値と寸法に合わせて、つまみを矩形内の位置へ移動する。
+	/// 中心を原点とした未回転座標で置くため、回転トランスフォームによって Content と同じだけ回って表示位置が一致する。
+	/// </summary>
 	private void UpdateThumb()
 	{
 		if (_thumbOffset is null)
@@ -325,7 +364,9 @@ public sealed class PlanarPad : ContentControl
 
 
 
-	// ドラッグ開始時にレンズを出す。サンプラーが設定されていなければ何もしない。つまみは隠してレンズへ置き換える。
+	/// <summary>
+	/// ドラッグ開始時にレンズを出す。サンプラーが設定されていなければ何もしない。つまみは隠してレンズへ置き換える。
+	/// </summary>
 	private void BeginLens()
 	{
 		if (_lens is null || LensColorSampler is null)
@@ -346,7 +387,9 @@ public sealed class PlanarPad : ContentControl
 
 
 
-	// レンズを現在のつまみ位置(未回転の局所座標)へ追従させ、その点まわりの色面を映し直す。レンズはパッドと同じ回転枠に入るため、ここでは回転を考えず局所座標で扱う。
+	/// <summary>
+	/// レンズを現在のつまみ位置(未回転の局所座標)へ追従させ、その点まわりの色面を映し直す。レンズはパッドと同じ回転枠に入るため、ここでは回転を考えず局所座標で扱う。
+	/// </summary>
 	private void UpdateLens()
 	{
 		if (_lens is null || !_lens.IsActive || LensColorSampler is null)
@@ -367,7 +410,9 @@ public sealed class PlanarPad : ContentControl
 
 
 
-	// ドラッグ終了時にレンズを退場させ、つまみを戻す。
+	/// <summary>
+	/// ドラッグ終了時にレンズを退場させ、つまみを戻す。
+	/// </summary>
 	private void EndLens()
 	{
 		if (_lens is null)
@@ -386,7 +431,12 @@ public sealed class PlanarPad : ContentControl
 
 
 
-	// 色相環のレンズが内側のこのパッドを覗くとき、静止しているつまみ(中空の二重リング)をその場へ描き込むためのサンプラー。パッド局所座標 (x, y) が現在のつまみ(XValue・YValue の位置)の輪の上にあれば、その色を baseColor へ重ねて返す。色面の外(baseColor が透明)や輪の外はそのまま返す。色相環のレンズはこれを色面の色の上から掛けるため、つまみも色面と一緒に拡大・屈折されて映る。パッドそのものをドラッグ中はつまみがレンズへ置き換わって消えるのが正しいため、本サンプラーは色相環側からの覗き見にだけ使う。
+	/// <summary>
+	/// 色相環のレンズが内側のこのパッドを覗くとき、静止しているつまみ(中空の二重リング)をその場へ描き込むためのサンプラー。
+	/// パッド局所座標 (x, y) が現在のつまみ(XValue・YValue の位置)の輪の上にあれば、その色を baseColor へ重ねて返す。
+	/// 色面の外(baseColor が透明)や輪の外はそのまま返す。色相環のレンズはこれを色面の色の上から掛けるため、つまみも色面と一緒に拡大・屈折されて映る。
+	/// パッドそのものをドラッグ中はつまみがレンズへ置き換わって消えるのが正しいため、本サンプラーは色相環側からの覗き見にだけ使う。
+	/// </summary>
 	public Color SampleThumbOverlay(Color baseColor, double x, double y)
 	{
 		if (ActualWidth <= 0.0 || ActualHeight <= 0.0)
@@ -426,7 +476,11 @@ public sealed class PlanarPad : ContentControl
 
 
 
-	// 画面上の位置を XValue・YValue の比率へ写す。中心を原点に取り、PadRotation の逆回転で未回転座標へ戻してから矩形内の比率を求めるため、回転していても見た目どおりの位置が値になる。比率はクランプせずに返し、矩形 [0,1] の内外判定は呼び出し側に委ねる。寸法が無いときは false を返す。
+	/// <summary>
+	/// 画面上の位置を XValue・YValue の比率へ写す。
+	/// 中心を原点に取り、PadRotation の逆回転で未回転座標へ戻してから矩形内の比率を求めるため、回転していても見た目どおりの位置が値になる。
+	/// 比率はクランプせずに返し、矩形 [0,1] の内外判定は呼び出し側に委ねる。寸法が無いときは false を返す。
+	/// </summary>
 	private bool TryMapToValues(Point position, out double fractionX, out double fractionY)
 	{
 		fractionX = 0.0;
@@ -456,7 +510,10 @@ public sealed class PlanarPad : ContentControl
 
 
 
-	// 矢印キーの方向を画面上の移動として扱い、現在のつまみの画面位置をその分ずらしてから値へ写し直す。回転時もポインタ操作と移動方向が一致する。引数は幅・高さに対する比率で与える。
+	/// <summary>
+	/// 矢印キーの方向を画面上の移動として扱い、現在のつまみの画面位置をその分ずらしてから値へ写し直す。
+	/// 回転時もポインタ操作と移動方向が一致する。引数は幅・高さに対する比率で与える。
+	/// </summary>
 	private void NudgeByScreenDelta(double fractionX, double fractionY)
 	{
 		if (ActualWidth <= 0.0 || ActualHeight <= 0.0)

@@ -314,7 +314,7 @@ public sealed partial class PaletteTabView : UserControl
 		{
 			Text = Loc.Get("Favorite_MenuDelete"),
 			KeyboardAcceleratorTextOverride = "Del",
-			Icon = new SymbolIcon(Symbol.Delete) { Foreground = criticalBrush },
+			Icon = new FontIcon { FontFamily = new FontFamily("ms-appx:///Assets/Fonts/romoji.ttf#Romoji"), Glyph = "\uE014", Foreground = criticalBrush },
 		};
 		delete.Click += async (_, _) => await DeleteFavoriteAsync(row);
 

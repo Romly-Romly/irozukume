@@ -107,7 +107,7 @@ public sealed class PaletteViewModel : INotifyPropertyChanged
 		// お気に入りの増減でコンボの一覧を組み直すための購読。寿命の長い共有ストアだが、VM とお気に入りストアは同じ寿命のため購読は解かない。
 		_favorites.Items.CollectionChanged += OnFavoritesChanged;
 
-		// 既定では先頭のお気に入り(空のことが多い)ではなく、その次の Web 名前付きカラーを開く。お気に入りはコンボの先頭に置くが、初期表示は従来どおり名前付きカラーにする。
+		// 既定では先頭のお気に入り(空のことが多い)ではなく、その次の Web 名前付きカラーを開く。お気に入りはコンボの先頭に置くが、初期表示は名前付きカラーにする。
 		_selectedPaletteIndex = Math.Min(_favoritesPaletteIndex + 1, _palettes.Count - 1);
 		LoadPalette(_selectedPaletteIndex);
 	}

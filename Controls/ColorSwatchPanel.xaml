@@ -318,7 +318,7 @@
 						<SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="{ThemeResource SystemFillColorCritical}" />
 						<SolidColorBrush x:Key="ButtonForegroundPressed" Color="{ThemeResource SystemFillColorCritical}" />
 					</Button.Resources>
-					<FontIcon Glyph="&#xE74D;" FontSize="14" />
+					<FontIcon FontFamily="ms-appx:///Assets/Fonts/romoji.ttf#Romoji" Glyph="&#xE014;" FontSize="14" />
 				</Button>
 				<Button
 					x:Uid="SwatchToolAdd"

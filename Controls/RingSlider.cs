@@ -13,24 +13,40 @@ using Irozukume.Controls.Geometry;
 
 namespace Irozukume.Controls;
 
-// 環状に値を選ぶ汎用スライダー。角度値(度, 0–360, 端で巻き戻る)を環の上のつまみで選ぶ。色相を前提とせず、リングの塗りは利用側が TrackBrush に与える(色相環画像など)。中央は ContentPresenter として空けてあり、2次元スライダー等を Content に置ける。リングの帯の上だけを操作対象とし、中央の Content は独立して入力を受けられる。値の変化は ValueChanged で通知する。
+/// <summary>
+/// 環状に値を選ぶ汎用スライダー。
+/// 角度値(度, 0–360, 端で巻き戻る)を環の上のつまみで選ぶ。色相を前提とせず、リングの塗りは利用側が TrackBrush に与える(色相環画像など)。
+/// 中央は ContentPresenter として空けてあり、2次元スライダー等を Content に置ける。リングの帯の上だけを操作対象とし、中央の Content は独立して入力を受けられる。
+/// 値の変化は ValueChanged で通知する。
+/// </summary>
 public sealed class RingSlider : ContentControl
 {
-	// テンプレート内のつまみとその平行移動。値と寸法に応じて中央から環の上へずらす。
+	/// <summary>
+	/// テンプレート内のつまみとその平行移動。値と寸法に応じて中央から環の上へずらす。
+	/// </summary>
 	private FrameworkElement? _thumb;
 	private TranslateTransform? _thumbOffset;
 
-	// つまみをドラッグ中かどうか。ポインタを捕捉している間だけ真にする。
+	/// <summary>
+	/// つまみをドラッグ中かどうか。ポインタを捕捉している間だけ真にする。
+	/// </summary>
 	private bool _isDragging;
 
-	// ドラッグ中につまみをガラスレンズへ膨らませる管理役と、その置き場。テンプレートに置き場があるときだけ用意する。
+	/// <summary>
+	/// ドラッグ中につまみをガラスレンズへ膨らませる管理役と、その置き場。テンプレートに置き場があるときだけ用意する。
+	/// </summary>
 	private Canvas? _lensHost;
 	private LensController? _lens;
 
-	// レンズに映す色面の色を返すサンプラー。コントロール局所座標(画素)を受け、その点の色(色相環なら帯の色、帯の外は透明)を返す。利用側が設定する。null のときはレンズを出さず、従来どおりのつまみで操作する。
+	/// <summary>
+	/// レンズに映す色面の色を返すサンプラー。
+	/// コントロール局所座標(画素)を受け、その点の色(色相環なら帯の色、帯の外は透明)を返す。利用側が設定する。null のときはレンズを出さず、通常のつまみで操作する。
+	/// </summary>
 	public Func<double, double, Color>? LensColorSampler { get; set; }
 
-	// 色相環のつまみのガラスレンズの効き。2次元パッドとは別に調整できるよう、ここで持つ。各項目の意味と単位は GlassLensParams を参照。
+	/// <summary>
+	/// 色相環のつまみのガラスレンズの効き。2次元パッドとは別に調整できるよう、ここで持つ。各項目の意味と単位は <see cref="GlassLensParams"/> を参照。
+	/// </summary>
 	private static readonly GlassLensParams LensParams = new()
 	{
 		Diameter = 48.0,
@@ -41,7 +57,9 @@ public sealed class RingSlider : ContentControl
 		BevelFraction = 0.35,
 	};
 
-	// Value の正規化(0–360 への巻き戻し)で変更通知が再入するのを抑える。
+	/// <summary>
+	/// Value の正規化(0–360 への巻き戻し)で変更通知が再入するのを抑える。
+	/// </summary>
 	private bool _isCoercingValue;
 
 
@@ -53,7 +71,9 @@ public sealed class RingSlider : ContentControl
 
 
 
-	// 現在の角度値(度)。0 を真上とし時計回りに増える。0 と 360 は同一の位置を指すため、範囲外の値は [0, 360) へ巻き戻して保持する。
+	/// <summary>
+	/// 現在の角度値(度)。0 を真上とし時計回りに増える。0 と 360 は同一の位置を指すため、範囲外の値は [0, 360) へ巻き戻して保持する。
+	/// </summary>
 	public double Value
 	{
 		get => (double)GetValue(ValueProperty);
@@ -66,7 +86,9 @@ public sealed class RingSlider : ContentControl
 
 
 
-	// リングの帯の太さ。色相環などのグラデーションを見せる幅として使い、つまみの当たり判定の帯幅にもなる。
+	/// <summary>
+	/// リングの帯の太さ。色相環などのグラデーションを見せる幅として使い、つまみの当たり判定の帯幅にもなる。
+	/// </summary>
 	public double RingThickness
 	{
 		get => (double)GetValue(RingThicknessProperty);
@@ -79,7 +101,9 @@ public sealed class RingSlider : ContentControl
 
 
 
-	// つまみの直径。中央半径上に置かれ、この径の分だけリング帯の内外へはみ出す。
+	/// <summary>
+	/// つまみの直径。中央半径上に置かれ、この径の分だけリング帯の内外へはみ出す。
+	/// </summary>
 	public double ThumbDiameter
 	{
 		get => (double)GetValue(ThumbDiameterProperty);
@@ -92,7 +116,9 @@ public sealed class RingSlider : ContentControl
 
 
 
-	// リングの帯を塗るブラシ。色相環の画像ブラシなど、環の見た目の中身は利用側が与える。
+	/// <summary>
+	/// リングの帯を塗るブラシ。色相環の画像ブラシなど、環の見た目の中身は利用側が与える。
+	/// </summary>
 	public Brush? TrackBrush
 	{
 		get => (Brush?)GetValue(TrackBrushProperty);
@@ -105,7 +131,9 @@ public sealed class RingSlider : ContentControl
 
 
 
-	// 矢印キーひと押しでの変化量(度)。
+	/// <summary>
+	/// 矢印キーひと押しでの変化量(度)。
+	/// </summary>
 	public double SmallChange
 	{
 		get => (double)GetValue(SmallChangeProperty);
@@ -118,7 +146,9 @@ public sealed class RingSlider : ContentControl
 
 
 
-	// PageUp/PageDown ひと押しでの変化量(度)。
+	/// <summary>
+	/// PageUp/PageDown ひと押しでの変化量(度)。
+	/// </summary>
 	public double LargeChange
 	{
 		get => (double)GetValue(LargeChangeProperty);
@@ -131,7 +161,9 @@ public sealed class RingSlider : ContentControl
 
 
 
-	// 値が変わったときに新しい値(度)を通知する。
+	/// <summary>
+	/// 値が変わったときに新しい値(度)を通知する。
+	/// </summary>
 	public event TypedEventHandler<RingSlider, double>? ValueChanged;
 
 
@@ -206,7 +238,9 @@ public sealed class RingSlider : ContentControl
 
 
 
-	// 現在の値と寸法に合わせて、つまみを中央から環の上へ移動する。
+	/// <summary>
+	/// 現在の値と寸法に合わせて、つまみを中央から環の上へ移動する。
+	/// </summary>
 	private void UpdateThumb()
 	{
 		if (_thumbOffset is null)
@@ -299,7 +333,9 @@ public sealed class RingSlider : ContentControl
 
 
 
-	// ドラッグ開始時にレンズを出す。サンプラーが設定されていなければ何もしない。つまみは隠してレンズへ置き換える。
+	/// <summary>
+	/// ドラッグ開始時にレンズを出す。サンプラーが設定されていなければ何もしない。つまみは隠してレンズへ置き換える。
+	/// </summary>
 	private void BeginLens()
 	{
 		if (_lens is null || LensColorSampler is null)
@@ -320,7 +356,9 @@ public sealed class RingSlider : ContentControl
 
 
 
-	// レンズを現在のつまみ位置へ追従させ、その点まわりの色面を映し直す。
+	/// <summary>
+	/// レンズを現在のつまみ位置へ追従させ、その点まわりの色面を映し直す。
+	/// </summary>
 	private void UpdateLens()
 	{
 		if (_lens is null || !_lens.IsActive || LensColorSampler is null)
@@ -341,7 +379,9 @@ public sealed class RingSlider : ContentControl
 
 
 
-	// ドラッグ終了時にレンズを退場させ、つまみを戻す。
+	/// <summary>
+	/// ドラッグ終了時にレンズを退場させ、つまみを戻す。
+	/// </summary>
 	private void EndLens()
 	{
 		if (_lens is null)
@@ -360,7 +400,12 @@ public sealed class RingSlider : ContentControl
 
 
 
-	// 別のコントロール(中央のパッド)のレンズが色相環を覗くとき、静止しているつまみ(中空の二重リング)をその場へ描き込むためのサンプラー。リング局所座標 (x, y) の点が現在のつまみの輪の上にあれば、その色を baseColor へ重ねて返す。輪の外や帯の外(baseColor が透明)はそのまま返す。パッドのレンズはこれを帯の色の上から掛けるため、つまみも帯と一緒に拡大・屈折されてレンズに映る。色相環そのものをドラッグ中は、つまみがレンズへ置き換わって消えるのが正しいため、本サンプラーはパッド側からの覗き見にだけ使う。
+	/// <summary>
+	/// 別のコントロール(中央のパッド)のレンズが色相環を覗くとき、静止しているつまみ(中空の二重リング)をその場へ描き込むためのサンプラー。
+	/// リング局所座標 (x, y) の点が現在のつまみの輪の上にあれば、その色を baseColor へ重ねて返す。輪の外や帯の外(baseColor が透明)はそのまま返す。
+	/// パッドのレンズはこれを帯の色の上から掛けるため、つまみも帯と一緒に拡大・屈折されてレンズに映る。
+	/// 色相環そのものをドラッグ中は、つまみがレンズへ置き換わって消えるのが正しいため、本サンプラーはパッド側からの覗き見にだけ使う。
+	/// </summary>
 	public Color SampleThumbOverlay(Color baseColor, double x, double y)
 	{
 		if (ActualWidth <= 0.0 || ActualHeight <= 0.0)
@@ -406,7 +451,10 @@ public sealed class RingSlider : ContentControl
 
 
 
-	// ポインタ位置がリングの帯(つまみのはみ出し分を含む)の上にあるかを判定する。中央の穴や外側の余白での押下は操作対象にせず、中央の Content が入力を受けられるようにする。
+	/// <summary>
+	/// ポインタ位置がリングの帯(つまみのはみ出し分を含む)の上にあるかを判定する。
+	/// 中央の穴や外側の余白での押下は操作対象にせず、中央の Content が入力を受けられるようにする。
+	/// </summary>
 	private bool IsInBand(Point position)
 	{
 		if (ActualWidth <= 0.0 || ActualHeight <= 0.0)
@@ -425,7 +473,9 @@ public sealed class RingSlider : ContentControl
 
 
 
-	// ポインタ位置の指す角度を値へ反映する。
+	/// <summary>
+	/// ポインタ位置の指す角度を値へ反映する。
+	/// </summary>
 	private void SetValueFromPosition(Point position)
 	{
 		RingMetrics metrics = RingGeometry.Compute(ActualWidth, ActualHeight, RingThickness, ThumbDiameter);
@@ -437,7 +487,9 @@ public sealed class RingSlider : ContentControl
 
 
 
-	// 任意の角度を [0, 360) へ巻き戻す。
+	/// <summary>
+	/// 任意の角度を [0, 360) へ巻き戻す。
+	/// </summary>
 	private static double Normalize(double value)
 	{
 		double wrapped = value % 360.0;

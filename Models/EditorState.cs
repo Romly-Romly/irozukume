@@ -319,4 +319,32 @@ public sealed class EditorState
 	// 利用者が取っておいたお気に入りパレットの一覧。並びは登録順。このキーを持たない設定ではお気に入りなしで始める。各パレットは色の並びだけを持ち、配色の作り方は持たない。
 	[JsonPropertyName("saved_palettes")]
 	public List<SavedPaletteState>? SavedPalettes { get; set; }
+
+	// 画像タブの焼きなまし法の反復回数。多いほど煮詰まるが重くなる。このキーを持たない設定では既定の 18000 で始める。
+	[JsonPropertyName("sa_iterations")]
+	public int SaIterations { get; set; } = 18000;
+
+	// 画像タブの焼きなまし法の1手あたりの代表色の移動幅(Lab)。このキーを持たない設定では既定の 18 で始める。
+	[JsonPropertyName("sa_move")]
+	public double SaMove { get; set; } = 18.0;
+
+	// 画像タブの焼きなまし法の冷却率(1手ごとに温度へ掛ける係数、1未満)。このキーを持たない設定では既定の 0.9997 で始める。
+	[JsonPropertyName("sa_alpha")]
+	public double SaAlpha { get; set; } = 0.9997;
+
+	// 画像タブの焼きなまし法の初期温度係数(試行手の平均悪化量へ掛けて初期温度を決める)。このキーを持たない設定では既定の 0.5 で始める。
+	[JsonPropertyName("sa_initial_temp_factor")]
+	public double SaInitialTempFactor { get; set; } = 0.5;
+
+	// 画像タブの焼きなまし法で、種を中央値分割法の結果から起こすか。偽なら学習標本から無作為に種を採る。このキーを持たない設定では真で始める。
+	[JsonPropertyName("sa_seed_median_cut")]
+	public bool SaSeedFromMedianCut { get; set; } = true;
+
+	// 画像タブの焼きなまし法の彩度重み(0–8)。高彩度の色を学習標本へ多めに採る度合い。このキーを持たない設定では 0(均等)で始める。
+	[JsonPropertyName("sa_saturation_weight")]
+	public int SaSaturationWeight { get; set; }
+
+	// 画像タブの焼きなまし法の希少度重み(0–8)。色空間で疎(希少)な色を学習標本へ多めに採る度合い。このキーを持たない設定では 0(均等)で始める。
+	[JsonPropertyName("sa_rarity_weight")]
+	public int SaRarityWeight { get; set; }
 }

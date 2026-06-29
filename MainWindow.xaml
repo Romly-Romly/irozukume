@@ -31,6 +31,7 @@
 			<KeyboardAccelerator Modifiers="Control" Key="Number6" Invoked="OnSelectTabAccelerator" />
 			<KeyboardAccelerator Modifiers="Control" Key="Number7" Invoked="OnSelectTabAccelerator" />
 			<KeyboardAccelerator Modifiers="Control" Key="Number8" Invoked="OnSelectTabAccelerator" />
+			<KeyboardAccelerator Modifiers="Control" Key="Number9" Invoked="OnSelectTabAccelerator" />
 			<KeyboardAccelerator Modifiers="Control" Key="Tab" Invoked="OnNextTabAccelerator" />
 			<KeyboardAccelerator Modifiers="Control,Shift" Key="Tab" Invoked="OnPrevTabAccelerator" />
 		</Grid.KeyboardAccelerators>
@@ -250,7 +251,7 @@
 								IsEnabled="{x:Bind ViewModel.HasMultipleColors, Mode=OneWay}"
 								IsChecked="{x:Bind ViewModel.ShowContrastText, Mode=TwoWay}">
 								<ToggleMenuFlyoutItem.Icon>
-									<SymbolIcon Symbol="Font" />
+									<FontIcon FontFamily="ms-appx:///Assets/Fonts/romoji.ttf#Romoji" Glyph="&#xE012;" />
 								</ToggleMenuFlyoutItem.Icon>
 							</ToggleMenuFlyoutItem>
 							<!-- コントラスト確認で不透明度(アルファ)を反映するか。オンのとき、サンプル文字を文字色の不透明度で背景色へ透かし、コントラスト比もその透けた実効色で測る。オフなら不透明として扱う。 -->
@@ -281,7 +282,11 @@
 									x:Uid="MenuLimitWebSafe"
 									GroupName="ColorLimit"
 									KeyboardAcceleratorTextOverride="{x:Bind ViewModel.LimitWebSafeShortcut, Mode=OneWay}"
-									IsChecked="{x:Bind ViewModel.IsLimitWebSafe, Mode=TwoWay}" />
+									IsChecked="{x:Bind ViewModel.IsLimitWebSafe, Mode=TwoWay}">
+									<RadioMenuFlyoutItem.Icon>
+										<FontIcon FontFamily="ms-appx:///Assets/Fonts/romoji.ttf#Romoji" Glyph="&#xE015;" />
+									</RadioMenuFlyoutItem.Icon>
+								</RadioMenuFlyoutItem>
 								<RadioMenuFlyoutItem
 									x:Uid="MenuLimitRgb565"
 									GroupName="ColorLimit"
@@ -752,7 +757,7 @@
 								IsEnabled="{x:Bind ViewModel.HasMultipleColors, Mode=OneWay}"
 								IsChecked="{x:Bind ViewModel.ShowContrastText, Mode=TwoWay}">
 								<StackPanel Orientation="Vertical" Spacing="4" HorizontalAlignment="Center">
-									<SymbolIcon Symbol="Font" HorizontalAlignment="Center" />
+									<FontIcon FontFamily="ms-appx:///Assets/Fonts/romoji.ttf#Romoji" Glyph="&#xE012;" HorizontalAlignment="Center" />
 									<TextBlock x:Uid="ToolbarShowText" HorizontalAlignment="Center" Visibility="{x:Bind ViewModel.ToolbarCaptionVisibility, Mode=OneWay}" />
 								</StackPanel>
 							</ToggleButton>
@@ -803,7 +808,11 @@
 									<MenuFlyout Placement="Bottom">
 										<RadioMenuFlyoutItem x:Uid="MenuLimitNone" GroupName="ColorLimitToolbar" IsChecked="{x:Bind ViewModel.IsLimitNone, Mode=TwoWay}" />
 										<MenuFlyoutSeparator />
-										<RadioMenuFlyoutItem x:Uid="MenuLimitWebSafe" GroupName="ColorLimitToolbar" IsChecked="{x:Bind ViewModel.IsLimitWebSafe, Mode=TwoWay}" />
+										<RadioMenuFlyoutItem x:Uid="MenuLimitWebSafe" GroupName="ColorLimitToolbar" IsChecked="{x:Bind ViewModel.IsLimitWebSafe, Mode=TwoWay}">
+											<RadioMenuFlyoutItem.Icon>
+												<FontIcon FontFamily="ms-appx:///Assets/Fonts/romoji.ttf#Romoji" Glyph="&#xE015;" />
+											</RadioMenuFlyoutItem.Icon>
+										</RadioMenuFlyoutItem>
 										<RadioMenuFlyoutItem x:Uid="MenuLimitRgb565" GroupName="ColorLimitToolbar" IsChecked="{x:Bind ViewModel.IsLimitRgb565, Mode=TwoWay}" />
 										<RadioMenuFlyoutItem x:Uid="MenuLimitRgb555" GroupName="ColorLimitToolbar" IsChecked="{x:Bind ViewModel.IsLimitRgb555, Mode=TwoWay}" />
 										<RadioMenuFlyoutItem x:Uid="MenuLimitRgb444" GroupName="ColorLimitToolbar" IsChecked="{x:Bind ViewModel.IsLimitRgb444, Mode=TwoWay}" />
@@ -872,7 +881,11 @@
 										</MenuFlyoutSubItem.Icon>
 										<RadioMenuFlyoutItem x:Uid="MenuLimitNone" GroupName="ColorLimitOverflow" IsChecked="{x:Bind ViewModel.IsLimitNone, Mode=TwoWay}" />
 										<MenuFlyoutSeparator />
-										<RadioMenuFlyoutItem x:Uid="MenuLimitWebSafe" GroupName="ColorLimitOverflow" IsChecked="{x:Bind ViewModel.IsLimitWebSafe, Mode=TwoWay}" />
+										<RadioMenuFlyoutItem x:Uid="MenuLimitWebSafe" GroupName="ColorLimitOverflow" IsChecked="{x:Bind ViewModel.IsLimitWebSafe, Mode=TwoWay}">
+											<RadioMenuFlyoutItem.Icon>
+												<FontIcon FontFamily="ms-appx:///Assets/Fonts/romoji.ttf#Romoji" Glyph="&#xE015;" />
+											</RadioMenuFlyoutItem.Icon>
+										</RadioMenuFlyoutItem>
 										<RadioMenuFlyoutItem x:Uid="MenuLimitRgb565" GroupName="ColorLimitOverflow" IsChecked="{x:Bind ViewModel.IsLimitRgb565, Mode=TwoWay}" />
 										<RadioMenuFlyoutItem x:Uid="MenuLimitRgb555" GroupName="ColorLimitOverflow" IsChecked="{x:Bind ViewModel.IsLimitRgb555, Mode=TwoWay}" />
 										<RadioMenuFlyoutItem x:Uid="MenuLimitRgb444" GroupName="ColorLimitOverflow" IsChecked="{x:Bind ViewModel.IsLimitRgb444, Mode=TwoWay}" />
@@ -930,6 +943,7 @@
 							<ToggleMenuFlyoutItem Tag="palette" x:Uid="TabPalette" Click="OnTabVisibilityToggle" />
 							<ToggleMenuFlyoutItem Tag="mix" x:Uid="TabMix" Click="OnTabVisibilityToggle" />
 							<ToggleMenuFlyoutItem Tag="harmony" x:Uid="TabHarmony" Click="OnTabVisibilityToggle" />
+							<ToggleMenuFlyoutItem Tag="image" x:Uid="TabImage" Click="OnTabVisibilityToggle" />
 							<MenuFlyoutSeparator />
 							<MenuFlyoutItem x:Name="ShowAllTabsItem" x:Uid="MenuShowAllTabs" Click="OnShowAllTabsClick" />
 						</MenuFlyout>
@@ -1009,6 +1023,7 @@
 						<SelectorBarItem Tag="palette" x:Uid="TabPalette" />
 						<SelectorBarItem Tag="mix" x:Uid="TabMix" />
 						<SelectorBarItem Tag="harmony" x:Uid="TabHarmony" />
+						<SelectorBarItem Tag="image" x:Uid="TabImage" />
 					</SelectorBar>
 				</ScrollViewer>
 

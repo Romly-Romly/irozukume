@@ -13,26 +13,37 @@ using Irozukume.Helpers;
 using Irozukume.Interop;
 using Irozukume.Models;
 using Irozukume.Services;
+using Romly.WinUI.Common.Windowing;
 
 namespace Irozukume;
 
-// アプリのエントリ。タスクトレイに常駐し、アイコンの左クリックでメインウィンドウを表示、右クリックメニューから「開く」「終了」を行う。
-// ウィンドウの×ボタンは終了ではなくトレイへの退避として扱い、常駐を継続する。プロセスを畳むのは「終了」のみ。
+/// <summary>
+/// アプリのエントリ。タスクトレイに常駐し、アイコンの左クリックでメインウィンドウを表示、右クリックメニューから「開く」「終了」を行う。
+/// ウィンドウの×ボタンは終了ではなくトレイへの退避として扱い、常駐を継続する。プロセスを畳むのは「終了」のみ。
+/// </summary>
 public partial class App : Application
 {
 	private MainWindow? _window;
 	private TaskbarIcon? _trayIcon;
 
-	// トレイの右クリックメニュー。SecondWindow の別ウィンドウで描かれるため、アプリ テーマの変更時にこのメニューへ配色を当て直す必要があり、参照を保持する。
+	/// <summary>
+	/// トレイの右クリックメニュー。SecondWindow の別ウィンドウで描かれるため、アプリ テーマの変更時にこのメニューへ配色を当て直す必要があり、参照を保持する。
+	/// </summary>
 	private MenuFlyout? _trayMenu;
 
-	// アプリの永続設定。起動時に読み込み、ウィンドウ配置を保存する際に書き戻す。
+	/// <summary>
+	/// アプリの永続設定。起動時に読み込み、ウィンドウ配置を保存する際に書き戻す。
+	/// </summary>
 	private Settings _settings = new();
 
-	// ウィンドウを一度でも表示したか。未表示のまま終了する場合、AppWindow の位置は OS 既定の生成位置のままでユーザーの選択ではないため、その値で既存の保存を上書きしないよう保存を見送る判断に使う。
+	/// <summary>
+	/// ウィンドウを一度でも表示したか。未表示のまま終了する場合、AppWindow の位置は OS 既定の生成位置のままでユーザーの選択ではないため、その値で既存の保存を上書きしないよう保存を見送る判断に使う。
+	/// </summary>
 	private bool _hasBeenShown;
 
-	// 設定の削除・全消去リセットの操作中に立てる。立っている間は SaveSettings が何もしないため、削除した settings.json が終了時・トレイ退避時の保存で復活しない。
+	/// <summary>
+	/// 設定の削除・全消去リセットの操作中に立てる。立っている間は <see cref="SaveSettings"/> が何もしないため、削除した settings.json が終了時・トレイ退避時の保存で復活しない。
+	/// </summary>
 	private bool _suppressSave;
 
 
@@ -49,7 +60,9 @@ public partial class App : Application
 
 
 
-	// アプリ全体で捕まえ損ねた未処理例外の最後の受け皿。WinUI の UI スレッドへ漏れた例外がここへ来る。crash.log へ残すだけで Handled は立てず、既定のクラッシュ処理に委ねる。
+	/// <summary>
+	/// アプリ全体で捕まえ損ねた未処理例外の最後の受け皿。WinUI の UI スレッドへ漏れた例外がここへ来る。crash.log へ残すだけで Handled は立てず、既定のクラッシュ処理に委ねる。
+	/// </summary>
 	private void OnUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
 	{
 		CrashLog.Write(e.Exception);
@@ -58,7 +71,10 @@ public partial class App : Application
 
 
 
-	// 2つ目以降の起動から転送されてきたアクティベーションを受けて、既存インスタンスのウィンドウを前面に出す。Activated は UI スレッド外で発火しうるため、ウィンドウのディスパッチャへ載せ替えてから表示する。
+	/// <summary>
+	/// 2つ目以降の起動から転送されてきたアクティベーションを受けて、既存インスタンスのウィンドウを前面に出す。
+	/// Activated は UI スレッド外で発火しうるため、ウィンドウのディスパッチャへ載せ替えてから表示する。
+	/// </summary>
 	public void OnReactivated()
 	{
 		_window?.DispatcherQueue.TryEnqueue(ShowWindow);
@@ -85,7 +101,10 @@ public partial class App : Application
 
 
 
-	// 保存済みの表示言語をアプリへ適用する。非パッケージアプリでは WinAppSDK 版の ApplicationLanguages を使う(WinRT 版は非パッケージで効かない)。"ja"/"en" はその言語へ固定し、"system"・未指定は空文字で OS の表示言語に従う。ウィンドウ生成より前に呼ぶことで、x:Uid が初回読み込み時に目的の言語で解決される。
+	/// <summary>
+	/// 保存済みの表示言語をアプリへ適用する。
+	/// 非パッケージアプリでは WinAppSDK 版の ApplicationLanguages を使う(WinRT 版は非パッケージで効かない)。"ja"/"en" はその言語へ固定し、"system"・未指定は空文字で OS の表示言語に従う。ウィンドウ生成より前に呼ぶことで、x:Uid が初回読み込み時に目的の言語で解決される。
+	/// </summary>
 	private static void ApplyLanguageOverride(string? language)
 	{
 		string primaryLanguage = language switch
@@ -108,7 +127,11 @@ public partial class App : Application
 
 
 
-	// トレイアイコンとコンテキストメニューをコードで組み立てる。アイコンは exe・ウィンドウと同じ絵柄に揃えるため、出力フォルダへ置いた ico を実行フォルダからの絶対パスで読む。非パッケージ配布では ms-appx 等の資産URIが解決できないため、file URI になる絶対パスを使う。
+	/// <summary>
+	/// トレイアイコンとコンテキストメニューをコードで組み立てる。
+	/// アイコンは exe・ウィンドウと同じ絵柄に揃えるため、出力フォルダへ置いた ico を実行フォルダからの絶対パスで読む。
+	/// 非パッケージ配布では ms-appx 等の資産URIが解決できないため、file URI になる絶対パスを使う。
+	/// </summary>
 	private void InitializeTrayIcon()
 	{
 		var menu = new MenuFlyout { AreOpenCloseAnimationsEnabled = false };
@@ -136,7 +159,7 @@ public partial class App : Application
 			}
 		};
 
-		// 管理者として再起動。通常権限では昇格ウィンドウ(管理者アプリ)の上で採色フックが OS に握られ採色できない。明示的に昇格して拾えるようにする。既に管理者なら現状を示すだけで無効化する。
+		// 管理者として再起動。通常権限では昇格ウィンドウ(管理者アプリ)の上で採色フックが OS に握られ採色できないので、明示的に昇格して拾えるようにするためのもの。既に管理者なら現状を示すだけで無効化する。
 		var adminItem = new MenuFlyoutItem();
 		if (ElevationHelper.IsElevated)
 		{
@@ -187,7 +210,9 @@ public partial class App : Application
 
 
 
-	// トレイメニュー先頭に出す「アプリ名 バージョン」の文字列を組み立てる。バージョンはアセンブリのバージョンから取り、取得できない場合はアプリ名だけを返す。
+	/// <summary>
+	/// トレイメニュー先頭に出す「アプリ名 バージョン」の文字列を組み立てる。バージョンはアセンブリのバージョンから取り、取得できない場合はアプリ名だけを返す。
+	/// </summary>
 	private static string BuildAppNameVersionText()
 	{
 		System.Version? version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
@@ -198,7 +223,10 @@ public partial class App : Application
 
 
 
-	// トレイの右クリックメニューに現在のアプリ テーマを適用する。SecondWindow の別ウィンドウで描かれメインウィンドウの RequestedTheme が届かないため、プレゼンターのスタイル経由で配色を合わせる。Default のときはシステム設定に従う。
+	/// <summary>
+	/// トレイの右クリックメニューに現在のアプリテーマを適用する。
+	/// SecondWindow の別ウィンドウで描かれメインウィンドウの RequestedTheme が届かないため、プレゼンターのスタイル経由で配色を合わせる。Default のときはシステム設定に従う。
+	/// </summary>
 	private void ApplyTrayMenuTheme()
 	{
 		if (_trayMenu is null || _window is null)
@@ -214,7 +242,9 @@ public partial class App : Application
 
 
 
-	// アプリ テーマが変わったら、トレイメニューの配色も当て直す。
+	/// <summary>
+	/// アプリ テーマが変わったら、トレイメニューの配色も当て直す。
+	/// </summary>
 	private void OnAppearanceThemeChanged(object? sender, EventArgs e)
 	{
 		ApplyTrayMenuTheme();
@@ -223,7 +253,9 @@ public partial class App : Application
 
 
 
-	// メインウィンドウを表示して前面へ出す。Show は H.NotifyIcon が提供する Window 拡張で、トレイへ退避した非表示状態からの復帰に対応する。
+	/// <summary>
+	/// メインウィンドウを表示して前面へ出す。Show は H.NotifyIcon が提供する Window 拡張で、トレイへ退避した非表示状態からの復帰に対応する。
+	/// </summary>
 	private void ShowWindow()
 	{
 		if (_window is null)
@@ -250,7 +282,9 @@ public partial class App : Application
 
 
 
-	// 「終了」だけがプロセスを畳む唯一の経路。トレイアイコンを即座に取り除いてから終了する。トレイメニューとメインメニューの双方から呼ばれる。
+	/// <summary>
+	/// 「終了」だけがプロセスを畳む唯一の経路。トレイアイコンを即座に取り除いてから終了する。トレイメニューとメインメニューの双方から呼ばれる。
+	/// </summary>
 	internal void ExitApplication()
 	{
 		SaveSettings();
@@ -261,7 +295,9 @@ public partial class App : Application
 
 
 
-	// 現在の状態を設定ファイルへ即時保存する。表示言語の変更時など、終了を待たずに保存したい場面でメインウィンドウから呼ぶ。
+	/// <summary>
+	/// 現在の状態を設定ファイルへ即時保存する。表示言語の変更時など、終了を待たずに保存したい場面でメインウィンドウから呼ぶ。
+	/// </summary>
 	internal void PersistSettings()
 	{
 		SaveSettings();
@@ -270,7 +306,18 @@ public partial class App : Application
 
 
 
-	// アプリを再起動する。表示言語の変更を読み込み済み UI へ反映するには、いったん終了して起動し直す必要がある。終了前に状態を保存し、トレイアイコンを片付けてから、同じ実行ファイルを起動して現在のプロセスを終える。
+	/// <summary>
+	/// メインウィンドウの Win32 ハンドル。非パッケージアプリで FileOpenPicker 等の WinRT のダイアログを所有ウィンドウへ紐付けるのに使う。ウィンドウがまだ無いときは IntPtr.Zero を返す。
+	/// </summary>
+	internal nint WindowHandle => _window is null ? IntPtr.Zero : WinRT.Interop.WindowNative.GetWindowHandle(_window);
+
+
+
+
+	/// <summary>
+	/// アプリを再起動する。表示言語の変更を読み込み済み UI へ反映するには、いったん終了して起動し直す必要がある。
+	/// 終了前に状態を保存し、トレイアイコンを片付けてから、同じ実行ファイルを起動して現在のプロセスを終える。
+	/// </summary>
 	internal void RestartApplication()
 	{
 		SaveSettings();
@@ -289,8 +336,11 @@ public partial class App : Application
 
 
 
-	// 管理者権限で自分を起動し直す。通常権限では UIPI により昇格ウィンドウ上で採色フックが効かないため、利用者の明示操作で昇格セッションへ移る。runas 動詞で起動時に一度だけ UAC を出す(マニフェストは asInvoker のままなので通常起動では UAC は出ない)。
-	// UAC を拒否・キャンセルした場合は昇格起動が失敗するので、トレイアイコンを保持したまま通常権限で動作を続ける。成功して新プロセスへ引き継げたときだけ現在のプロセスを畳む。
+	/// <summary>
+	/// 管理者権限で自分を起動し直す。通常権限では UIPI により昇格ウィンドウ上で採色フックが効かないため、利用者の明示操作で昇格セッションへ移る。
+	/// Verb = "runas" で起動時に一度だけ UAC を出す(マニフェストは asInvoker のままなので通常起動では UAC は出ない)。
+	/// UAC を拒否・キャンセルした場合は昇格起動が失敗するので、トレイアイコンを保持したまま通常権限で動作を続ける。成功して新プロセスへ引き継げたときだけ現在のプロセスを畳む。
+	/// </summary>
 	internal void RestartAsAdministrator()
 	{
 		string? path = Environment.ProcessPath;
@@ -325,7 +375,10 @@ public partial class App : Application
 
 
 
-	// 設定ファイルのある実行フォルダをエクスプローラーで開く。設定ファイルがあればそれを選択した状態で、無ければフォルダだけを開く。バックアップ等はそこから手動で行ってもらう。開けなくてもアプリの動作は妨げない。
+	/// <summary>
+	/// 設定ファイルのある実行フォルダをエクスプローラーで開く。
+	/// 設定ファイルがあればそれを選択した状態で、無ければフォルダだけを開く。バックアップ等はそこから手動で行ってもらう。開けなくてもアプリの動作は妨げない。
+	/// </summary>
 	internal void OpenSettingsFolder()
 	{
 		try
@@ -348,7 +401,9 @@ public partial class App : Application
 
 
 
-	// 設定をすべて削除し、初期状態で起動し直す。配布前に既定の見え方を確認するための操作。終了時保存で削除が無に帰さないよう保存を抑止してから消し、再起動する。
+	/// <summary>
+	/// 設定をすべて削除し、初期状態で起動し直す。配布前に既定の見え方を確認するための操作。終了時保存で削除が無に帰さないよう保存を抑止してから消し、再起動する。
+	/// </summary>
 	internal void ResetSettingsAndRestart()
 	{
 		_suppressSave = true;
@@ -359,7 +414,10 @@ public partial class App : Application
 
 
 
-	// 設定ファイルを削除してアプリを終了する。アンインストール前の後始末用。終了処理 (ExitApplication) の保存が削除を無に帰さないよう、抑止フラグを立ててから消し、そのまま終了する。
+	/// <summary>
+	/// 設定ファイルを削除してアプリを終了する。
+	/// アンインストール前の後始末用。終了処理 (<see cref="ExitApplication"/>) の保存が削除を無に帰さないよう、抑止フラグを立ててから消し、そのまま終了する。
+	/// </summary>
 	internal void DeleteSettingsAndExit()
 	{
 		_suppressSave = true;
@@ -370,7 +428,10 @@ public partial class App : Application
 
 
 
-	// 現在のウィンドウ配置と色編集状態を設定へ取り込んで保存する。× でのトレイ退避時と終了時に呼び、次回起動へ引き継ぐ。一度も表示していないウィンドウは位置が OS 既定の生成位置のままなので保存しない。これで未表示のまま終了しても、既存の保存値を既定位置で汚さない。保存に失敗してもアプリの動作・終了を妨げないよう、例外は飲み込む。
+	/// <summary>
+	/// 現在のウィンドウ配置と色編集状態を設定へ取り込んで保存する。
+	/// × でのトレイ退避時と終了時に呼び、次回起動へ引き継ぐ。一度も表示していないウィンドウは位置が OS 既定の生成位置のままなので保存しない。これで未表示のまま終了しても、既存の保存値を既定位置で汚さない。保存に失敗してもアプリの動作・終了を妨げないよう、例外は飲み込む。
+	/// </summary>
 	private void SaveSettings()
 	{
 		if (_window is null || !_hasBeenShown || _suppressSave)
@@ -380,7 +441,7 @@ public partial class App : Application
 
 		try
 		{
-			_settings.Window = WindowPlacementService.Capture(_window);
+			_settings.Window = WindowPlacementService.Capture(_window.AppWindow);
 			_settings.Editor = _window.CaptureEditorState();
 			_settings.Appearance = _window.CaptureAppearanceState();
 
@@ -398,7 +459,10 @@ public partial class App : Application
 
 
 
-	// ×ボタンで閉じられた時は終了させず、ウィンドウをトレイへ退避させて常駐を続ける。Handled を立てることで実際のクローズを取り消す。退避の本体はメニューの「閉じる」(Ctrl+W)と共通の HideWindowToTray が担う。
+	/// <summary>
+	/// ×ボタンで閉じられた時は終了させず、ウィンドウをトレイへ退避させて常駐を続ける。
+	/// Handled を立てることで実際のクローズを取り消す。退避の本体はメニューの「閉じる」(Ctrl+W)と共通の <see cref="HideWindowToTray"/> が担う。
+	/// </summary>
 	private void OnWindowClosed(object sender, WindowEventArgs args)
 	{
 		args.Handled = true;
@@ -408,12 +472,18 @@ public partial class App : Application
 
 
 
-	// ウィンドウを終了させずトレイへ退避させる。×ボタン・メニューの「閉じる」(Ctrl+W)から呼ばれる。退避でウィンドウ位置が失われる前にこの時点の配置を保存し、次回起動へ持ち越す。設定ページを開いたまま退避した場合でも次の再表示は色ピッカー(本体)で開くよう、退避前に本体表示へ戻しておく。コントラストマトリックスの補助ウィンドウも一緒に隠す。
+	/// <summary>
+	/// ウィンドウを終了させずトレイへ退避させる。×ボタン・メニューの「閉じる」(Ctrl+W)から呼ばれる。
+	/// 退避でウィンドウ位置が失われる前にこの時点の配置を保存し、次回起動へ持ち越す。
+	/// 設定ページを開いたまま退避した場合でも次の再表示は色ピッカー(本体)で開くよう、退避前に本体表示へ戻しておく。
+	/// コントラストマトリックスとプレビューの補助ウィンドウも一緒に隠す。
+	/// </summary>
 	internal void HideWindowToTray()
 	{
 		SaveSettings();
 		_window?.CloseSettings();
 		_window?.HideContrastMatrix();
+		_window?.HideColorPreview();
 		_window?.Hide();
 	}
 }

@@ -11,7 +11,7 @@ namespace Irozukume.Controls.Generators.Triangles;
 /// <summary>
 /// HWB の白み・黒みを表す三角形の画像を生成する。
 /// 三角形は純色・白・黒を頂点に取り、各画素の重心座標から白み(白の重み)・黒み(黒の重み)を求め、与えた色相とあわせて HWB→RGB で塗る。HWB は色 = 純色·(1−W−B) + 白·W + 黒·B の線形補間のため、三角形の内側(W+B≤1)は退化しない。
-/// 三角形の形・縁のなじませ・角丸・色制限の扱いは TriangleRenderer に委ね、本クラスは重心の重みから HWB の色を作る式だけを与える。HslTriangle と同じ三角形の形を使い、塗りだけ HSL の双錐断面から HWB の線形補間へ替えた対の描画。
+/// 三角形の形・縁のなじませ・角丸・色制限の扱いは <see cref="TriangleRenderer"/> に委ね、本クラスは重心の重みから HWB の色を作る式だけを与える。<see cref="HslTriangle"/> と同じ三角形の形を使い、塗りだけ HSL の双錐断面から HWB の線形補間へ替えた対の描画。
 /// </summary>
 /// <remarks>色相が変わるたびに作り直す想定。三角形は未回転(純色の頂点が真上)で描き、回転は表示側(TrianglePad)で行う。</remarks>
 public static class HwbTriangle

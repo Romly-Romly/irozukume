@@ -2,6 +2,27 @@
 
 > 🌐 **[日本語 →](CHANGELOG.ja.md)**
 
+## 0.6.0-alpha — 2026/06/29
+
+### Added
+
+- Added a color preview window. It reflects the color you're editing, alpha included, so you can place it next to other on-screen elements to compare. Grab it anywhere to move it, and press F to toggle fullscreen.
+- Added palette extraction from an image. Load an image and build a palette with various algorithms, then use those colors or save them to your favorites. Algorithms include k-means and octree, plus simulated annealing, which can also surface understated accent colors.
+
+### Changed
+
+- Drew custom icons for trash, web-safe color, contrast check, lens effect, and more.
+- Windows now restore to the monitor where they were last shown on multi-monitor setups.
+- Title bar caption button colors now follow the system's custom color scheme and High Contrast settings.
+- Other minor changes.
+
+### Fixed
+
+- Fixed the tab bar becoming empty at startup when the default-selected tab was set to be hidden.
+- Other minor fixes.
+
+
+
 ## 0.3.0-alpha — 2026/06/22
 
 ### Added

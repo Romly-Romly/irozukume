@@ -3,6 +3,8 @@
 
 using System.Text.Json.Serialization;
 
+using Romly.WinUI.Common.Windowing;
+
 namespace Irozukume.Models;
 
 // アプリの永続設定のルート。メインウィンドウの配置・コントラストマトリックスの配置・色編集状態・外観設定を持つ。設定項目が増えたらここへ足していく。

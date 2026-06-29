@@ -12,7 +12,7 @@ namespace Irozukume.Controls.Generators.Wheels;
 /// <summary>
 /// 色相環(リングの帯)の画像を生成する。
 /// 各画素の中心からの角度を色相に、半径で帯の内外を決め、帯の縁は不透明度を滑らかに落として縁取りをなじませる。
-/// 角度の取り方は RingGeometry と揃えるため、つまみの位置と環の色がずれない。
+/// 角度の取り方は <see cref="RingGeometry"/> と揃えるため、つまみの位置と環の色がずれない。
 /// </summary>
 /// <remarks>生成はサイズ変更時など必要なときだけ行う想定で、描画中の頻繁な再生成は呼び出し側が避ける。</remarks>
 public static class HueWheel

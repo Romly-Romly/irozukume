@@ -2,19 +2,19 @@
 
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
-		<!-- 画面キャプチャ系 API（WDA_EXCLUDEFROMCAPTURE 等）が Windows 10 2004 (build 19041) 以降を要するため、最低対応バージョンを 19041 とする。 -->
-		<TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+		<TargetFramework>net10.0-windows10.0.22621.0</TargetFramework>
+		<!-- 画面キャプチャ系 API（WDA_EXCLUDEFROMCAPTURE 等）が Windows 10 2004 (build 19041) 以降を要するため、最低でも 19041 以降じゃないといけない。 -->
+		<TargetPlatformMinVersion>10.0.22621.0</TargetPlatformMinVersion>
 		<RootNamespace>Irozukume</RootNamespace>
-		<!-- アプリのバージョン。publish スクリプトはこの値を読み取って zip 名に反映する。FileVersion はここから 0.3.0.0 が導出され、プレリリース表記(-alpha)は AssemblyInformationalVersion に入る。 -->
-		<Version>0.3.0-alpha</Version>
+		<!-- アプリのバージョン。FileVersion はここから 0.6.0.0 が導出され、プレリリース表記(-alpha)は AssemblyInformationalVersion に入る。 -->
+		<Version>0.6.0-alpha</Version>
 		<!-- 既定(フォールバック)の表示言語。非パッケージアプリには Package.appxmanifest が無いため、このプロパティで宣言する。OS の表示言語に対応する resw が無いときと、選択言語に欠けた文字列があるときの最終フォールバックに使う。Strings\en\Resources.resw を必ず完備しておく。 -->
 		<DefaultLanguage>en</DefaultLanguage>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<Platforms>x86;x64;arm64</Platforms>
 		<RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
 		<UseWinUI>true</UseWinUI>
-		<!-- exe 本体に埋め込むアイコン。エクスプローラ・タスクバー・Alt+Tab の既定アイコン源になる。実体は _assets\icons の build_ico.py が各サイズのPNGから束ねて生成する。 -->
+		<!-- exe 本体に埋め込むアイコン。エクスプローラ・タスクバー・Alt+Tab の既定アイコン源になる。 -->
 		<ApplicationIcon>Assets\Irozukume.ico</ApplicationIcon>
 		<WindowsPackageType>None</WindowsPackageType>
 		<EnableMsixTooling>true</EnableMsixTooling>
@@ -26,7 +26,7 @@
 		<DefaultItemExcludes>$(DefaultItemExcludes);_spikes\**</DefaultItemExcludes>
 	</PropertyGroup>
 
-	<!-- 同梱アイコンフォント。_assets のツールで生成し、ms-appx:///Assets/Fonts/romoji.ttf#Romoji で参照する。 -->
+	<!-- 同梱アイコンフォント。 ms-appx:///Assets/Fonts/romoji.ttf#Romoji で参照する。 -->
 	<ItemGroup>
 		<Content Include="Assets\Fonts\romoji.ttf" CopyToOutputDirectory="PreserveNewest" />
 		<!-- 起動中ウィンドウへ AppWindow.SetIcon で当てるため、ico の実体を出力に置く。非パッケージ配布では資産URIが解決できないため、実行フォルダからの相対パスで参照する。 -->
@@ -41,13 +41,28 @@
 		<PackageReference Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
 	</ItemGroup>
 
+	<!-- 共通ライブラリ Romly.WinUI.Common を External\ に内包し、ProjectReference で参照する。 -->
+	<!-- self-contained publish では WindowsAppSDKSelfContained がコマンドラインのグローバルプロパティとしてこの参照先にも伝播し、ライブラリ側も自己完結ランタイム(MsixContent 配下の native dll 一式)を生成する。それが本体の生成物と同一相対パスで衝突し dotnet publish が NETSDK1152 で失敗するため、この参照に限りプロパティを解除し、ランタイムは本体だけが抱えるようにする。 -->
+	<ItemGroup>
+		<ProjectReference Include="External\Romly.WinUI.Common\Romly.WinUI.Common.csproj" UndefineProperties="WindowsAppSDKSelfContained" />
+	</ItemGroup>
+
+	<!-- External 配下は上の ProjectReference で別プロジェクトとしてビルドするため、本体の既定 glob から除外する。ライブラリのソースや obj の自動生成物(AssemblyInfo 等)を本体が拾うと、二重コンパイルで型衝突(CS0436)・属性重複(CS0579)を起こすため。 -->
+	<ItemGroup>
+		<Compile Remove="External\**" />
+		<Page Remove="External\**" />
+		<Content Remove="External\**" />
+		<None Remove="External\**" />
+		<EmbeddedResource Remove="External\**" />
+	</ItemGroup>
+
 	<!-- WindowsAppSDK が自己完結発行(WindowsAppSDKSelfContained)で WinUI 組み込み文字列の .mui を全言語ぶん(80以上)コピーするため、アプリの対応言語(英語・日本語)以外の言語フォルダをビルド後に削除する。これらの .mui はフレームワークパッケージから丸ごとコピーされる資産で、SatelliteResourceLanguages や NeutralLanguage では絞れないため後処理で消す。.mui は WinUI 標準部品の文字列訳であって実行に必須の dll ではなく、削除しても起動・動作には影響しない。出力フォルダ(OutDir)と発行フォルダ(PublishDir)の双方を対象にし、残す言語の .mui を Exclude で守ってから、残りの言語フォルダを RemoveDir で消す。 -->
 	<Target Name="TrimUnusedMuiLanguages"
-	        Condition="'$(WindowsPackageType)' == 'None'"
-	        AfterTargets="Build;Publish">
+			Condition="'$(WindowsPackageType)' == 'None'"
+			AfterTargets="Build;Publish">
 		<ItemGroup>
 			<_UnusedMui Include="$(OutDir)*\*.mui;$(PublishDir)*\*.mui"
-			            Exclude="$(OutDir)en-us\*.mui;$(OutDir)ja-JP\*.mui;$(PublishDir)en-us\*.mui;$(PublishDir)ja-JP\*.mui" />
+						Exclude="$(OutDir)en-us\*.mui;$(OutDir)ja-JP\*.mui;$(PublishDir)en-us\*.mui;$(PublishDir)ja-JP\*.mui" />
 			<_UnusedMuiDirs Include="@(_UnusedMui->'%(RootDir)%(Directory)')" />
 		</ItemGroup>
 		<RemoveDir Directories="@(_UnusedMuiDirs)" />

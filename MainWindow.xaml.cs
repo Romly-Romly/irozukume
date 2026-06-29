@@ -29,6 +29,8 @@ using Irozukume.Services;
 using Irozukume.ViewModels;
 using Irozukume.Views;
 
+using Romly.WinUI.Common.Windowing;
+
 namespace Irozukume;
 
 // アプリのメインウィンドウ。左に色リスト(最大5色)のプレビュー、右にコマンドバー・タブ切り替え・タブ内容を並べる。トレイ操作で表示・退避する対象となる。
@@ -78,6 +80,9 @@ public sealed partial class MainWindow : Window
 	private MixTabView? _mixTab;
 	private HarmonyTabView? _harmonyTab;
 
+	// 「画像から抽出」タブの中身も読み込んだ画像や抽出結果の状態を持つため、タブを切り替えても作り直さず使い回す。
+	private ImagePaletteTabView? _imageTab;
+
 	// アルファのスライダー領域の中身。タブを跨いでタブの中身の下に常駐するため、初回に一度だけ生成して枠へ収め、表示・非表示は ShowAlpha に束ねた枠の可視性で切り替える。
 	private AlphaTabView? _alphaTab;
 
@@ -96,6 +101,9 @@ public sealed partial class MainWindow : Window
 	// SelectorBar の読み込み後に選び直す、保存済みのタブ見出し。読み込み前に選択を変えても既定へ戻されるため、適用を Loaded まで保留する。適用後は null に戻す。
 	private string? _pendingActiveTab;
 
+	// SelectorBar の読み込み後に当てる、保存済みの隠しタブ。構築時に当てると、XAML 既定で選択中の RGB/CMYK が隠しタブに含まれるとき、選択中のアンカー項目が畳まれたまま初回レイアウトが走り、SelectorBar (内部 ItemsRepeater) が項目を実体化し損ねてバーが空になる。これを避けるため適用を Loaded まで保留する。適用後は null に戻す。
+	private IReadOnlyList<string>? _pendingHiddenTabs;
+
 	// コマンドバーのオーバーフロー判定中の再入を抑える札。畳む/戻すで Visibility を差し替えると SizeChanged が呼び戻されるため、判定の最中は無視する。
 	private bool _updatingToolbarOverflow;
 
@@ -104,6 +112,9 @@ public sealed partial class MainWindow : Window
 
 	// コントラストマトリックスの保存済み配置。初回生成時に適用する。保存が無ければ null で、既定のサイズで開く。
 	private readonly WindowPlacement? _matrixPlacement;
+
+	// 1色をウィンドウ全体へべた塗りして見せるプレビューウィンドウ。色パネルの右クリックメニューから開く。このセッションでは1つだけを使い回し、初回に生成する。
+	private ColorPreviewWindow? _previewWindow;
 
 	// サイドバーの色パネル(1色1枚)。色リストの並びと同じ順で持ち、リストの組み直しのたびに作り直す。イベントの発生元から位置を引くのにも使う。
 	private readonly List<ColorSwatchPanel> _colorPanels = new();
@@ -197,22 +208,17 @@ public sealed partial class MainWindow : Window
 		// 表示言語の選択が変わったら、保存して再起動を促す。読み込み済み UI は言語を動的に差し替えられないため、反映には再起動が要る。
 		Appearance.LanguageChanged += OnAppearanceLanguageChanged;
 
-		// キャプションボタン(最小化・最大化・閉じる)はルートの RequestedTheme に追従しないため、実効テーマに合わせて配色を当てる。Default 時の OS テーマ変更にも追えるよう実効テーマの変化を購読し、初期状態も一度当てる。
-		if (this.Content is FrameworkElement rootElement)
-		{
-			rootElement.ActualThemeChanged += OnRootActualThemeChanged;
-		}
-
-		UpdateCaptionButtonColors();
+		// キャプションボタン(最小化・最大化・閉じる)はルートの RequestedTheme に追従しないため、Default 時の OS テーマ変更にも追えるよう、共通ライブラリのヘルパーで実効テーマの変化を購読し初期状態も当てる。
+		TitleBarCaptionColors.FollowContentTheme(this);
 
 		// 保存済み配置があれば復元し、無ければ既定サイズで開く。表示前に適用することで、ちらつきなく目的の位置・サイズで現れる。
 		if (placement is not null)
 		{
-			WindowPlacementService.Apply(this, placement, MinWidthDip, MinHeightDip);
+			WindowPlacementService.Apply(this.AppWindow, placement, MinWidthDip, MinHeightDip);
 		}
 		else
 		{
-			WindowPlacementService.ResizeToDip(this, 960, 640);
+			WindowPlacementService.ResizeToDip(this.AppWindow, 960, 640);
 		}
 
 		// 最低サイズを課す。復元・既定のどちらで開いても常に効かせる。
@@ -227,6 +233,7 @@ public sealed partial class MainWindow : Window
 		// テキストモードの切り替えでサイドバーの構成を組み替え、色リストの並び・件数・アクティブの変化でパネル一覧を組み直すための購読。ウィンドウと共有モデルは寿命が同じため、購読は解かない。保存値で始まる初期状態もここで一度反映する。
 		ViewModel.PropertyChanged += OnViewModelPropertyChanged;
 		ViewModel.ColorListChanged += OnColorListChanged;
+		ViewModel.ColorsChanged += OnColorsChanged;
 		_rowHeightAnimator = new GridStarHeightAnimator(ColorListGrid);
 
 		// テキストモードの役選択バーは、どちらの役を担うかを固定し、クリック通知の宛先を一度だけ結ぶ。中身(色の並びと選択)の反映は RebuildContrastRolePanel が担う。
@@ -245,8 +252,8 @@ public sealed partial class MainWindow : Window
 		_alphaTab = new AlphaTabView(ViewModel);
 		AlphaPanelBorder.Child = _alphaTab;
 
-		// 保存済みの隠しタブを反映する。表示/非表示は Visibility (Collapsed) で切り替え、読み込みで戻される選択とは違ってここで当てた値はそのまま残る。
-		ApplyHiddenTabs(editorState?.HiddenTabs);
+		// 保存済みの隠しタブは、SelectorBar の読み込みが済んでから Loaded で当てる。構築時に当てると、選択中のアンカー項目が畳まれたまま初回レイアウトが走り、SelectorBar が項目を実体化し損ねてバーが空になる。受け渡しは一時フィールドで保留する。
+		_pendingHiddenTabs = editorState?.HiddenTabs;
 
 		// 保存済みの選択タブの復元と、隠れたタブが選ばれた状態の是正は、SelectorBar の読み込み後に Loaded でまとめて行う。構築段階で SelectedItem を変えても、読み込み時に XAML 既定 (RGB/CMYK) の選択へ戻されてしまうため、適用を Loaded まで待つ。XAML 既定で選ばれる RGB/CMYK 自体が隠れている場合もあるため、選択タブの保存有無に依らず購読する。
 		_pendingActiveTab = editorState?.ActiveTab;
@@ -342,11 +349,21 @@ public sealed partial class MainWindow : Window
 
 
 
-	// 色リストの並び・件数・アクティブ・役の変化を受けて、サイドバーのパネル一覧と役選択チップを組み直す。
+	// 色リストの並び・件数・アクティブ・役の変化を受けて、サイドバーのパネル一覧と役選択チップを組み直す。あわせて、表示中のプレビューをアクティブ色(切替後や色制限の変更を反映した表示色)へ追従させる。
 	private void OnColorListChanged(object? sender, EventArgs e)
 	{
 		RebuildColorList();
 		RebuildContrastRolePanel();
+		RefreshColorPreview();
+	}
+
+
+
+
+	// 色の編集(アクティブ色の表示色・不透明度の変化)を受けて、表示中のプレビューを追従させる。スライダーのドラッグ中など連続編集のたびに流れるため、表示していなければ何もしない軽い経路で受ける。
+	private void OnColorsChanged(object? sender, EventArgs e)
+	{
+		RefreshColorPreview();
 	}
 
 
@@ -658,6 +675,13 @@ public sealed partial class MainWindow : Window
 		var favorite = new MenuFlyoutItem { Text = Loc.Get("Ctx_AddFavorite"), Icon = new FontIcon { Glyph = "\uE734" } };
 		favorite.Click += async (_, _) => await AddSingleColorToFavoriteAsync(index);
 		flyout.Items.Add(favorite);
+
+		flyout.Items.Add(new MenuFlyoutSeparator());
+
+		// この色をウィンドウ全体へべた塗りして見せるプレビューウィンドウを開く。色に不透明度があればウィンドウ全体の半透明として反映する。
+		var preview = new MenuFlyoutItem { Text = Loc.Get("Ctx_ShowPreview"), Icon = new FontIcon { Glyph = "\uE890" } };
+		preview.Click += (_, _) => ShowColorPreview(index);
+		flyout.Items.Add(preview);
 
 		return flyout;
 	}
@@ -1017,6 +1041,14 @@ public sealed partial class MainWindow : Window
 			return;
 		}
 
+		if (key == "image")
+		{
+			// 画像のドロップ領域・操作群は固定し、結果のスウォッチ一覧だけが内部でスクロールするため、Palette タブと同じくスクロール包みを介さず直接差し込む。
+			_imageTab ??= new ImagePaletteTabView(ViewModel, _favorites);
+			TabContent.Content = _imageTab;
+			return;
+		}
+
 		TabContent.Content = new TextBlock
 		{
 			Text = Loc.Get("Tab_FallbackFormat", key),
@@ -1046,6 +1078,11 @@ public sealed partial class MainWindow : Window
 	private void TabSelectorBar_Loaded(object sender, RoutedEventArgs e)
 	{
 		TabSelectorBar.Loaded -= TabSelectorBar_Loaded;
+
+		// 隠しタブの適用は、初回レイアウトで全タブが実体化し終えたこの時点で行う。構築時に当てると選択中のアンカー項目が畳まれて実体化に失敗するため、読み込み後のここまで遅らせる。
+		ApplyHiddenTabs(_pendingHiddenTabs);
+		_pendingHiddenTabs = null;
+
 		RestoreActiveTab(_pendingActiveTab);
 		_pendingActiveTab = null;
 
@@ -1825,37 +1862,6 @@ public sealed partial class MainWindow : Window
 
 
 
-	// タイトルバーのキャプションボタン(最小化・最大化・閉じる)の前景色を、現在の実効テーマに合わせる。ExtendsContentIntoTitleBar 下でもこれらはシステムのキャプションボタンのままで、ルート要素の RequestedTheme では追従しないため、AppWindow のタイトルバー越しに配色を当てて視認性を保つ。背景はシステム既定(閉じるボタンの赤いホバー等)に委ねる。
-	private void UpdateCaptionButtonColors()
-	{
-		if (this.Content is not FrameworkElement root)
-		{
-			return;
-		}
-
-		bool dark = root.ActualTheme == ElementTheme.Dark;
-		Color foreground = dark ? Microsoft.UI.Colors.White : Microsoft.UI.Colors.Black;
-		Color inactiveForeground = dark ? Color.FromArgb(0xFF, 0x77, 0x77, 0x77) : Color.FromArgb(0xFF, 0x99, 0x99, 0x99);
-
-		var titleBar = AppWindow.TitleBar;
-		titleBar.ButtonForegroundColor = foreground;
-		titleBar.ButtonHoverForegroundColor = foreground;
-		titleBar.ButtonPressedForegroundColor = foreground;
-		titleBar.ButtonInactiveForegroundColor = inactiveForeground;
-	}
-
-
-
-
-	// 実効テーマが変わったら(設定での選択変更、または Default 時の OS テーマ変更)、キャプションボタンの配色も追従させる。
-	private void OnRootActualThemeChanged(FrameworkElement sender, object args)
-	{
-		UpdateCaptionButtonColors();
-	}
-
-
-
-
 	// 役選択パネルの入れ替えボタン。文字色と背景色の役を入れ替える。
 	private void OnSwapRolesClick(object sender, RoutedEventArgs e)
 	{
@@ -1906,7 +1912,54 @@ public sealed partial class MainWindow : Window
 	// コントラストマトリックスの現在の配置を取り出す。このセッションで一度も開いていなければ null を返し、呼び出し側は保存済みの配置を温存する。隠れている間もウィンドウは生きているため、最後に見えていた位置・寸法が捕捉できる。
 	public WindowPlacement? CaptureContrastMatrixPlacement()
 	{
-		return _matrixWindow is null ? null : WindowPlacementService.Capture(_matrixWindow);
+		return _matrixWindow is null ? null : WindowPlacementService.Capture(_matrixWindow.AppWindow);
+	}
+
+
+
+
+	// 色パネルの右クリックメニューの「プレビューウィンドウを表示」。指定位置の色をアクティブ(編集対象)にしてから、その表示色(色制限の丸めを反映)と不透明度をプレビューウィンドウへ渡して表示する。以後はアクティブ色の編集にプレビューが追従し、その場で色を調整しながら確認できる。ウィンドウはこのセッションで1つだけを使い回し、初回に生成して以後は同じウィンドウへ色を差し替える。
+	private void ShowColorPreview(int index)
+	{
+		ViewModel.ActivateColor(index);
+
+		int active = ViewModel.ActiveColorIndex;
+		Color color = ViewModel.DisplayedColorAt(active);
+		byte alpha = (byte)Math.Round(ViewModel.Colors[active].Alpha);
+
+		_previewWindow ??= new ColorPreviewWindow();
+		_previewWindow.ShowColor(color, alpha);
+	}
+
+
+
+
+	// 表示中のプレビューを、アクティブな色の現在の表示色・不透明度へ追従させる。色の編集(ColorsChanged)とアクティブ切替・色制限の変更(ColorListChanged)の双方から呼ぶ。プレビューが無い・隠れている間は何もしない。
+	private void RefreshColorPreview()
+	{
+		if (_previewWindow is null || !_previewWindow.IsVisible)
+		{
+			return;
+		}
+
+		int active = ViewModel.ActiveColorIndex;
+		if (active < 0 || active >= ViewModel.Colors.Count)
+		{
+			return;
+		}
+
+		Color color = ViewModel.DisplayedColorAt(active);
+		byte alpha = (byte)Math.Round(ViewModel.Colors[active].Alpha);
+		_previewWindow.UpdateColor(color, alpha);
+	}
+
+
+
+
+	// プレビューウィンドウを隠す。トレイ退避時に App から呼ばれ、メインウィンドウと一緒に画面から消える。
+	public void HideColorPreview()
+	{
+		_previewWindow?.HideWindow();
 	}
 
 

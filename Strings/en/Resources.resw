@@ -162,6 +162,12 @@
 	<data name="MatrixWindowTitle" xml:space="preserve">
 		<value>Contrast matrix - Irozukume</value>
 	</data>
+	<data name="PreviewWindowTitle" xml:space="preserve">
+		<value>Color preview - Irozukume</value>
+	</data>
+	<data name="PreviewFullScreenHint" xml:space="preserve">
+		<value>Double-click, Esc or F to exit</value>
+	</data>
 	<data name="MatrixCornerLabel" xml:space="preserve">
 		<value>Text ＼ Bg</value>
 	</data>
@@ -327,6 +333,9 @@
 	<data name="Ctx_AddFavorite" xml:space="preserve">
 		<value>Add to favorites</value>
 	</data>
+	<data name="Ctx_ShowPreview" xml:space="preserve">
+		<value>Show preview window</value>
+	</data>
 	<data name="SwatchColor2.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
 		<value>Background color</value>
 	</data>
@@ -435,6 +444,89 @@
 	</data>
 	<data name="TabHarmony.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
 		<value>Harmony (Ctrl+8)</value>
+	</data>
+	<data name="TabImage.Text" xml:space="preserve">
+		<value>Image</value>
+	</data>
+	<data name="TabImage.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>From image (Ctrl+9)</value>
+	</data>
+
+	<!-- ImageTab: extract-from-image tab -->
+	<data name="ImageTab_DropHint.Text" xml:space="preserve">
+		<value>Drop an image here</value>
+	</data>
+	<data name="ImageTab_PickFile.Content" xml:space="preserve">
+		<value>Pick image...</value>
+	</data>
+	<data name="ImageTab_ColorCountLabel.Text" xml:space="preserve">
+		<value>Colors</value>
+	</data>
+	<data name="ImageTab_AlgorithmLabel.Text" xml:space="preserve">
+		<value>Algorithm</value>
+	</data>
+	<data name="ImageTab_AlgoMedianCut.Content" xml:space="preserve">
+		<value>Median Cut</value>
+	</data>
+	<data name="ImageTab_AlgoKMeans.Content" xml:space="preserve">
+		<value>k-means</value>
+	</data>
+	<data name="ImageTab_AlgoOctree.Content" xml:space="preserve">
+		<value>Octree</value>
+	</data>
+	<data name="ImageTab_AlgoSA.Content" xml:space="preserve">
+		<value>Simulated Annealing</value>
+	</data>
+	<data name="ImageTab_SaSettingsHeader.Text" xml:space="preserve">
+		<value>Simulated annealing settings</value>
+	</data>
+	<data name="ImageTab_SaSeed.Content" xml:space="preserve">
+		<value>Seed from median cut</value>
+	</data>
+	<data name="ImageTab_SaIterations.Header" xml:space="preserve">
+		<value>Iterations</value>
+	</data>
+	<data name="ImageTab_SaMove.Header" xml:space="preserve">
+		<value>Move step</value>
+	</data>
+	<data name="ImageTab_SaAlpha.Header" xml:space="preserve">
+		<value>Cooling rate α</value>
+	</data>
+	<data name="ImageTab_SaInitialTemp.Header" xml:space="preserve">
+		<value>Initial temperature factor</value>
+	</data>
+	<data name="ImageTab_SaSatWeight.Header" xml:space="preserve">
+		<value>Saturation weight</value>
+	</data>
+	<data name="ImageTab_SaRareWeight.Header" xml:space="preserve">
+		<value>Rarity weight</value>
+	</data>
+	<data name="ImageTab_Extract.Content" xml:space="preserve">
+		<value>Extract</value>
+	</data>
+	<data name="ImageTab_SaveFavorite.Content" xml:space="preserve">
+		<value>Save as favorite</value>
+	</data>
+	<data name="ImageTab_Extracting.Text" xml:space="preserve">
+		<value>Extracting...</value>
+	</data>
+	<data name="ImageTab_EmptyHint.Text" xml:space="preserve">
+		<value>Load an image to extract colors</value>
+	</data>
+	<data name="ImageTab_LoadErrorTitle" xml:space="preserve">
+		<value>Could not load image</value>
+	</data>
+	<data name="ImageTab_LoadErrorContent" xml:space="preserve">
+		<value>This image could not be loaded. Please try another image.</value>
+	</data>
+	<data name="ImageTab_TooManyWarningFormat" xml:space="preserve">
+		<value>This palette has {0} colors. A favorite can hold only the first {1} colors of the list. The remaining {2} will not be saved.</value>
+	</data>
+	<data name="ImageTab_CloseImage.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+		<value>Close image</value>
+	</data>
+	<data name="ImageTab_CloseImage.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+		<value>Close image</value>
 	</data>
 	<data name="HarmonySchemeLabel.Text" xml:space="preserve">
 		<value>Scheme</value>
@@ -1570,7 +1662,7 @@
 		<value>Lens effect</value>
 	</data>
 	<data name="SettingsLensEffectCard.Description" xml:space="preserve">
-		<value>Applies the glass refraction and chromatic aberration to the thumb loupe. When off, the loupe simply magnifies.</value>
+		<value>Applies the lens refraction and chromatic aberration to the thumb loupe. When off, the loupe simply magnifies.</value>
 	</data>
 	<data name="SettingsLensMagnifyCard.Header" xml:space="preserve">
 		<value>Magnification</value>
@@ -1633,10 +1725,10 @@
 		<value>Diameter of the circular glass lens.</value>
 	</data>
 	<data name="SettingsScreenPickerGlassCard.Header" xml:space="preserve">
-		<value>Glass effect</value>
+		<value>Lens effect</value>
 	</data>
 	<data name="SettingsScreenPickerGlassCard.Description" xml:space="preserve">
-		<value>Applies refraction, blur and highlight glass effects. Off leaves a plain loupe with just a border and zoom.</value>
+		<value>Applies refraction, blur and highlight lens effects. Off leaves a plain loupe with just a border and zoom.</value>
 	</data>
 	<data name="SettingsScreenPickerRefractionCard.Header" xml:space="preserve">
 		<value>Refraction strength</value>

@@ -18,6 +18,7 @@ using Irozukume.Interop;
 using Irozukume.Models;
 using Irozukume.Services;
 using Irozukume.ViewModels;
+using Romly.WinUI.Common.Windowing;
 
 namespace Irozukume.Views;
 
@@ -73,11 +74,11 @@ public sealed partial class ContrastMatrixWindow : Window
 		// 保存済みの配置があれば、復元先モニタの DPI とワークエリアへクランプして適用する。ディスプレイ構成が変わって元位置が画面外でも可視域へ引き戻される。無ければ既定のサイズで開く。
 		if (placement is not null)
 		{
-			WindowPlacementService.Apply(this, placement, MinWidthDip, MinHeightDip);
+			WindowPlacementService.Apply(this.AppWindow, placement, MinWidthDip, MinHeightDip);
 		}
 		else
 		{
-			WindowPlacementService.ResizeToDip(this, 640, 520);
+			WindowPlacementService.ResizeToDip(this.AppWindow, 640, 520);
 		}
 
 		_minSizer = new WindowMinSizer(this, MinWidthDip, MinHeightDip);
